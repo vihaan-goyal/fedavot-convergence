@@ -18,11 +18,22 @@ There is no build system, package, or test suite. The deliverables are the figur
 
 ## Running
 
-Use the checked-in virtualenv (Python 3.13, numpy 2.4, scikit-learn 1.8, matplotlib 3.10):
+There is **no `.venv/` on disk** (it was git-ignored and is gone despite CLAUDE.md history
+referencing it). The working interpreter is a user-scoped CPython 3.13 installed via winget:
 
-```bash
-.venv/Scripts/python.exe icasp2025.py        # MNIST experiment
-.venv/Scripts/python.exe lin_reg_last_one.py  # synthetic linear-regression experiment
+```
+C:\Users\vihaa\AppData\Local\Programs\Python\Python313\python.exe
+```
+
+Installed packages: `numpy` (2.5) + `matplotlib` (3.11). **`scikit-learn` is NOT installed** —
+`icasp2025.py` and `lin_reg_last_one.py` import it (`make_regression`, `StandardScaler`,
+`mean_squared_error`) and will fail until you `pip install scikit-learn`. The two figure
+scripts that avoid sklearn (`phase_boundary_experiment.py`, `feasibility_diagnostic.py`) run
+as-is. Invoke with the full path above (it is not on `PATH`):
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe" phase_boundary_experiment.py  # phase-boundary figure
+& "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe" feasibility_diagnostic.py     # mechanism figure
 ```
 
 Each script runs end-to-end (fetch/generate data → solve transport → train over `SEEDS`
@@ -72,7 +83,8 @@ NumPy multinomial logistic regression (`icasp2025.py`) vs. plain linear-regressi
   is no CLI. Figure filenames are f-strings embedding `K`, so bumping `K` writes a new file.
 - Plot color code is fixed: FedAVOT = blue, FedAvg(K) = orange, FedAvg(full) = red.
 - `imdb_wiki.csv` (~13 MB) and `ICASP_2026.zip` are committed data assets; the generated
-  `*.png`/`*.pdf` figures are committed outputs. `.venv/` is git-ignored despite being on disk.
+  `*.png`/`*.pdf` figures are committed outputs. `.venv/` is git-ignored and no longer on disk
+  (see Running for the winget-installed interpreter that replaced it).
 
 ## Open research question: "Why does FedAVOT fail to converge?" (diagnosis)
 
@@ -98,12 +110,19 @@ construction, because of how `p` and `r` are defined.**
 - One-liner for the paper: **FedAVOT corrects participation bias but cannot fix support
   collapse.** Convergence needs `supp(p) ⊆ reachable set`, quantitatively `p ≼ π`.
 
-Next steps agreed (not yet done):
-1. **Make the failure visible**: after `solve_T`, print IPFP row error
-   `np.max(np.abs(Y.sum(axis=1) - p))` and plot achieved weight `Σ_j q_j T[i,j]` vs `p_i`.
-2. **Feasible-regime sweep**: milder skew (`idx**0.5` / `idx**1`) and/or an availability floor
-   `r_i ≥ ε`; expected result is FedAVOT converges and beats FedAvg(K) — turns "it fails" into
-   a phase-boundary result.
+Next steps:
+1. **Make the failure visible** — ✅ DONE (`feasibility_diagnostic.py` → `fedavot_mechanism.png`/`.pdf`).
+   Two regimes side by side: scatter of achieved weight `mᵢ = Σⱼ qⱼ·T[i,j]` vs target `pᵢ` with the
+   ceiling `πᵢ` overlaid, plus IPFP row-error-vs-iteration. Feasible (α=0.2): all clients on the
+   diagonal, row_err→8e-11 in 56 iters, 0% `p`-mass undelivered. Infeasible (α=3.0): high-`p`
+   clients pinned at `πᵢ` far below the diagonal, row_err stalls at 7.7e-2, **78% of `p`-mass
+   undelivered = the loss floor**. This is the mechanism panel behind the phase boundary.
+2. **Feasible-regime sweep** — ✅ DONE (`phase_boundary_experiment.py` → `fedavot_phase_boundary.png`).
+   Sweeps skew α; shows FedAVOT tracks FedAvg(full) when feasible and stalls when not, plus a
+   phase-boundary panel (final loss vs % infeasible mass). NOTE: it labels α=0.5 the "feasible"
+   regime, but α=0.5 is only ~14% infeasible and IPFP does *not* fully converge there — the
+   mechanism figure uses α=0.2 (genuinely 0% infeasible) for the clean feasible baseline. Keep the
+   two α labels straight if both figures go in the paper.
 3. **Kill the estimation artifact**: 1M MC samples can't cover C(100,3)=161,700 subsets;
    reformulate IPFP on per-user participation marginals (100 numbers) instead of per-subset `q`.
 4. **Confound to fix before final numbers**: `X_full = rng.randn(...)` uses random-noise
