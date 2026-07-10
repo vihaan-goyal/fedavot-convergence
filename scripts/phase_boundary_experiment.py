@@ -157,5 +157,5 @@ for a, xi in zip(ALPHAS, infeas):
                 (xi, results[a]['ot']), textcoords="offset points", xytext=(4, 5), fontsize=8, color=BLUE)
 
 fig.suptitle("FedAVOT converges only when the p↔availability transport is feasible", fontsize=13, y=1.02)
-fig.savefig("fedavot_phase_boundary.png", dpi=140, bbox_inches="tight")
-print("saved fedavot_phase_boundary.png")
+fig.savefig("figures/fedavot_phase_boundary.png", dpi=140, bbox_inches="tight")
+print("saved figures/fedavot_phase_boundary.png")

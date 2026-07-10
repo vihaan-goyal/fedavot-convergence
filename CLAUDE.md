@@ -16,24 +16,26 @@ count toward the objective. Every experiment compares three aggregation rules:
 There is no build system, package, or test suite. The deliverables are the figures
 (`*.png` / `*.pdf`) produced by running the scripts/notebook.
 
+## Repo layout
+
+- `icasp_paper.ipynb` (root) — the main artifact.
+- `data/` — committed datasets: `imdb_wiki.csv`, `imdb_embeddings.npy`, `ICASP_2026.zip`.
+- `scripts/` — standalone experiment scripts (see below).
+- `figures/` — generated `.png`/`.pdf` outputs (committed).
+
+All paths inside the notebook and scripts are **repo-root-relative** (`data/...`,
+`figures/...`), so always run from the repo root.
+
 ## Running
 
-There is **no `.venv/` on disk** (it was git-ignored and is gone despite CLAUDE.md history
-referencing it). The working interpreter is a user-scoped CPython 3.13 installed via winget:
-
-```
-C:\Users\vihaa\AppData\Local\Programs\Python\Python313\python.exe
-```
-
-Installed packages: `numpy` (2.5) + `matplotlib` (3.11). **`scikit-learn` is NOT installed** —
-`icasp2025.py` and `lin_reg_last_one.py` import it (`make_regression`, `StandardScaler`,
-`mean_squared_error`) and will fail until you `pip install scikit-learn`. The two figure
-scripts that avoid sklearn (`phase_boundary_experiment.py`, `feasibility_diagnostic.py`) run
-as-is. Invoke with the full path above (it is not on `PATH`):
+Use the checked-in virtualenv (`.venv/`, git-ignored but on disk: Python 3.13, numpy 2.5,
+matplotlib 3.11, scikit-learn 1.9, pandas 3.0):
 
 ```powershell
-& "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe" phase_boundary_experiment.py  # phase-boundary figure
-& "$env:LOCALAPPDATA\Programs\Python\Python313\python.exe" feasibility_diagnostic.py     # mechanism figure
+.venv/Scripts/python.exe scripts/phase_boundary_experiment.py  # phase-boundary figure
+.venv/Scripts/python.exe scripts/feasibility_diagnostic.py     # mechanism figure
+.venv/Scripts/python.exe scripts/icasp2025.py                  # MNIST experiment
+.venv/Scripts/python.exe scripts/lin_reg_last_one.py           # synthetic linear regression
 ```
 
 Each script runs end-to-end (fetch/generate data → solve transport → train over `SEEDS`
@@ -80,11 +82,12 @@ NumPy multinomial logistic regression (`icasp2025.py`) vs. plain linear-regressi
 ## Conventions
 
 - All experiment knobs live in an ALL-CAPS config block at the top of each script; there
-  is no CLI. Figure filenames are f-strings embedding `K`, so bumping `K` writes a new file.
+  is no CLI. Figure filenames are f-strings embedding `K` (saved under `figures/`), so
+  bumping `K` writes a new file.
 - Plot color code is fixed: FedAVOT = blue, FedAvg(K) = orange, FedAvg(full) = red.
-- `imdb_wiki.csv` (~13 MB) and `ICASP_2026.zip` are committed data assets; the generated
-  `*.png`/`*.pdf` figures are committed outputs. `.venv/` is git-ignored and no longer on disk
-  (see Running for the winget-installed interpreter that replaced it).
+- `data/imdb_wiki.csv` (~13 MB) and `data/ICASP_2026.zip` are committed data assets; the
+  generated figures in `figures/` are committed outputs. `.venv/` is git-ignored despite
+  being on disk.
 
 ## Open research question: "Why does FedAVOT fail to converge?" (diagnosis)
 
@@ -111,13 +114,13 @@ construction, because of how `p` and `r` are defined.**
   collapse.** Convergence needs `supp(p) ⊆ reachable set`, quantitatively `p ≼ π`.
 
 Next steps:
-1. **Make the failure visible** — ✅ DONE (`feasibility_diagnostic.py` → `fedavot_mechanism.png`/`.pdf`).
+1. **Make the failure visible** — ✅ DONE (`scripts/feasibility_diagnostic.py` → `figures/fedavot_mechanism.png`/`.pdf`).
    Two regimes side by side: scatter of achieved weight `mᵢ = Σⱼ qⱼ·T[i,j]` vs target `pᵢ` with the
    ceiling `πᵢ` overlaid, plus IPFP row-error-vs-iteration. Feasible (α=0.2): all clients on the
    diagonal, row_err→8e-11 in 56 iters, 0% `p`-mass undelivered. Infeasible (α=3.0): high-`p`
    clients pinned at `πᵢ` far below the diagonal, row_err stalls at 7.7e-2, **78% of `p`-mass
    undelivered = the loss floor**. This is the mechanism panel behind the phase boundary.
-2. **Feasible-regime sweep** — ✅ DONE (`phase_boundary_experiment.py` → `fedavot_phase_boundary.png`).
+2. **Feasible-regime sweep** — ✅ DONE (`scripts/phase_boundary_experiment.py` → `figures/fedavot_phase_boundary.png`).
    Sweeps skew α; shows FedAVOT tracks FedAvg(full) when feasible and stalls when not, plus a
    phase-boundary panel (final loss vs % infeasible mass). NOTE: it labels α=0.5 the "feasible"
    regime, but α=0.5 is only ~14% infeasible and IPFP does *not* fully converge there — the
