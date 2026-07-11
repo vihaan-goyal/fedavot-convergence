@@ -1,4 +1,7 @@
-% !TEX root = preview.tex
+% Subfile of preview.tex (compile either directly; LiveLaTeX-friendly). When pasting
+% into the Overleaf, copy only what is BETWEEN \begin{document} and \end{document}.
+\documentclass[preview]{subfiles}
+\begin{document}
 % Experimental setup paragraphs — drafted 2026-07-11 for the ICASSP 2026 FedAVOT paper.
 % Notation follows the paper (arXiv:2509.14444): p = importance over users, q =
 % availability over subsets A_j, T = coupling (T 1_M = p, 1_N^T T = q),
@@ -64,3 +67,5 @@ extended feasible run) over $3$ seeds, sweeping
 $\alpha \in \{0.5, 1, 1.5, 2, 3\}$, which spans roughly $14\%$ to $87\%$
 infeasible importance mass; the feasibility-mechanism diagnostic contrasts
 $\alpha = 0.2$ (fully feasible) with $\alpha = 3.0$.
+
+\end{document}

@@ -1,12 +1,13 @@
-% Standalone LOCAL PREVIEW wrapper for the experiment fragments. Not part of the
-% Overleaf paper: compile THIS file (tectonic paper/preview.tex, or LiveLaTeX on it)
-% to preview experimental_setup.tex + experimental_results.tex with the real figures.
-% The fragments themselves stay preamble-free so they can be pasted into the Overleaf.
+% Standalone LOCAL PREVIEW root for the experiment fragments. Not part of the Overleaf
+% paper. Compile this for the combined preview, or compile either fragment directly
+% (they are subfiles and borrow this preamble). When pasting into the Overleaf, copy
+% only the fragment content BETWEEN \begin{document} and \end{document}.
 \documentclass[10pt,twocolumn]{article}
 \usepackage[margin=1.9cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage[colorlinks=true,linkcolor=blue]{hyperref}
+\usepackage{subfiles}
 \graphicspath{{../figures/}{figures/}}
 \begin{document}
 
@@ -15,7 +16,7 @@
 \date{Fragments as of 2026-07-11; formatting here is approximate, the Overleaf governs.}
 \maketitle
 
-\input{experimental_setup}
-\input{experimental_results}
+\subfile{experimental_setup}
+\subfile{experimental_results}
 
 \end{document}
