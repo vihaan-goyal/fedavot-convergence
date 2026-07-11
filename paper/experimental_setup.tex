@@ -1,86 +1,104 @@
-% Experimental setup section — drafted 2026-07-11 for the ICASP 2026 paper.
-% Numbers match the current repo state (icasp_paper.ipynb + scripts/).
+% Experimental setup section — drafted 2026-07-11 for the ICASSP 2026 FedAVOT paper.
+% Notation follows the paper (arXiv:2509.14444): p = importance distribution over users,
+% q = availability distribution over subsets A_j, T = transport coupling (T 1_M = p,
+% 1_N^T T = q), Y[i,j] = T[i,j]/q_j = aggregation weights, theta = model, eta_theta = LR,
+% H = local epochs, F(theta) = sum_i p_i f_i(theta).
+% NOTE: the repo code names the coupling Y and the weights T — the REVERSE of the paper.
+% This file uses the paper's convention.
 % Figure references left as \ref{...} placeholders — wire them to the Overleaf labels.
 
 \section{Experimental Setup}
 \label{sec:setup}
 
 \subsection{Protocol}
-All experiments compare three aggregation rules under an identical
-availability-driven participation process. There are $N$ clients with local
-objectives $F_i$, an \emph{importance} distribution $p$ defining the global
-objective $F(w)=\sum_{i=1}^{N} p_i F_i(w)$, and an \emph{availability}
-distribution $r$ governing participation. In every round the server draws a
-subset $S$ of $K$ clients without replacement with probabilities proportional
-to $r$ (implemented via the Gumbel top-$K$ trick). Each selected client runs
-$E=5$ epochs of full-batch gradient descent from the current global model,
-and the three rules aggregate the resulting local models $\theta_i$ in
-parallel from the same subset draw, so their loss curves are directly
+All experiments compare FedAVOT against FedAvg under identical
+availability-driven partial participation. There are $N$ users with local
+objectives $f_i$, an importance distribution $p$ defining the global
+objective $F(\theta)=\sum_{i=1}^{N} p_i f_i(\theta)$, and an availability
+distribution $q$ over the $M=\binom{N}{K}$ participating sets
+$\mathcal{A}_j \subseteq [N]$ of size $K$. In our experiments $q$ is induced
+by per-user availability weights $r \in \Delta^{N-1}$: in every round $t$
+the active set $S^t = \mathcal{A}_{j(t)}$ is drawn by sampling $K$ users
+without replacement with probabilities proportional to $r$ (via the Gumbel
+top-$K$ trick), so that $q_j = \Pr[S^t = \mathcal{A}_j]$; we estimate $q$
+from $10^6$ Monte Carlo draws of this sampler ($4\times 10^5$ in the
+synthetic experiments). Each active user runs $H=5$ local epochs of
+full-batch gradient descent with learning rate $\eta_\theta$ from the
+current global model, and the three aggregation rules are updated in
+parallel from the same draw $S^t$, so their loss curves are directly
 comparable:
 \begin{itemize}
-  \item \textbf{FedAVOT}: $w \leftarrow \sum_{i \in S} T_{ij}\,\theta_i$,
-        where $j$ indexes the sampled subset and $T$ is the masked
-        optimal-transport plan described below;
-  \item \textbf{FedAvg($K$)} (partial participation):
-        $w \leftarrow \sum_{i \in S} \tfrac{N}{K}\, p_i\, \theta_i$;
-  \item \textbf{FedAvg(full)} (full-participation reference):
-        $w \leftarrow \sum_{i=1}^{N} p_i\, \theta_i$ over all clients.
+  \item \textbf{FedAVOT}:
+        $\hat\theta^{t} \leftarrow \sum_{i \in S^t} Y[i, j(t)]\,
+        \theta_i^{t-1}$, with weights $Y[i,j] = T[i,j]/q_j$ obtained from
+        the masked transport plan $T$ described below;
+  \item \textbf{FedAvg ($K$ users)}:
+        $\hat\theta^{t} \leftarrow \sum_{i \in S^t} \tfrac{N}{K}\, p_i\,
+        \theta_i^{t-1}$;
+  \item \textbf{FedAvg (full participation)}:
+        $\hat\theta^{t} \leftarrow \sum_{i=1}^{N} p_i\, \theta_i^{t-1}$.
 \end{itemize}
+The plan $T \in \mathbb{R}^{N \times M}$ is fitted by Sinkhorn scaling to
+the marginal constraints $T \mathbf{1}_M = p$ and
+$\mathbf{1}_N^{\top} T = q$ with support restricted to the mask
+$\mathcal{E} = \{(i,j) : i \in \mathcal{A}_j\}$ (tolerance $10^{-12}$ on
+the row marginal, at most $10^3$ iterations for the real-data experiments;
+$10^{-10}$ and $3\times 10^3$ for the synthetic ones), and each column of
+$Y$ is renormalized to a convex weight vector over $S^t$.
 
-\textbf{Transport plan.} The columns of the transport problem are all
-$\binom{N}{K}$ subsets. The column marginal $q_j=\Pr[S_j \text{ drawn}]$ is
-estimated by Monte Carlo ($10^6$ draws for the real-data experiments,
-$4\times10^5$ for the synthetic ones). A joint coupling $Y$ with row marginal
-$p$ and column marginal $q$, masked to subset membership, is fitted by
-Sinkhorn-style iterative proportional fitting (IPFP; tolerance $10^{-12}$,
-at most $10^3$ iterations for real data; $10^{-10}$ and $3\times10^3$ for
-synthetic). Each column of $Y$ is then normalized to a convex weight vector,
-$T_{\cdot j} = Y_{\cdot j}/q_j$, giving the FedAVOT aggregation weights.
+\textbf{Feasibility.} Since $T$ is supported on $\mathcal{E}$, the row
+constraint $T\mathbf{1}_M = p$ is achievable only if
+\begin{equation}
+  p_i \;\le\; \pi_i \;:=\!\! \sum_{j:\, i \in \mathcal{A}_j}\!\! q_j
+  \qquad \text{for every user } i,
+  \label{eq:feasibility}
+\end{equation}
+where $\pi_i$ is the inclusion probability of user $i$ under $q$. We
+quantify the violation of \eqref{eq:feasibility} as the importance mass
+held by infeasible users, $\sum_{i:\, p_i > \pi_i} p_i$, and design the
+availability weights $r$ to place each experiment on a chosen side of this
+condition.
 
-\textbf{Feasibility.} Because $T$ can place weight on a client only through
-subsets containing it, the marginal constraint $\sum_j q_j T_{ij} = p_i$ is
-achievable only if $p_i \le \pi_i$ for every client, where
-$\pi_i=\Pr[i \in S]$ is the inclusion probability (estimated with
-$5\times10^5$ Monte Carlo draws). We quantify infeasibility as the importance
-mass held by violating clients, $\sum_{i:\,p_i>\pi_i} p_i$.
-
-\textbf{Metrics.} We report the $p$-weighted global mean-squared error
-$\sum_i p_i \,\mathrm{MSE}_i(w)$ per round; final values are averaged over
-the last $500$ rounds and reported as mean $\pm$ standard deviation across
-seeds.
+\textbf{Metrics.} We report the global objective $F(\theta^t)$ with
+$\ell$ the squared loss (i.e., the importance-weighted MSE) per round;
+final values are averaged over the last $500$ rounds and reported as
+mean $\pm$ standard deviation across random seeds.
 
 \subsection{Real data: IMDb-Wiki age regression}
-Clients are formed by grouping IMDb-Wiki images by celebrity identity; we
+Users are formed by grouping IMDb-Wiki images by celebrity identity; we
 take the first $N=100$ identities with at least $30$ training images and
-give each client $30$ images. Features are $128$-dimensional face embeddings
-extracted with a pretrained ResNet; the task is linear regression of
-(mean-centered) age on the embedding. Hyperparameters: $K=3$, $4000$ rounds
-($5000$ for the feasible-availability variant), learning rate $10^{-2}$,
-$E=5$ local epochs, $5$ seeds. Two availability regimes are evaluated
-against the same cubic importance $p_i \propto (N{+}1{-}i)^3$:
+assign each user $n_i = 30$ images. Features are $128$-dimensional face
+embeddings extracted with a pretrained ResNet, and the task is linear
+regression of (mean-centered) age on the embedding. Hyperparameters:
+$K=3$, $4000$ communication rounds ($5000$ for the feasible-availability
+variant), $\eta_\theta = 10^{-2}$, $H=5$, $5$ seeds. Two availability
+regimes are evaluated against the same cubic importance
+$p_i \propto (N{+}1{-}i)^3$:
 \begin{itemize}
   \item \emph{Mirrored (infeasible)}: $r_i \propto i^3$, the exact mirror
-        image of $p$, so the most important clients are almost never
-        available ($41/100$ clients violate $p_i \le \pi_i$, holding
-        $\approx 88\%$ of the importance mass);
-  \item \emph{Aligned (feasible)}: $r_i \propto N{+}1{-}i$, a linear skew in
-        the same direction as $p$. The transport is feasible for all clients
-        ($\max_i p_i/\pi_i = 0.66$) while the cubic-vs-linear shape mismatch
-        still requires nontrivial reweighting.
+        image of $p$, so the most important users are almost never
+        available; $41/100$ users violate \eqref{eq:feasibility}, holding
+        ${\approx}88\%$ of the importance mass;
+  \item \emph{Aligned (feasible)}: $r_i \propto N{+}1{-}i$, a linear skew
+        in the same direction as $p$; \eqref{eq:feasibility} holds for all
+        users ($\max_i p_i/\pi_i = 0.66$) while the cubic-vs-linear shape
+        mismatch still requires nontrivial reweighting.
 \end{itemize}
 
 \subsection{Controlled synthetic experiment}
 To isolate the effect of feasibility we use a linear-regression setting in
 which the skew of both distributions is a single knob $\alpha$:
 $p_i \propto (N{+}1{-}i)^{\alpha}$ and $r_i \propto i^{\alpha}$, with
-$N=50$, $K=3$. Client $i$ holds $30$ samples with standard-normal features
-in $d=40$ dimensions and labels generated by a client-specific linear model
-$w_i = \bar w + h\,\delta_i u + 0.3\,\varepsilon_i$ with label noise
-$\sigma=0.1$, where $\delta_i = 2i/(N{-}1)-1$ orders the drift along the
-availability axis and $h=3$ sets its strength — that is, the distribution
-shift is availability-correlated, so which clients participate determines
-which optimum is reached. Hyperparameters: learning rate $10^{-3}$, $E=5$,
-$1500$ rounds ($5000$ for the extended feasible run), $3$ seeds. We sweep
-$\alpha \in \{0.5, 1, 1.5, 2, 3\}$, spanning $\approx 14\%$ to
-$\approx 87\%$ infeasible importance mass; the feasibility-mechanism
-diagnostic contrasts $\alpha=0.2$ (fully feasible, $0\%$) with $\alpha=3.0$.
+$N=50$ and $K=3$. User $i$ holds $30$ samples with standard-normal
+features in $d=40$ dimensions, and labels are generated by a user-specific
+linear model $\theta_i^{\star} = \bar\theta + h\,\delta_i u +
+0.3\,\varepsilon_i$ with additive label noise of standard deviation
+$0.1$, where $\delta_i = 2i/(N{-}1)-1$ orders the drift along the
+availability axis and $h=3$ sets its strength; that is, the distribution
+shift is availability-correlated, so which users participate determines
+which optimum is reached. Hyperparameters: $\eta_\theta = 10^{-3}$, $H=5$,
+$1500$ communication rounds ($5000$ for the extended feasible run), $3$
+seeds. We sweep $\alpha \in \{0.5, 1, 1.5, 2, 3\}$, spanning
+${\approx}14\%$ to ${\approx}87\%$ infeasible importance mass; the
+feasibility-mechanism diagnostic contrasts $\alpha=0.2$ (fully feasible)
+with $\alpha=3.0$.
