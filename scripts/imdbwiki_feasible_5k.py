@@ -214,24 +214,35 @@ print(f"\nFINAL (tail-{TAIL} mean over {len(SEEDS)} seeds): "
 # ================================================================
 # Figure
 # ================================================================
-def plot_curve(ax, L, label, color):
+np.savez(f"data/imdbwiki_feasible_K{K}_{ROUNDS}rounds_curves.npz",
+         fedot=np.array(all_fedot), faK=np.array(all_faK), full=np.array(all_full),
+         p=p, r=r, pi=pi)   # raw curves saved so the plot can be tweaked without retraining
+
+def plot_curve(ax, L, label, color, band=True):
     mean = np.mean(L, axis=0); std = np.std(L, axis=0)
     x = np.arange(len(mean))
     ax.plot(x, mean, label=label, color=color)
-    ax.fill_between(x, mean-std, mean+std, color=color, alpha=0.15)
+    if band:
+        ax.fill_between(x, np.maximum(mean-std, 1e-3), mean+std, color=color, alpha=0.15)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 plot_curve(ax, all_fedot, f"FedAVOT (K={K})", "tab:blue")
-plot_curve(ax, all_faK, f"FedAvg (K={K})", "tab:orange")
+# FedAvg(K)'s fixed (N/K)*p_i debiasing assumes uniform participation; under
+# availability-aligned sampling it is mis-scaled (~3.7x per round) and diverges.
+# Draw its mean without a std band (the band smears on a log axis once it blows
+# up) and keep the y-limits tight around the converging curves, so the orange
+# curve simply exits through the top of the axes.
+plot_curve(ax, all_faK, f"FedAvg (K={K})", "tab:orange", band=False)
 plot_curve(ax, all_full, "FedAvg (full)", "tab:red")
 ax.set_yscale("log")
-# FedAvg(K)'s fixed (N/K)*p_i debiasing assumes uniform participation; under
-# availability-aligned sampling it is mis-scaled (~3.7x per round) and diverges,
-# so cap the axis and annotate rather than let it dwarf the converging curves.
-if np.mean(all_faK, axis=0).max() > 1e4:
-    ax.set_ylim(top=1e4)
+lo = 0.85 * min(np.mean(all_fedot, axis=0).min(), np.mean(all_full, axis=0).min())
+hi = 1.35 * max(np.mean(all_fedot, axis=0).max(), np.mean(all_full, axis=0).max())
+ax.set_ylim(lo, hi)
+if np.mean(all_faK, axis=0).max() > hi:
     ax.annotate("FedAvg(K) diverges (off scale):\nfixed N/K scaling assumes uniform participation",
-                xy=(0.35, 0.9), xycoords="axes fraction", fontsize=9, color="tab:orange")
+                xy=(0.02, 0.97), xycoords="axes fraction", va="top",
+                fontsize=9, color="tab:orange",
+                arrowprops=None)
 ax.set_xlabel("Round"); ax.set_ylabel("Global p-weighted MSE (log)")
 ax.set_title(f"IMDb-Wiki (real embeddings), FEASIBLE availability (aligned linear r), "
              f"{ROUNDS} rounds, {len(SEEDS)} seeds\n"
