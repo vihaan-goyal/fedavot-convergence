@@ -7,3 +7,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# local LaTeX preview artifact
+paper/preview.pdf

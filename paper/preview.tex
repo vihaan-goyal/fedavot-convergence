@@ -1,0 +1,21 @@
+% Standalone LOCAL PREVIEW wrapper for the experiment fragments. Not part of the
+% Overleaf paper: compile THIS file (tectonic paper/preview.tex, or LiveLaTeX on it)
+% to preview experimental_setup.tex + experimental_results.tex with the real figures.
+% The fragments themselves stay preamble-free so they can be pasted into the Overleaf.
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=1.9cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,linkcolor=blue]{hyperref}
+\graphicspath{{../figures/}{figures/}}
+\begin{document}
+
+\title{FedAVOT experiments: setup + results (local preview)}
+\author{}
+\date{Fragments as of 2026-07-11; formatting here is approximate, the Overleaf governs.}
+\maketitle
+
+\input{experimental_setup}
+\input{experimental_results}
+
+\end{document}
