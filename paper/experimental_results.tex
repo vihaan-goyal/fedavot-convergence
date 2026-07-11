@@ -1,0 +1,94 @@
+% Results paragraphs + figure blocks — drafted 2026-07-11, companion to
+% experimental_setup.tex (same notation; prose \paragraph style).
+% Upload these PDFs from figures/ to the Overleaf:
+%   imdbwiki_infeasible_K3_4000rounds.pdf   imdbwiki_feasible_K3_5000rounds.pdf
+%   fedavot_phase_boundary.pdf              fedavot_mechanism.pdf
+% Note: the PDFs currently carry their in-image titles (working style); if the
+% camera-ready should be title-free (captions only), the scripts can regenerate
+% them without titles in one line each.
+
+% ---------------------------------------------------------------- figures
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{imdbwiki_infeasible_K3_4000rounds.pdf}
+  \caption{IMDb-Wiki age regression under the mirrored (infeasible)
+  availability regime ($r_i \propto i^3$ vs.\ $p_i \propto (N{+}1{-}i)^3$;
+  $5$ seeds, shaded $\pm 1$ std). FedAVOT improves over partial-participation
+  FedAvg but both plateau far above full participation: $88\%$ of the
+  importance mass rests on users whose inclusion probability is below their
+  importance, which no aggregation rule can recover.}
+  \label{fig:imdb-infeasible}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{imdbwiki_feasible_K3_5000rounds.pdf}
+  \caption{IMDb-Wiki under the aligned (feasible) availability regime
+  ($r_i \propto N{+}1{-}i$), $5000$ rounds. With $p_i \le \pi_i$ satisfied
+  for all users, FedAVOT converges to the full-participation objective value
+  and remains stable; FedAvg with $K$ users diverges, as its fixed $N/K$
+  debiasing presumes uniform participation.}
+  \label{fig:imdb-feasible}
+\end{figure}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fedavot_phase_boundary.pdf}
+  \caption{Synthetic feasibility sweep. Left/center: loss trajectories in a
+  feasible ($\alpha=0.5$) and an infeasible ($\alpha=3$) regime. Right:
+  final loss versus the fraction of importance mass violating
+  $p_i \le \pi_i$; FedAVOT's degradation relative to full participation
+  (annotated ratios) grows with the infeasible mass.}
+  \label{fig:phase}
+\end{figure*}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fedavot_mechanism.pdf}
+  \caption{Mechanism of the failure. In the feasible regime ($\alpha=0.2$)
+  Sinkhorn scaling matches the importance marginal to machine precision and
+  every user receives its target weight; in the infeasible regime
+  ($\alpha=3$) the row-marginal error stalls and high-importance users are
+  pinned at their inclusion-probability ceiling $\pi_i$, leaving $78\%$ of
+  the importance mass undeliverable.}
+  \label{fig:mechanism}
+\end{figure}
+
+% ---------------------------------------------------------------- results prose
+\paragraph{Results on IMDb-Wiki}
+The two availability regimes bracket the feasibility condition and produce
+qualitatively different outcomes (Figs.~\ref{fig:imdb-infeasible}
+and~\ref{fig:imdb-feasible}). In the mirrored regime the transport problem
+is infeasible for $41$ of $100$ users holding ${\approx}88\%$ of the
+importance mass, and Sinkhorn scaling cannot match the importance marginal
+(row-marginal error ${\approx}4\times10^{-2}$ at termination). FedAVOT
+still improves over partial-participation FedAvg — final
+importance-weighted MSE $116.40 \pm 0.53$ versus $129.33 \pm 0.04$ — but
+both plateau far above the full-participation reference ($83.07$): the mass
+assigned to users who are effectively never sampled acts as an
+irreducible floor, independent of the aggregation rule. In the aligned
+regime the same importance distribution becomes fully feasible, Sinkhorn
+converges (row-marginal error ${\approx}5\times10^{-9}$), and FedAVOT
+attains $88.82 \pm 0.19$, approaching the full-participation value and
+remaining stable through round $5000$; the residual offset is consistent
+with the sampling variance of $K=3$ users per round at a fixed step size.
+Notably, FedAvg with $K$ users \emph{diverges} in this regime: its fixed
+$N/K$ debiasing presumes uniform participation, and under
+availability-aligned sampling the realized aggregation weights exceed unity
+in expectation, exponentially amplifying the iterates. FedAVOT is immune by
+construction, since each column of $Y$ is a convex combination.
+
+\paragraph{Results of the Synthetic Sweep}
+The controlled study (Fig.~\ref{fig:phase}) confirms that feasibility — not
+the aggregation rule — governs convergence. When the transport is feasible
+FedAVOT tracks full participation (final-loss ratio $1.01$ at $\alpha=0.5$
+over $5000$ rounds), while its final loss degrades monotonically as the
+infeasible importance mass grows, up to $8.4\times$ the full-participation
+loss at $\alpha=3$ (${\approx}87\%$ infeasible mass).
+Fig.~\ref{fig:mechanism} exposes the mechanism: in the feasible regime the
+row-marginal error decays to ${\sim}10^{-10}$ within $56$ Sinkhorn
+iterations and the achieved user weights sit on the diagonal against their
+targets, whereas in the infeasible regime the error stalls at
+${\sim}8\times10^{-2}$ and every violating user is pinned at its inclusion
+probability $\pi_i < p_i$ — the undeliverable $78\%$ of the importance
+mass accounts quantitatively for the loss floor observed in training.
