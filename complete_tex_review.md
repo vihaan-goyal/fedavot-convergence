@@ -183,21 +183,24 @@ never names it.
 
 ## Mechanical fixes (can do ourselves in the clone, then push with Vihaan's OK)
 
-- [ ] Title is truncated: ends with a colon + \vspace{-8pt}. Intended subtitle is
-  probably the Overleaf project name ("...to Mitigate Distribution Shift").
-- [ ] Leftover IEEEtran boilerplate: \markboth line ("Shell et al.: Bare Demo...").
-- [ ] Duplicate references: Villani book cited as villani2008optimal AND
-  villani2009optimal; Liero et al. as liero2018optimal AND liero2018hk. Each appears
-  twice in the reference list. Bib also has literal same-key duplicates
-  (villani2003topics, li2020federated). (Benamou pair FIXED 7/15 with Problem 3: the
-  case-mismatched cite now points at benamou2015iterative, so only one entry prints.)
-- [ ] FedAVOT acronym is never expanded anywhere.
-- [ ] Mangled sentence in results prose: "...improves over partial-participation
-  FedAvg. Final importance-weighted MSE 116.40..." (period should be a colon).
-- [ ] 78% vs 87% at alpha=3: mechanism caption says 78% of importance mass
-  undeliverable, sweep prose says ~87% infeasible mass. Both correct (undeliverable
-  excess sum(p_i - pi_i) vs total mass held by violating users) but reads as a
-  discrepancy; add one distinguishing clause.
+ALL DONE + PUSHED 7/15 (Overleaf commit 192db23):
+
+- [x] Title completed with the project subtitle: "Optimally Transport Weighted
+  Stochastic Gradient Descent to Mitigate Distribution Shift" (Herlock may want to
+  tweak the wording; flagged as his to review).
+- [x] IEEEtran \markboth boilerplate removed.
+- [x] Duplicate references: cites unified to villani2009optimal (correct year for
+  Old and New) and liero2018optimal; refrences.bib deduped by a script (20 same-key
+  duplicate entries dropped, incl. peyre2019computational x5, cuturi2013sinkhorn x3;
+  the uncited benamou2015Iterative capital-I entry removed). bibtex now runs with
+  ZERO errors (was 19-20).
+- [x] FedAVOT expanded at first use in the intro: "Federated AVerage with Optimal
+  Transport" (official expansion from the arXiv:2509.14444 abstract, which itself
+  has the typo "Fereated"; not reproduced).
+- [x] Mangled results sentence fixed (period -> colon before the MSE numbers).
+- [x] 78% vs 87%: mechanism caption now says "(the excess sum_i (p_i - pi_i)_+; the
+  violating users themselves hold ~87% of the total importance mass, the figure
+  quoted for the sweep)".
 
 ## Status notes
 
