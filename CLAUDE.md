@@ -80,11 +80,25 @@ Diagnosis + paper experiments (2026-07):
   availability ALIGNED with importance (linear skew) → 0/100 infeasible, IPFP row_err 5e-9.
   Quotable: FedAVOT 88.82 ± 0.19 vs full 83.07. **FedAvg(K) diverges here** (its fixed N/K
   scaling assumes uniform participation; script freezes it at a 1e12 cap).
+- `infeasible_bias_check.py` — no training; p_hat from stalled IPFP + closed-form
+  weighted-LS optima on IMDb-Wiki → validates Sec 3.3's bias bound (see finding 6).
+- `regularized_transport_sweep.py` → `figures/imdbwiki_regularized_*` — lambda-penalized
+  (unbalanced) masked Sinkhorn sweep on the mirrored regime, kappa = 0..1 trained in
+  parallel per draw; endpoints = uniform averaging / plain IPFP (see finding 6).
 - `imdbwiki_cvar_*.py` — the FED-CVaR-AVG study (arXiv:2309.14176, Theodoropoulos/
   Nikolakakis/Kalogerias; code: github.com/PeriklisTheodoropoulos/risk-aware-FL):
   `_fedavot` (infeasible, alpha=0.3), `_feasible` (aligned), `_grid` ((alpha,gamma) grid +
   hinge-tilted-aggregation variant), `_a09_*` (near-risk-neutral bookend),
   `cvar_alpha_trend.py` (summary figure from saved npz).
+- `adult_fairness.py` → `figures/adult_race_K3_2000rounds.*` — Adult (Census Income)
+  fairness experiment for the OT-SGD paper (fills the paper's promised-but-missing Adult
+  results; data cached at `data/adult.csv`). Group-homogeneous clients by race (users per
+  group ∝ prevalence: 85/10/3/1/1), group-uniform importance p (1/5 per race), binary
+  logistic regression. Both regimes in one script/figure: PREVALENCE (uniform r → 5/100
+  infeasible users, 60% p-mass, IPFP stalls 1.7e-1): FedAVOT 0.2278 ± 0.0018,
+  FedAvg(K) 0.6720 ± 0.0886, full 0.2068; ALIGNED (r ∝ p, feasible, 2.9e-8): FedAVOT
+  0.2076 ≈ full 0.2068, **FedAvg(K) diverges**. Design is new (Amtej's Oct-2025 Adult
+  pipeline was never committed) — needs Herlock's sign-off before entering the paper.
 
 ## Paper text (`paper/`)
 
@@ -152,11 +166,25 @@ full experimental story:
    improve monotonically. The real finding: **plain uniform averaging over the drawn
    subset beats FedAVOT in the infeasible regime** (108.5 vs 116.4 overall; 112.3 vs
    123.3 on infeasible users) — the gains earlier attributed to CVaR were from uniform
-   aggregation. In the feasible regime FedAVOT wins (89.1 vs 94+). Open question for the
-   paper: why uniform aggregation is so strong under infeasibility (hypothesis: distorted
-   non-converged transport weights add variance without fixing the marginal).
+   aggregation. In the feasible regime FedAVOT wins (89.1 vs 94+). The "why" is now
+   RESOLVED quantitatively (see finding 6).
 5. Residual ~7% FedAVOT-to-full gap in the feasible regime is consistent with K=3
    sampling variance at fixed LR (unverified: LR decay should shrink it).
+6. **Theory-experiment bridge for the infeasible case (2026-07-15, Problem 2 of the
+   complete.tex review)**: the stalled IPFP delivers exactly the surrogate marginal
+   p_hat = Y·1 (columns match q, so expected per-round weight of user i is p_hat_i);
+   in the mirrored IMDb-Wiki regime p_hat ≈ min(p, pi) renormalized, ||p - p_hat||_1 =
+   1.58. Linear regression → closed-form optima: F_p optimum 82.9 (matches measured
+   full 83.07), surrogate floor F_p(theta_phat*) = 105.9, so the marginal shift alone
+   explains 22.9 of the 33.3 measured gap (`scripts/infeasible_bias_check.py`).
+   Running Sec 3.3's lambda-penalized transport (unbalanced Sinkhorn; kappa =
+   lambda/(lambda+1) row-power update; kappa=0 IS uniform averaging, kappa=1 IS plain
+   IPFP) shows **lambda tunes variance, not bias, under severe infeasibility**: floors
+   flat at 104-106 for all lambda, measured loss rises 108.3 → 116.5 with lambda
+   (`scripts/regularized_transport_sweep.py`). This resolves finding 4's open question:
+   uniform wins because same floor + minimal weight variance. Footguns: the damped form
+   Y *= (p/rowsum)^kappa has a kappa-independent fixed point (wrong problem); the u-v
+   scaling form overflows at kappa=1 (use dense bounded-Y IPFP there).
 
 Known estimation artifact (pre-existing): 1M MC samples can't cover C(100,3)=161,700
 subsets; a cleaner formulation would run IPFP on per-user participation marginals.
