@@ -130,7 +130,15 @@ later. Also the constant B in the bias bound is never defined.)
 
 ## Problem 3: The obvious rival baseline is never addressed (Horvitz-Thompson)
 
-- [ ] Add one related-work paragraph naming the HT tradeoff
+- [x] DONE + PUSHED 7/15 (Overleaf commit 5ead17b): "Inverse-propensity
+  (Horvitz--Thompson) reweighting" paragraph added to Related work (after the FL
+  paragraph), citing Horvitz & Thompson (1952) (new bib entry) and cross-referencing
+  the aligned-regime FedAvg(K) divergence (new \label{sec:experiments}) and Sec 3.3's
+  bias bound. Framing: unbiased whenever pi_i > 0 but weights exceed 1 exactly when
+  p_i > pi_i (variance/divergence); FedAVOT's convex weights trade that for bounded
+  bias; the comparison is stability vs bias, not unbiasedness alone. Also fixed the
+  pre-existing benamou2015Iterative case-mismatched cite (rendered as [?]) from the
+  mechanical list.
 
 The most likely reviewer question: "Why optimal transport at all? Weight each
 participating client by p_i / pi_i (importance over inclusion probability). Textbook,
@@ -179,10 +187,10 @@ never names it.
   probably the Overleaf project name ("...to Mitigate Distribution Shift").
 - [ ] Leftover IEEEtran boilerplate: \markboth line ("Shell et al.: Bare Demo...").
 - [ ] Duplicate references: Villani book cited as villani2008optimal AND
-  villani2009optimal; Benamou et al. as benamou2015iterative AND benamou2015Iterative;
-  Liero et al. as liero2018optimal AND liero2018hk. Each appears twice in the
-  reference list. Bib also has literal same-key duplicates (villani2003topics,
-  li2020federated).
+  villani2009optimal; Liero et al. as liero2018optimal AND liero2018hk. Each appears
+  twice in the reference list. Bib also has literal same-key duplicates
+  (villani2003topics, li2020federated). (Benamou pair FIXED 7/15 with Problem 3: the
+  case-mismatched cite now points at benamou2015iterative, so only one entry prints.)
 - [ ] FedAVOT acronym is never expanded anywhere.
 - [ ] Mangled sentence in results prose: "...improves over partial-participation
   FedAvg. Final importance-weighted MSE 116.40..." (period should be a colon).
