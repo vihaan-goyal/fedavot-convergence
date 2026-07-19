@@ -166,19 +166,30 @@ never names it.
   of the Ford-Fulkerson supply-demand theorem (Hall's marriage theorem = bipartite
   ancestor). Both previously-uncited bib entries are now used. villani/peyre still
   cited elsewhere (OT context), no orphans. Compiles clean.
-- [ ] 5. Local epochs: the analysis covers single weighted gradient steps; experiments
-  do H=5 local epochs then parameter averaging. Standard FL slack; needs one sentence.
-  Similarly the theory treats q as given while experiments estimate it from 1e6 MC
-  draws; half a sentence in Sec 2.
-- [ ] 6. Feasibility condition cross-ref: the experiments protocol states "feasible
-  precisely when p_i <= pi_i". Should cite Theorem 1 and say the general condition
-  "reduces to" this in our setting (singleton case).
+- [x] 5. Local epochs + estimated q — DONE, PUSHED 7/18 (Overleaf commit 961b290).
+  (a) Protocol paragraph: one sentence after the H=5 line — Theorem thm:main analyzes
+  a single weighted step; H>1 local epochs are the standard FedAvg deviation (cite
+  mcmahan2017communication) and affect all compared rules identically (same local
+  updates). (b) Sec 2, after q's introduction: q treated as known; estimated offline
+  by MC simulation of the batch sampler when not in closed form (\ref to experiments).
+- [x] 6. Feasibility cross-ref — DONE, PUSHED 7/18 (961b290). NOTE: the old sentence
+  ("feasible precisely when p_i <= pi_i") claimed an equivalence that is FALSE in
+  general — the singleton case of Theorem 1 is only necessary (counterexample: N=4,
+  K=2, uniform q, p=(1/2,1/2,0,0) satisfies all singletons but violates I={1,2}).
+  Rewrote honestly: singletons I={i} of eq (feasibility) give the necessary per-user
+  ceiling, it is the operative condition in our designs, and IPFP converging to
+  machine precision in every feasible regime certifies the remaining inequalities.
 
 ## Clarity issues
 
-- [ ] Section 2 is a 3-page wall of prose: the \subsection and \paragraph structure
-  was stripped when main.tex was flattened into complete.tex, leaving ~15 bare
-  "{Heading.}" braces that render as plain inline text. Restore as \paragraph{...}.
+- [x] Bare-brace headings — DONE, PUSHED 7/18 (961b290): all 25 restored (23
+  \paragraph + 2 \subsubsection in Sec 3.3, matching main.tex's original structure).
+  ROOT CAUSE FOUND: spconf.sty overrides \@sect with no run-in branch, so the
+  standard \paragraph dies with "undefined \@svsechd" — that is WHY the headings
+  were flattened to bare braces in the first place. Fixed via a preamble
+  \renewcommand{\paragraph}: plain unnumbered run-in bold heading (\par\medskip
+  \noindent\bf + 0.5em space), spconf-safe. Verified in the PDF: headings render,
+  subsubsections numbered 3.3.1/3.3.2, no [?] cites. Now 10 pages (was 9).
 - [ ] Section 3.3 states its one idea (p_hat is the closest feasible target, bias is
   controllable) four times: Interpretation / Geometric interpretation / Practical
   implications / Summary. Could lose a third of its length.
