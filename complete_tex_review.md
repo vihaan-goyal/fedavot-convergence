@@ -154,11 +154,18 @@ never names it.
 
 ## Smaller credibility points
 
-- [ ] 4. Theorem 1 ownership: the abstract claims the feasibility condition as a
-  contribution ("we give a max-flow/min-cut style condition"), but the theorem is
-  cited to Villani / Peyre-Cuturi as known. Hall (1935) and Ford-Fulkerson are in the
-  bib and never cited, and this result descends from them. Pick one: adaptation
-  (cite properly, soften the claim) or contribution (prove it).
+- [x] 4. Theorem 1 ownership — RESOLVED as "adaptation" and PUSHED 7/18 (Overleaf
+  commit f122c16), per Herlock's 7/16 confirmation ("Yes it is referenced in other
+  ones"). Four edits: (a) abstract now says "a classical max-flow/min-cut feasibility
+  condition, specialized to our masked setting, characterizes exactly when it does";
+  (b) intro cites \cite{fordfulkerson1962flows,hall1935representatives} at the
+  characterization claim; (c) contribution 2 opens "Specializing a classical
+  flow-feasibility condition to the batch-sampling mask, we delineate..."; (d) the
+  theorem's cite changed from villani/peyre (wrong source for a combinatorial flow
+  result) to Ford-Fulkerson + Hall, with a lead-in sentence naming it a specialization
+  of the Ford-Fulkerson supply-demand theorem (Hall's marriage theorem = bipartite
+  ancestor). Both previously-uncited bib entries are now used. villani/peyre still
+  cited elsewhere (OT context), no orphans. Compiles clean.
 - [ ] 5. Local epochs: the analysis covers single weighted gradient steps; experiments
   do H=5 local epochs then parameter averaging. Standard FL slack; needs one sentence.
   Similarly the theory treats q as given while experiments estimate it from 1e6 MC
