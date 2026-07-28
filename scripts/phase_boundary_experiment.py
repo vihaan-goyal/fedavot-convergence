@@ -134,9 +134,10 @@ gs = gridspec.GridSpec(1, 3, wspace=0.28)
 def plot_curves(ax, R, title):
     x = np.arange(len(R['curves']['ot']))*EVAL_EVERY
     ax.plot(x, R['curves']['ot'], color=BLUE, lw=2, label="FedAVOT")
-    ax.plot(x, R['curves']['f'],  color=RED,  lw=2, label="FedAvg (full)")
-    ax.plot(x, R['curves']['k'],  color=ORANGE, lw=1.3, alpha=0.8, label="FedAvg (K)")
-    ax.set_yscale("log"); ax.set_xlabel("Round"); ax.set_ylabel("Global p-weighted MSE (log)")
+    ax.plot(x, R['curves']['f'],  color=RED,  lw=2, label="Full coverage")
+    ax.plot(x, R['curves']['k'],  color=ORANGE, lw=1.3, alpha=0.8, label="Fixed multiplier $m/K$")
+    ax.set_yscale("log"); ax.set_xlabel("Iteration")
+    ax.set_ylabel(r"Importance-weighted MSE $F_p(\theta)$ (log)")
     ax.set_title(title); ax.grid(alpha=0.3, which="both", ls="--"); ax.legend(fontsize=9)
 
 plot_curves(fig.add_subplot(gs[0]), results[FEASIBLE_A],
@@ -147,16 +148,17 @@ plot_curves(fig.add_subplot(gs[1]), results[INFEASIBLE_A],
 ax = fig.add_subplot(gs[2])
 infeas = [results[a]['infeas']*100 for a in ALPHAS]
 ax.plot(infeas, [results[a]['ot'] for a in ALPHAS], 'o-', color=BLUE, lw=2, label="FedAVOT")
-ax.plot(infeas, [results[a]['f']  for a in ALPHAS], 's-', color=RED,  lw=2, label="FedAvg (full)")
+ax.plot(infeas, [results[a]['f']  for a in ALPHAS], 's-', color=RED,  lw=2, label="Full coverage")
 ax.set_yscale("log"); ax.set_xlabel("% of importance mass that is infeasible ($p_i>\\pi_i$)")
-ax.set_ylabel("Final global p-weighted MSE (log)")
+ax.set_ylabel("Final importance-weighted MSE (log)")
 ax.set_title("Phase boundary\nfinal loss vs transport infeasibility")
 ax.grid(alpha=0.3, which="both", ls="--"); ax.legend(fontsize=9)
 for a, xi in zip(ALPHAS, infeas):
     ax.annotate(f"{results[a]['ot']/results[a]['f']:.1f}×",
                 (xi, results[a]['ot']), textcoords="offset points", xytext=(4, 5), fontsize=8, color=BLUE)
 
-fig.suptitle("FedAVOT converges only when the p↔availability transport is feasible", fontsize=13, y=1.02)
+fig.suptitle("FedAVOT converges only when the importance-to-availability transport is feasible",
+             fontsize=13, y=1.02)
 fig.savefig("figures/fedavot_phase_boundary.png", dpi=140, bbox_inches="tight")
 fig.savefig("figures/fedavot_phase_boundary.pdf", bbox_inches="tight")
 print("saved figures/fedavot_phase_boundary.png")

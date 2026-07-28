@@ -10,3 +10,5 @@ __pycache__/
 
 # local LaTeX preview artifact
 paper/*.pdf
+
+data/mnist_cache.npz

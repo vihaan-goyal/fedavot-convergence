@@ -90,6 +90,33 @@ Diagnosis + paper experiments (2026-07):
   `_fedavot` (infeasible, alpha=0.3), `_feasible` (aligned), `_grid` ((alpha,gamma) grid +
   hinge-tilted-aggregation variant), `_a09_*` (near-risk-neutral bookend),
   `cvar_alpha_trend.py` (summary figure from saved npz).
+- `ram_feasibility_diagnostic.py` → `figures/ram_feasibility_diagnostic.*` — transport
+  geometry of the FED-CVaR-AVG paper's own setting (arXiv:2309.14176 = "Federated
+  Learning Under Restricted User Availability"; their `script for Mnist.py`). N=30 users,
+  3 rarest hold digits 8,9 exclusively, RAM seed 2517 chosen so the availability tail
+  (0.0061/0.0077/0.0107) matches their Table 1. Sweeps `users_per_round` R. Headline:
+  **their published R=1 makes FedAVOT vacuous** (singleton batch → normalized weight ≡ 1
+  → FedAVOT *is* FedAvg-relay), 16/30 users infeasible against a uniform target holding
+  53% of its mass; feasibility (`p_i <= pi_i`) first holds at **R=6**, where IPFP
+  converges to 1e-10. Also introduces the **enumeration-free transport solver** (below).
+- `ram_cvar_vs_fedavot.py` → `figures/ram_cvar_vs_fedavot_1500rounds.*` — the training
+  experiment in that setting: MNIST (64 PCA dims + bias, multinomial logistic), 30 users,
+  their data split, R in {1,3,6} × (alpha,gamma) in {(1,1),(0.3,0.3),(0.1,0.1)}, 1500
+  rounds, 3 seeds, identical RAM draws. Five rules: FedAvg-relay (their baseline),
+  FED-CVaR-AVG (their Alg 1), FedAVOT, FedAVOT+CVaR, and Horvitz--Thompson relay.
+  Metrics: overall test accuracy, accuracy on the rare users' digits, p-weighted train
+  loss. `--smoke` shrinks it to a 1-minute shape check.
+- `prep_mnist_cache.py` — one-off, fetches MNIST to `data/mnist_cache.npz` (git-ignored).
+- `replot_paper_figures.py` — regenerates the three curve-based paper figures (IMDb-Wiki
+  infeasible/feasible, Adult) from the saved `data/*_curves.npz` with the **de-federated
+  vocabulary** (2026-07-27, Herlock's request): users/clients → critical groups, round →
+  iteration, FedAvg(K) → fixed multiplier `m/K`, FedAvg(full) → full coverage, FedAVOT
+  unchanged. No retraining, so the numbers quoted in the tex stay exactly valid.
+  `phase_boundary_experiment.py` and `feasibility_diagnostic.py` have no saved curves;
+  their labels were edited in place and the scripts re-run (both reproduce their quoted
+  numbers exactly). **If you touch a paper figure, check the rendered PDF text, not just
+  the prose** — the FL vocabulary was baked into the images and survived a full prose
+  reframe unnoticed.
 - `adult_fairness.py` → `figures/adult_race_K3_2000rounds.*` — Adult (Census Income)
   fairness experiment for the OT-SGD paper (fills the paper's promised-but-missing Adult
   results; data cached at `data/adult.csv`). Group-homogeneous clients by race (users per
@@ -186,5 +213,45 @@ full experimental story:
    Y *= (p/rowsum)^kappa has a kappa-independent fixed point (wrong problem); the u-v
    scaling form overflows at kappa=1 (use dense bounded-Y IPFP there).
 
-Known estimation artifact (pre-existing): 1M MC samples can't cover C(100,3)=161,700
-subsets; a cleaner formulation would run IPFP on per-user participation marginals.
+7. **Why our CVaR results looked "odd" to Herlock — RESOLVED (2026-07-27)**. Herlock
+   asked (7/27) to test CVaR vs FedAVOT in the setting of "Restricted user availability
+   in Federated Learning" — which is the SAME paper as the CVaR one (arXiv:2309.14176,
+   real title "Federated Learning Under Restricted User Availability"). Three results:
+   (a) **Their published setting makes the comparison degenerate.** Their RAM relays
+   `users_per_round = 1`: the server broadcasts the single selected user's (theta, t) as
+   the new global model, so there is no aggregation step. A singleton batch has one
+   transport weight and it is forced to 1, so **FedAVOT is identically FedAvg-relay**
+   there (confirmed: identical to 4 decimals in every seed). Their setting is also
+   severely infeasible for a uniform target — 16/30 users, 53% of the target mass;
+   feasibility first holds at R=6 (`ram_feasibility_diagnostic.py`).
+   (b) **The two schemes act on different axes**: CVaR reweights ACROSS rounds
+   (step-size amplification), FedAVOT WITHIN a round (aggregation weights). Sweeping R
+   swaps them. MNIST, their split, 1500 rounds, 3 seeds, rare-digit test accuracy:
+   R=1 FedAvg 0.613 = FedAVOT 0.613, FED-CVaR-AVG 0.779 (**their result reproduces**);
+   R=6 FedAVOT 0.788 > FED-CVaR-AVG 0.775, and FedAVOT+CVaR is best at 0.851 vs full
+   participation 0.795.
+   (c) **The apparent contradiction with finding 4 is a metric difference, not a
+   disagreement.** On the p-weighted objective FedAVOT is built to minimise, adding CVaR
+   always costs (R=6: FedAVOT 0.2670 vs +CVaR 0.2750/0.2789; full 0.2645); on the
+   rare-group accuracy their paper reports, adding CVaR always helps. Both papers are
+   right about different objectives (`figures/ram_metric_disagreement_1500rounds.*`).
+   Caveat for the paper's HT paragraph: the Horvitz--Thompson relay did NOT diverge here
+   and was the best method at R=1 (rare 0.800) — its weights only reach 5.5x. Note
+   `p_i <= pi_i` is exactly the condition `p_i/pi_i <= 1`, i.e. **feasibility is the same
+   condition as HT weights being bounded** (at R=1 the 16 users with weight > 1 are
+   exactly the 16 infeasible ones; at R=6 all weights are <= 0.83). So "unbounded" should
+   not be written as "diverges" — the severity depends on the ratio and on whether the
+   loss is bounded (CE here vs unbounded MSE in the IMDb-Wiki runs).
+
+Known estimation artifact (pre-existing, now FIXED in the RAM scripts): 1M MC samples
+can't cover C(100,3)=161,700 subsets. `scripts/ram_feasibility_diagnostic.py` replaces
+enumeration entirely: masked IPFP converges to a product form `Y[i,S] = u_i v_S 1{i in S}`,
+so column-normalizing gives `w_i(S) = u_i / sum_{j in S} u_j` and the whole plan is fixed
+by the N-vector `u` solving `E_S[w_i(S) 1{i in S}] = p_i`. Fit it by multiplicative
+updates over Monte-Carlo RAM draws — no C(N,K) matrix, any K. Validated to 4e-10 against
+the enumerated masked IPFP on a feasible instance (`--validate`). **Footgun:** run it in
+LOG space (`log_u += log p - log p_hat`, recentred). Under infeasibility `log u` diverges
+for the starved users — that divergence IS the stall — so any absolute floor on `u`
+silently flattens the plan and wrecks the fit (an earlier `clip(u, 1e-30)` turned a
+correct `||p-p_hat||_1 = 0.03` into 0.25). Compare on a FEASIBLE instance only: when
+infeasible neither iteration has a fixed point and the two stalls need not coincide.

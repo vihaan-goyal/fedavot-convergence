@@ -90,7 +90,7 @@ def analyze(alpha):
 print("solving feasible regime...");   F = analyze(FEASIBLE_A)
 print("solving infeasible regime..."); I = analyze(INFEASIBLE_A)
 for tag, R in [("feasible", F), ("infeasible", I)]:
-    print(f"[{tag}] alpha={R['alpha']}  infeasible clients={int(R['infeasible'].sum())}/{NUM_USERS}  "
+    print(f"[{tag}] alpha={R['alpha']}  infeasible groups={int(R['infeasible'].sum())}/{NUM_USERS}  "
           f"infeasible p-mass={R['infeas_mass']*100:.0f}%  undelivered p-mass={R['missing_mass']*100:.1f}%  "
           f"IPFP iters={R['iters']}  final row_err={R['final_row_err']:.2e}")
 
@@ -108,8 +108,8 @@ def scatter_panel(ax, R, title):
     # feasibility ceiling pi_i vs p_i (grey), then achieved m_i vs p_i (blue/red)
     ax.scatter(p, pi, s=16, facecolors="none", edgecolors=GRAY, lw=0.9, zorder=2,
                label=r"ceiling $\pi_i$ (max deliverable)")
-    ax.scatter(p[~inf], m[~inf], s=26, color=BLUE, zorder=3, label="feasible client")
-    ax.scatter(p[inf],  m[inf],  s=30, color=RED,  marker="X", zorder=4, label="infeasible client")
+    ax.scatter(p[~inf], m[~inf], s=26, color=BLUE, zorder=3, label="feasible group")
+    ax.scatter(p[inf],  m[inf],  s=30, color=RED,  marker="X", zorder=4, label="infeasible group")
     # draw the shortfall as a vertical drop from the diagonal to the achieved point
     for i in np.where(inf)[0]:
         ax.plot([p[i], p[i]], [m[i], p[i]], color=RED, lw=0.8, alpha=0.5, zorder=2)
@@ -130,7 +130,7 @@ scatter_panel(fig.add_subplot(gs[0, 0]), F,
               f"Feasible ($\\alpha$={F['alpha']}): IPFP hits the target\n"
               f"{F['missing_mass']*100:.1f}% of $p$-mass undelivered")
 scatter_panel(fig.add_subplot(gs[0, 1]), I,
-              f"Infeasible ($\\alpha$={I['alpha']}): high-$p$ clients pinned at ceiling\n"
+              f"Infeasible ($\\alpha$={I['alpha']}): high-$p$ groups pinned at ceiling\n"
               f"{I['missing_mass']*100:.0f}% of $p$-mass undelivered $\\Rightarrow$ loss floor")
 F_conv = F['final_row_err'] < 1e-8
 err_panel(fig.add_subplot(gs[1, 0]), F,
