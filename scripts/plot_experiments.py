@@ -391,8 +391,14 @@ def fig_heatmaps(summary, index, ds, regime, args, labels):
             ax.set_xlabel("α")
             ax.set_ylabel("γ")
             if np.isfinite(H).any():
-                by, bx = np.unravel_index(np.nanargmin(H), H.shape)
-                ax.plot(bx, by, marker="*", color="red", ms=14, mec="white")
+                # star ALL cells tied with the minimum: gamma=1 and alpha=1 are both
+                # exactly risk-neutral (at alpha=1 the hinge is always active when
+                # losses exceed t0=0, so coef == 1), so the optimum is often a rim tie
+                hmin = np.nanmin(H)
+                ties = np.argwhere(np.abs(H - hmin) <= 1e-9 * max(abs(hmin), 1e-12))
+                for by, bx in ties:
+                    ax.plot(bx, by, marker="*", color="red",
+                            ms=7 if len(ties) > 1 else 14, mec="white", ls="none")
             for yi in range(len(gammas)):
                 for xi in range(len(alphas)):
                     if Div[yi, xi]:
@@ -403,10 +409,10 @@ def fig_heatmaps(summary, index, ds, regime, args, labels):
                                 fontsize=5.5, color="white")
             ax.set_title(name, fontsize=10)
             fig.colorbar(im, ax=ax, fraction=0.046)
+        base = labels["fedavot" if m == "fedavot_cvar" else "fedavg"]
         fig.suptitle(f"{DS_LABEL[ds]}, {regime.upper()}: {labels[m]} over (α, γ) "
-                     f"(mean over seeds; ★ = best; γ=1 row must match "
-                     f"{labels['fedavot' if m == 'fedavot_cvar' else 'fedavg']})",
-                     fontsize=10)
+                     f"(mean over seeds; ★ = best incl. ties; γ=1 row and α=1 column "
+                     f"are exactly risk-neutral = {base})", fontsize=10)
         fig.tight_layout()
         save_fig(fig, args, f"{ds}_{regime}_{m}_heatmap")
 
