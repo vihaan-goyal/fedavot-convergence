@@ -232,7 +232,7 @@ def fig_overview(summary, index, ds, regime, args, labels, ylabels, xlabel):
         return
     fig, ax = plt.subplots(figsize=(10, 6))
     tail_bits = []
-    ref_curves = []
+    live_means = {}
     for m, a, g, suff in shown:
         files, _ = config_files(index, ds, regime, m, a, g)
         if not files:
@@ -243,14 +243,22 @@ def fig_overview(summary, index, ds, regime, args, labels, ylabels, xlabel):
         mu, sd = model_tail(summary, index, ds, regime, m, args, a, g)
         if mu is not None and mu < args.cap:
             tail_bits.append(f"{SHORT[m]} {mu:.4g}")
-            ref_curves.append(np.mean(L, axis=0))
-        if diverged:
+            live_means[m] = np.mean(L, axis=0)
+    # axis conventions of the figures already in the paper (replot_paper_figures.py):
+    # adult trajectory panels pin ylim to (0.18, 3.0) (line 103); imdb figures use
+    # 0.85x min / 1.35x max of the FedAVOT and full-coverage MEAN curves (lines 60-62)
+    if ds == "adult":
+        ax.set_ylim(0.18, 3.0)
+    else:
+        anch = ([live_means[m] for m in ("fedavot", "full") if m in live_means]
+                or list(live_means.values()))
+        if anch:
+            ax.set_ylim(0.85 * min(c.min() for c in anch),
+                        1.35 * max(c.max() for c in anch))
+    for m, a, g, suff in shown:
+        if m not in live_means and config_files(index, ds, regime, m, a, g)[0]:
             ax.annotate(f"{labels[m]} diverges (pinned at cap)", xy=(0.03, 0.96),
                         xycoords="axes fraction", va="top", fontsize=8, color=COL[m])
-    if ref_curves:
-        lo = 0.85 * min(c.min() for c in ref_curves)
-        hi = 1.6 * max(np.median(c) for c in ref_curves)
-        ax.set_ylim(lo, hi)
     ax.set_yscale("log")
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabels[ds])
@@ -289,9 +297,9 @@ def fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel):
         ax.set_yscale("log")
         finite = [np.mean(curves[(m, gc)], axis=0) for m, *_ in shown
                   if curves[(m, gc)].max() < args.cap]
-        if finite:
+        if finite:   # same 0.85x/1.35x-of-means rule as the paper figures
             ax.set_ylim(0.85 * min(c.min() for c in finite),
-                        1.8 * max(np.median(c) for c in finite))
+                        1.35 * max(c.max() for c in finite))
         ax.set_title(gc[len("group_"):], fontsize=10)
         ax.set_xlabel(xlabel, fontsize=8)
         ax.grid(alpha=0.3, which="both")
@@ -303,9 +311,13 @@ def fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel):
     xs = np.arange(len(gcols))
     live = [s for s in shown if max(curves[(s[0], gc)].max() for gc in gcols) < args.cap]
     wd = 0.8 / max(len(live), 1)
+    bar_max = 0.0
     for k, (m, a, g, suff) in enumerate(live):
         gt = [curves[(m, gc)][:, -args.tail:].mean() for gc in gcols]
+        bar_max = max(bar_max, max(gt))
         ax.bar(xs + (k - (len(live) - 1) / 2) * wd, gt, wd, color=COL[m], label=labels[m])
+    if bar_max > 0:   # paper bar convention: 0 to 1.25x max (replot line 135)
+        ax.set_ylim(0, 1.25 * bar_max)
     ax.set_xticks(xs)
     ax.set_xticklabels([gc[len("group_"):].replace("-", "-\n") for gc in gcols], fontsize=7)
     ax.set_ylabel(f"tail-{args.tail} group loss", fontsize=8)
