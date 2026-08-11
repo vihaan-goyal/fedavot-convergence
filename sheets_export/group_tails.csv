@@ -1,0 +1,21 @@
+dataset,regime,critical_group,FedAVOT,"FedAVOT + CVaR (a=0.3, g=0.3)","FedCVaR uniform agg (a=0.3, g=0.3)",FedAvg (uniform over K),FedAvg (full)
+imdbwiki,infeasible,tier1,113.523,122.857,110.855,103.778,72.4865
+imdbwiki,infeasible,tier2,118.257,122.992,118.988,115.486,96.6918
+imdbwiki,infeasible,tier3,89.8251,96.0004,92.2335,89.3098,91.4464
+imdbwiki,infeasible,tier4,71.9075,85.2633,83.6348,74.9967,89.8911
+imdbwiki,infeasible,tier5,115.49,120.738,87.9298,88.3222,117.297
+imdbwiki,feasible,tier1,78.7171,86.7514,90.1381,83.2666,72.4865
+imdbwiki,feasible,tier2,102.146,106.468,98.2596,95.9361,96.6918
+imdbwiki,feasible,tier3,96.8403,104.548,89.6082,84.0258,91.4464
+imdbwiki,feasible,tier4,96.1756,112.412,96.081,81.7854,89.8911
+imdbwiki,feasible,tier5,122.823,128.41,113.971,111.121,117.297
+adult,infeasible,White,0.339597,0.339067,0.336385,0.331234,0.38512
+adult,infeasible,Black,0.174672,0.205771,0.215522,0.197422,0.168379
+adult,infeasible,Asian-Pac-Islander,0.361572,0.363099,0.387964,0.390741,0.319237
+adult,infeasible,Amer-Indian-Eskimo,0.172291,0.192148,0.204097,0.18536,0.118316
+adult,infeasible,Other,0.0644722,0.101017,0.153198,0.0855161,0.0278196
+adult,feasible,White,0.385967,0.36464,0.361551,0.380568,0.38512
+adult,feasible,Black,0.169841,0.197069,0.198107,0.168026,0.168379
+adult,feasible,Asian-Pac-Islander,0.318644,0.301926,0.306004,0.315533,0.319237
+adult,feasible,Amer-Indian-Eskimo,0.119496,0.164887,0.16741,0.127398,0.118316
+adult,feasible,Other,0.0287178,0.0616807,0.0652213,0.0322452,0.0278196
