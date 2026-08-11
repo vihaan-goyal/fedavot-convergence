@@ -12,3 +12,7 @@ __pycache__/
 paper/*.pdf
 
 data/mnist_cache.npz
+
+# experiment CSVs from scripts/run_experiments.py (up to ~15 GB)
+results/
+results_*/

@@ -1,0 +1,11 @@
+dataset,regime,model,alpha,gamma,overall_tail_mean,overall_tail_std
+imdbwiki,feasible,fedavot,,,89.0844,0.528
+imdbwiki,feasible,fedavot_cvar,0.90,0.90,89.1465,0.532
+imdbwiki,feasible,fedcvar,0.90,0.90,89.5468,0.554
+imdbwiki,feasible,fedavg,,,89.5073,0.552
+imdbwiki,feasible,full,,,83.0686,0
+imdbwiki,infeasible,fedavot,,,116.405,0.533
+imdbwiki,infeasible,fedavot_cvar,0.90,0.90,116.511,0.532
+imdbwiki,infeasible,fedcvar,0.90,0.90,108.498,0.675
+imdbwiki,infeasible,fedavg,,,108.467,0.675
+imdbwiki,infeasible,full,,,83.0686,0

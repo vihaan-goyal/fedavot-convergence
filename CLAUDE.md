@@ -60,7 +60,8 @@ matplotlib 3.11, scikit-learn 1.9, pandas 3.0, pypdf):
 IMDb-Wiki scripts run in ~2–5 minutes (vectorized batched training, 128-d embeddings);
 the synthetic scripts are similar. Only the notebook's MNIST cell and `icasp2025.py`
 are heavy. To iterate, lower `ROUNDS`/`SEEDS` in the ALL-CAPS config block at the top
-(no CLI). Newer scripts save raw curves to `data/*_curves.npz`; prefer replotting from
+(no CLI — except `run_experiments.py`/`plot_experiments.py`, which are argparse-driven
+by design). Newer scripts save raw curves to `data/*_curves.npz`; prefer replotting from
 those over retraining (see `scripts/cvar_alpha_trend.py` for the pattern).
 
 ### Scripts
@@ -117,6 +118,31 @@ Diagnosis + paper experiments (2026-07):
   numbers exactly). **If you touch a paper figure, check the rendered PDF text, not just
   the prose** — the FL vocabulary was baked into the images and survived a full prose
   reframe unnoticed.
+- `run_experiments.py` + `plot_experiments.py` — the unified argparse pipeline
+  (Herlock's 7/28 CSV/figures ask; the ONLY scripts with a CLI). Runner: 4 models
+  (fedavot, fedavot_cvar, fedcvar, fedavg = uniform-over-K; the m/K FedAvg(K) is
+  intentionally absent) x {feasible, infeasible} x (alpha, gamma) grid x
+  {imdbwiki, adult}, plus `full` as reference. All subset models vectorize into ONE
+  training loop per (dataset, regime, seed) via a config-table engine (`--sweep`):
+  fedavot/fedavg are the CVaR step at alpha=gamma=1, where the hinge multiplier is
+  exactly 1.0, so gamma=1.0 grid rows equal the grid-free models to <=1e-15 rel
+  (batched-BLAS row-position ulp; `--selftest` enforces it). Output: one wide CSV per
+  config x seed (`round, overall, group_<name> x5, user_0..99`) in `results/`
+  (git-ignored) + `results/summary.csv` (tail stats, best-(alpha,gamma) selection).
+  Critical groups: adult = the 5 races, imdbwiki = importance quintiles (tier1 =
+  top-p; `--imdb-groups` for alternatives). `--smoke` = 1-min check + time/disk
+  projections; `--rebuild-summary` regenerates the summary from CSVs. Full default
+  sweep (10x10 grid, 5 seeds, 4000 rounds) ~6 h and ~15 GB (`--gzip` ~4x smaller).
+  FOOTGUN: filenames omit the round count — runs at non-default `--rounds` need
+  their own `--outdir` (e.g. `results_2000`), or they silently overwrite the sweep.
+  Plotter reads ONLY the CSVs: overview / per-group panels / per-user heat-strips /
+  (alpha,gamma) heatmaps / best-table; `--vocab defed` for the de-federated labels.
+  Verified 2026-08-10: engine selftest green; ALL 11 historical anchors reproduce at
+  printed precision (imdb 116.40 +- 0.53 / 89.08 +- 0.53 / CVaR configs; adult 0.2278 /
+  0.2076 / full 0.2068 at `--rounds 2000`), incl. per-seed match of the grid npz at the
+  unstable (0.1, 0.1) config (111.389 / 9134.56 / 2686.02). NB the ancestor never hit
+  the 1e12 cap there either — "diverges at 0.1/0.1" in the July logs meant tail means
+  of 2686-22523, not a capped run.
 - `adult_fairness.py` → `figures/adult_race_K3_2000rounds.*` — Adult (Census Income)
   fairness experiment for the OT-SGD paper (fills the paper's promised-but-missing Adult
   results; data cached at `data/adult.csv`). Group-homogeneous clients by race (users per
