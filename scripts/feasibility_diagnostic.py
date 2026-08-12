@@ -142,6 +142,6 @@ err_panel(fig.add_subplot(gs[1, 1]), I,
 
 fig.suptitle(r"Why FedAVOT stalls: transport is infeasible ($p_i>\pi_i$), so IPFP debiasing silently fails",
              fontsize=13, y=0.98)
-fig.savefig("figures/fedavot_mechanism.png", dpi=140, bbox_inches="tight")
-fig.savefig("figures/fedavot_mechanism.pdf", bbox_inches="tight")
-print("saved figures/fedavot_mechanism.png / .pdf")
+fig.savefig("figures/2026-07-27_paper/fedavot_mechanism.png", dpi=140, bbox_inches="tight")
+fig.savefig("figures/2026-07-27_paper/fedavot_mechanism.pdf", bbox_inches="tight")
+print("saved figures/2026-07-27_paper/fedavot_mechanism.png / .pdf")

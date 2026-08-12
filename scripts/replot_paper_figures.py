@@ -67,7 +67,7 @@ for cfg in IMDB:
     ax.set_ylabel("Importance-weighted MSE $F_p(\\theta)$ (log)")
     ax.set_title(cfg["title"].format(rounds=cfg["rounds"], seeds=fedot.shape[0]))
     ax.legend(); ax.grid(alpha=0.3)
-    stem = f"figures/imdbwiki_{cfg['tag']}_K{K}_{cfg['rounds']}rounds"
+    stem = f"figures/2026-07-27_paper/imdbwiki_{cfg['tag']}_K{K}_{cfg['rounds']}rounds"
     fig.savefig(f"{stem}.png", dpi=140, bbox_inches="tight")
     fig.savefig(f"{stem}.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -144,6 +144,6 @@ fig.suptitle("Adult income classification, uniform importance target over race "
              f"($m={NUM_GROUPS}$ critical groups, $K={K}$, {ROUNDS} iterations, "
              f"{d['prevalence_avot_F'].shape[0]} seeds)", fontsize=12)
 fig.tight_layout()
-fig.savefig(f"figures/adult_race_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
-fig.savefig(f"figures/adult_race_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"saved figures/adult_race_K{K}_{ROUNDS}rounds.png/.pdf")
+fig.savefig(f"figures/2026-07-27_paper/adult_race_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
+fig.savefig(f"figures/2026-07-27_paper/adult_race_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"saved figures/2026-07-27_paper/adult_race_K{K}_{ROUNDS}rounds.png/.pdf")

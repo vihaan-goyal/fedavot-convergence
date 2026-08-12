@@ -248,6 +248,6 @@ ax.set_title(f"IMDb-Wiki (real embeddings), FEASIBLE availability (aligned linea
              f"{ROUNDS} rounds, {len(SEEDS)} seeds\n"
              f"p ≼ π holds → FedAVOT reaches FedAvg(full) on real data")
 ax.legend(); ax.grid(alpha=0.3)
-fig.savefig(f"figures/imdbwiki_feasible_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
-fig.savefig(f"figures/imdbwiki_feasible_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"saved figures/imdbwiki_feasible_K{K}_{ROUNDS}rounds.png")
+fig.savefig(f"figures/2026-07-27_paper/imdbwiki_feasible_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
+fig.savefig(f"figures/2026-07-27_paper/imdbwiki_feasible_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"saved figures/2026-07-27_paper/imdbwiki_feasible_K{K}_{ROUNDS}rounds.png")

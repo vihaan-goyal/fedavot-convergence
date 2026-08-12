@@ -72,10 +72,10 @@ fig.suptitle("FED-CVaR-AVG vs FedAVOT in the restricted-availability setting of 
              "arXiv:2309.14176\n(MNIST, 30 users, 3 rarest users hold digits 8 and 9 "
              "exclusively; 1500 rounds, 3 seeds)", fontsize=13)
 fig.tight_layout()
-fig.savefig(f"figures/ram_cvar_vs_fedavot_{ROUNDS}rounds.png", dpi=140,
+fig.savefig(f"figures/2026-07-27_ram_study/ram_cvar_vs_fedavot_{ROUNDS}rounds.png", dpi=140,
             bbox_inches="tight")
-fig.savefig(f"figures/ram_cvar_vs_fedavot_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"saved figures/ram_cvar_vs_fedavot_{ROUNDS}rounds.png/.pdf")
+fig.savefig(f"figures/2026-07-27_ram_study/ram_cvar_vs_fedavot_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"saved figures/2026-07-27_ram_study/ram_cvar_vs_fedavot_{ROUNDS}rounds.png/.pdf")
 
 # ---------------------------------------------------------------
 # Companion figure: the two metrics disagree, and that is the whole story.
@@ -107,7 +107,7 @@ axes2[0].legend(fontsize=8, loc="lower right")
 fig2.suptitle("Adding CVaR helps the rare-group metric and hurts the p-weighted "
               "objective: both results are real", fontsize=12.5)
 fig2.tight_layout()
-fig2.savefig(f"figures/ram_metric_disagreement_{ROUNDS}rounds.png", dpi=140,
+fig2.savefig(f"figures/2026-07-27_ram_study/ram_metric_disagreement_{ROUNDS}rounds.png", dpi=140,
              bbox_inches="tight")
-fig2.savefig(f"figures/ram_metric_disagreement_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"saved figures/ram_metric_disagreement_{ROUNDS}rounds.png/.pdf")
+fig2.savefig(f"figures/2026-07-27_ram_study/ram_metric_disagreement_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"saved figures/2026-07-27_ram_study/ram_metric_disagreement_{ROUNDS}rounds.png/.pdf")

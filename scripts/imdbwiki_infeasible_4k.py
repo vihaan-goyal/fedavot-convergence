@@ -247,7 +247,7 @@ ax.set_title(f"IMDb-Wiki (real embeddings), INFEASIBLE availability (mirrored cu
              f"{ROUNDS} rounds, {len(SEEDS)} seeds\n"
              f"88% of importance mass unreachable — FedAVOT and FedAvg(K) plateau above FedAvg(full)")
 ax.legend(); ax.grid(alpha=0.3)
-fig.savefig(f"figures/imdbwiki_infeasible_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
-fig.savefig(f"figures/imdbwiki_infeasible_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"saved figures/imdbwiki_infeasible_K{K}_{ROUNDS}rounds.png")
+fig.savefig(f"figures/2026-07-27_paper/imdbwiki_infeasible_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
+fig.savefig(f"figures/2026-07-27_paper/imdbwiki_infeasible_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"saved figures/2026-07-27_paper/imdbwiki_infeasible_K{K}_{ROUNDS}rounds.png")
 

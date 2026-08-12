@@ -399,8 +399,8 @@ fig.suptitle("FED-CVaR-AVG vs FedAVOT in the restricted-availability setting of 
              "arXiv:2309.14176\n(MNIST, 30 users, 3 rarest users hold digits 8 and 9 "
              "exclusively)", fontsize=13)
 fig.tight_layout()
-fig.savefig(f"figures/ram_cvar_vs_fedavot_{ROUNDS}rounds.png", dpi=140,
+fig.savefig(f"figures/2026-07-27_ram_study/ram_cvar_vs_fedavot_{ROUNDS}rounds.png", dpi=140,
             bbox_inches="tight")
-fig.savefig(f"figures/ram_cvar_vs_fedavot_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"\nsaved figures/ram_cvar_vs_fedavot_{ROUNDS}rounds.png/.pdf "
+fig.savefig(f"figures/2026-07-27_ram_study/ram_cvar_vs_fedavot_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"\nsaved figures/2026-07-27_ram_study/ram_cvar_vs_fedavot_{ROUNDS}rounds.png/.pdf "
       f"and data/ram_cvar_vs_fedavot_{ROUNDS}rounds.npz")

@@ -439,6 +439,6 @@ ax2.tick_params(axis="both", which="major", labelsize=18)
 ax2.grid(axis="y", alpha=0.3)
 
 plt.tight_layout()
-plt.savefig(f"figures/linreg_K{K}_FedAVOT_vs_FedAvg_full_with_priors.png", dpi=300, bbox_inches="tight")
-plt.savefig(f"figures/linreg_K{K}_FedAVOT_vs_FedAvg_full_with_priors.pdf", bbox_inches="tight")
+plt.savefig(f"figures/2026-07-08_notebook_legacy/linreg_K{K}_FedAVOT_vs_FedAvg_full_with_priors.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"figures/2026-07-08_notebook_legacy/linreg_K{K}_FedAVOT_vs_FedAvg_full_with_priors.pdf", bbox_inches="tight")
 plt.show()

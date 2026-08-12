@@ -275,7 +275,7 @@ ax.set_xlabel("Round"); ax.set_ylabel("Global p-weighted MSE (log)")
 ax.set_title(f"IMDb-Wiki, INFEASIBLE regime (mirrored cubic r), {ROUNDS} rounds, {len(SEEDS)} seeds\n"
              f"Does the CVaR risk-aware objective (arXiv:2309.14176) recover part of the floor?")
 ax.legend(fontsize=9); ax.grid(alpha=0.3)
-fig.savefig(f"figures/imdbwiki_cvar_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
-fig.savefig(f"figures/imdbwiki_cvar_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"saved figures/imdbwiki_cvar_K{K}_{ROUNDS}rounds.png")
+fig.savefig(f"figures/2026-07-11_cvar_study/imdbwiki_cvar_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
+fig.savefig(f"figures/2026-07-11_cvar_study/imdbwiki_cvar_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"saved figures/2026-07-11_cvar_study/imdbwiki_cvar_K{K}_{ROUNDS}rounds.png")
 

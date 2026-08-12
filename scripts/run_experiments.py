@@ -1,7 +1,7 @@
 # Unified experiment runner for the OT-SGD / FedAVOT paper (Herlock's 2026-07-28 ask):
 # one argparse-driven script that runs {FedAVOT, FedAVOT+CVaR, FedCVaR, FedAvg} x
 # {feasible, infeasible} x (alpha, gamma) grid x {imdbwiki, adult} and writes per-round
-# CSVs (overall / per-critical-group / per-user train loss) plus results/summary.csv.
+# CSVs (overall / per-critical-group / per-user train loss) plus <outdir>/summary.csv.
 # Figures are built separately by scripts/plot_experiments.py from the CSVs alone.
 #
 # Engine: every subset-trained model is a ROW of a config table pushed through ONE
@@ -25,7 +25,8 @@
 #
 # Filenames carry (dataset, regime, model, alpha, gamma, seed) but NOT rounds -- runs
 # at a non-default --rounds should use a separate --outdir to avoid overwriting the
-# main sweep (e.g. --outdir results_2000 for the Adult 2000-round anchor check).
+# main sweep (e.g. --outdir results/2026-08-10_adult_2000rounds for the Adult anchor
+# check). Convention: one dated folder per run under results/, flat CSVs inside.
 import argparse
 import os
 import re
@@ -100,7 +101,8 @@ def parse_args(argv=None):
     ap.add_argument("--ipfp-iters", type=int, default=1000, help="IPFP max iterations")
     ap.add_argument("--imdb-groups", default="tiers", choices=["tiers", "decades", "feasibility"],
                     help="IMDb-Wiki critical-group definition (tiers = importance quintiles)")
-    ap.add_argument("--outdir", default="results", help="output directory (git-ignored)")
+    ap.add_argument("--outdir", default="results/2026-08-10_main_sweep",
+                    help="output directory (git-ignored); use a new dated folder per run")
     ap.add_argument("--user-log-every", type=int, default=1,
                     help="log per-user columns every N rounds (overall/groups always "
                          "every round; the final round is always logged)")

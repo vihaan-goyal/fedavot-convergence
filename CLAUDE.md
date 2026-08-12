@@ -42,7 +42,7 @@ convention. When writing paper text from code, translate.
   embeddings keyed by image path, `ICASP_2026.zip`) **and saved loss curves** (`*_curves.npz`,
   written by the newer scripts so figures can be replotted without retraining).
 - `scripts/` — standalone experiment scripts (see below).
-- `figures/` — generated `.png`/`.pdf` outputs (committed; the `.pdf`s go to the Overleaf).
+- `figures/` — generated `.png`/`.pdf` outputs in dated per-experiment subfolders, see `figures/README.md` (committed; the `.pdf`s go to the Overleaf).
 - `paper/` — LaTeX fragments for the paper + local preview (see "Paper text" below).
 
 All paths inside the notebook and scripts are **repo-root-relative**, so always run from
@@ -69,9 +69,9 @@ those over retraining (see `scripts/cvar_alpha_trend.py` for the pattern).
 Earlier standalone snapshots: `icasp2025.py` (MNIST), `lin_reg_last_one.py` (synthetic).
 Diagnosis + paper experiments (2026-07):
 
-- `feasibility_diagnostic.py` → `figures/fedavot_mechanism.*` — the mechanism figure
+- `feasibility_diagnostic.py` → `figures/2026-07-27_paper/fedavot_mechanism.*` — the mechanism figure
   (achieved weight vs target with the `pi_i` ceiling; IPFP row-error trajectories).
-- `phase_boundary_experiment.py` → `figures/fedavot_phase_boundary.*` — synthetic alpha
+- `phase_boundary_experiment.py` → `figures/2026-07-27_paper/fedavot_phase_boundary.*` — synthetic alpha
   sweep; feasible/infeasible loss panels + phase-boundary panel.
 - `feasible_5k_rounds.py` — the phase-boundary feasible panel (alpha=0.5) at 5000 rounds.
 - `imdbwiki_infeasible_4k.py` — script reproduction of the notebook's main IMDb-Wiki cell
@@ -83,7 +83,7 @@ Diagnosis + paper experiments (2026-07):
   scaling assumes uniform participation; script freezes it at a 1e12 cap).
 - `infeasible_bias_check.py` — no training; p_hat from stalled IPFP + closed-form
   weighted-LS optima on IMDb-Wiki → validates Sec 3.3's bias bound (see finding 6).
-- `regularized_transport_sweep.py` → `figures/imdbwiki_regularized_*` — lambda-penalized
+- `regularized_transport_sweep.py` → `figures/2026-07-15_regularized_transport/imdbwiki_regularized_*` — lambda-penalized
   (unbalanced) masked Sinkhorn sweep on the mirrored regime, kappa = 0..1 trained in
   parallel per draw; endpoints = uniform averaging / plain IPFP (see finding 6).
 - `imdbwiki_cvar_*.py` — the FED-CVaR-AVG study (arXiv:2309.14176, Theodoropoulos/
@@ -91,7 +91,7 @@ Diagnosis + paper experiments (2026-07):
   `_fedavot` (infeasible, alpha=0.3), `_feasible` (aligned), `_grid` ((alpha,gamma) grid +
   hinge-tilted-aggregation variant), `_a09_*` (near-risk-neutral bookend),
   `cvar_alpha_trend.py` (summary figure from saved npz).
-- `ram_feasibility_diagnostic.py` → `figures/ram_feasibility_diagnostic.*` — transport
+- `ram_feasibility_diagnostic.py` → `figures/2026-07-27_ram_study/ram_feasibility_diagnostic.*` — transport
   geometry of the FED-CVaR-AVG paper's own setting (arXiv:2309.14176 = "Federated
   Learning Under Restricted User Availability"; their `script for Mnist.py`). N=30 users,
   3 rarest hold digits 8,9 exclusively, RAM seed 2517 chosen so the availability tail
@@ -100,7 +100,7 @@ Diagnosis + paper experiments (2026-07):
   → FedAVOT *is* FedAvg-relay), 16/30 users infeasible against a uniform target holding
   53% of its mass; feasibility (`p_i <= pi_i`) first holds at **R=6**, where IPFP
   converges to 1e-10. Also introduces the **enumeration-free transport solver** (below).
-- `ram_cvar_vs_fedavot.py` → `figures/ram_cvar_vs_fedavot_1500rounds.*` — the training
+- `ram_cvar_vs_fedavot.py` → `figures/2026-07-27_ram_study/ram_cvar_vs_fedavot_1500rounds.*` — the training
   experiment in that setting: MNIST (64 PCA dims + bias, multinomial logistic), 30 users,
   their data split, R in {1,3,6} × (alpha,gamma) in {(1,1),(0.3,0.3),(0.1,0.1)}, 1500
   rounds, 3 seeds, identical RAM draws. Five rules: FedAvg-relay (their baseline),
@@ -127,14 +127,17 @@ Diagnosis + paper experiments (2026-07):
   fedavot/fedavg are the CVaR step at alpha=gamma=1, where the hinge multiplier is
   exactly 1.0, so gamma=1.0 grid rows equal the grid-free models to <=1e-15 rel
   (batched-BLAS row-position ulp; `--selftest` enforces it). Output: one wide CSV per
-  config x seed (`round, overall, group_<name> x5, user_0..99`) in `results/`
-  (git-ignored) + `results/summary.csv` (tail stats, best-(alpha,gamma) selection).
+  config x seed (`round, overall, group_<name> x5, user_0..99`) + `summary.csv`
+  (tail stats, best-(alpha,gamma) selection) in the `--outdir` (git-ignored; default
+  `results/2026-08-10_main_sweep` = the completed sweep, flat CSVs per run folder).
   Critical groups: adult = the 5 races, imdbwiki = importance quintiles (tier1 =
   top-p; `--imdb-groups` for alternatives). `--smoke` = 1-min check + time/disk
   projections; `--rebuild-summary` regenerates the summary from CSVs. Full default
   sweep (10x10 grid, 5 seeds, 4000 rounds) ~6 h and ~15 GB (`--gzip` ~4x smaller).
   FOOTGUN: filenames omit the round count — runs at non-default `--rounds` need
-  their own `--outdir` (e.g. `results_2000`), or they silently overwrite the sweep.
+  their own `--outdir` (e.g. `results/2026-08-10_adult_2000rounds`, the old
+  `results_2000`), or they silently overwrite the sweep. Convention: one dated
+  `results/<YYYY-MM-DD>_<desc>/` folder per run.
   Plotter reads ONLY the CSVs: overview / per-group panels / per-user heat-strips /
   (alpha,gamma) heatmaps / best-table; `--vocab defed` for the de-federated labels.
   Verified 2026-08-10: engine selftest green; ALL 11 historical anchors reproduce at
@@ -143,7 +146,7 @@ Diagnosis + paper experiments (2026-07):
   unstable (0.1, 0.1) config (111.389 / 9134.56 / 2686.02). NB the ancestor never hit
   the 1e12 cap there either — "diverges at 0.1/0.1" in the July logs meant tail means
   of 2686-22523, not a capped run.
-- `adult_fairness.py` → `figures/adult_race_K3_2000rounds.*` — Adult (Census Income)
+- `adult_fairness.py` → `figures/2026-07-27_paper/adult_race_K3_2000rounds.*` — Adult (Census Income)
   fairness experiment for the OT-SGD paper (fills the paper's promised-but-missing Adult
   results; data cached at `data/adult.csv`). Group-homogeneous clients by race (users per
   group ∝ prevalence: 85/10/3/1/1), group-uniform importance p (1/5 per race), binary
@@ -260,7 +263,7 @@ full experimental story:
    disagreement.** On the p-weighted objective FedAVOT is built to minimise, adding CVaR
    always costs (R=6: FedAVOT 0.2670 vs +CVaR 0.2750/0.2789; full 0.2645); on the
    rare-group accuracy their paper reports, adding CVaR always helps. Both papers are
-   right about different objectives (`figures/ram_metric_disagreement_1500rounds.*`).
+   right about different objectives (`figures/2026-07-27_ram_study/ram_metric_disagreement_1500rounds.*`).
    Caveat for the paper's HT paragraph: the Horvitz--Thompson relay did NOT diverge here
    and was the best method at R=1 (rare 0.800) — its weights only reach 5.5x. Note
    `p_i <= pi_i` is exactly the condition `p_i/pi_i <= 1`, i.e. **feasibility is the same

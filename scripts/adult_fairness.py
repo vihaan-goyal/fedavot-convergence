@@ -344,6 +344,6 @@ for col, (regime, res) in enumerate(results.items()):
 fig.suptitle(f"Adult income classification, group-uniform importance over {GROUP_COL} "
              f"(N={NUM_USERS}, K={K}, {ROUNDS} rounds, {len(SEEDS)} seeds)", fontsize=12)
 fig.tight_layout()
-fig.savefig(f"figures/adult_{GROUP_COL}_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
-fig.savefig(f"figures/adult_{GROUP_COL}_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
-print(f"\nsaved figures/adult_{GROUP_COL}_K{K}_{ROUNDS}rounds.png/.pdf")
+fig.savefig(f"figures/2026-07-27_paper/adult_{GROUP_COL}_K{K}_{ROUNDS}rounds.png", dpi=140, bbox_inches="tight")
+fig.savefig(f"figures/2026-07-27_paper/adult_{GROUP_COL}_K{K}_{ROUNDS}rounds.pdf", bbox_inches="tight")
+print(f"\nsaved figures/2026-07-27_paper/adult_{GROUP_COL}_K{K}_{ROUNDS}rounds.png/.pdf")

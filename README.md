@@ -35,10 +35,10 @@ when feasible, and degrades **up to 8.4× worse** as infeasibility grows.
 | `icasp_paper.ipynb` | Main notebook. IMDb-Wiki age-regression experiments (real ResNet embeddings) + a self-contained **phase-boundary** section |
 | `data/imdb_embeddings.npy` | Cached ResNet18 features (512-d → PCA 128, standardized) for the ~3,300 face crops the experiments use |
 | `data/imdb_wiki.csv` | Age + image-path metadata for the IMDb-Wiki dataset |
-| `scripts/phase_boundary_experiment.py` | Standalone phase-boundary sweep (synthetic, controlled) → `figures/fedavot_phase_boundary.png` |
-| `scripts/feasibility_diagnostic.py` | Feasible-vs-infeasible IPFP mechanism figure → `figures/fedavot_mechanism.png` |
+| `scripts/phase_boundary_experiment.py` | Standalone phase-boundary sweep (synthetic, controlled) → `figures/2026-07-27_paper/fedavot_phase_boundary.png` |
+| `scripts/feasibility_diagnostic.py` | Feasible-vs-infeasible IPFP mechanism figure → `figures/2026-07-27_paper/fedavot_mechanism.png` |
 | `scripts/icasp2025.py`, `scripts/lin_reg_last_one.py` | Earlier standalone MNIST / linear-regression experiments |
-| `figures/` | Generated output figures (`.png` / `.pdf`) |
+| `figures/` | Generated output figures (`.png` / `.pdf`), in dated per-experiment subfolders (see `figures/README.md`) |
 
 Scripts are run from the repo root (paths inside them are root-relative), e.g.
 `python scripts/phase_boundary_experiment.py`.

@@ -1,5 +1,5 @@
 # Figure stage for the unified experiment runner (companion to run_experiments.py).
-# Reads ONLY results/*.csv[.gz] + results/summary.csv -- no training code, no npz.
+# Reads ONLY <results-dir>/*.csv[.gz] + its summary.csv -- no training code, no npz.
 #
 # Figures (all in the house style: log y, mean +- std seed band, png dpi140 + pdf):
 #   overview   : overall loss, 5 curves per (dataset, regime) -- fedavot, fedavg, full
@@ -53,8 +53,9 @@ YLABEL_DEFED = {"imdbwiki": r"Importance-weighted MSE $F_p(\theta)$ (log)",
 
 def parse_args(argv=None):
     ap = argparse.ArgumentParser(description="Build figures from run_experiments.py CSVs.")
-    ap.add_argument("--results-dir", default="results", help="where the CSVs live")
-    ap.add_argument("--fig-dir", default="figures", help="output directory")
+    ap.add_argument("--results-dir", default="results/2026-08-10_main_sweep",
+                    help="where the CSVs live (one dated run folder)")
+    ap.add_argument("--fig-dir", default="figures/2026-08-10_sweep_pipeline", help="output directory")
     ap.add_argument("--figures", nargs="+", default=["overview", "groups", "users",
                                                      "heatmaps", "best-table"],
                     choices=["overview", "groups", "users", "heatmaps", "best-table"])
