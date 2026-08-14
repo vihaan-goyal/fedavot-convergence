@@ -186,11 +186,11 @@ def model_tail(summary, index, ds, regime, model, args, alpha="", gamma=""):
 # ================================================================
 # House style helpers
 # ================================================================
-def plot_curve(ax, L, label, color, band=True):
+def plot_curve(ax, L, label, color, band=True, ls="-", lw=1.4, zorder=2):
     mean = np.mean(L, axis=0)
     std = np.std(L, axis=0)
     x = np.arange(len(mean))
-    ax.plot(x, mean, label=label, color=color, lw=1.4)
+    ax.plot(x, mean, label=label, color=color, lw=lw, ls=ls, zorder=zorder)
     if band:
         ax.fill_between(x, np.maximum(mean - std, 1e-3), mean + std, color=color, alpha=0.15)
 
@@ -232,15 +232,29 @@ def fig_overview(summary, index, ds, regime, args, labels, ylabels, xlabel):
     if not shown:
         return
     fig, ax = plt.subplots(figsize=(10, 6))
+    curves = {}
+    for m, a, g, suff in shown:
+        files, _ = config_files(index, ds, regime, m, a, g)
+        if files:
+            curves[m] = stack_seed_curves(files, "overall")
+    # at a risk-neutral best config (gamma=1 or alpha=1) the CVaR model is the
+    # identical run as its base, hiding the base's line; overlay the base dashed
+    partner = {"fedavot": "fedavot_cvar", "fedavg": "fedcvar"}
+    coincident = {m for m, pm in partner.items()
+                  if m in curves and pm in curves
+                  and np.allclose(curves[m], curves[pm])}
     tail_bits = []
     live_means = {}
     for m, a, g, suff in shown:
-        files, _ = config_files(index, ds, regime, m, a, g)
-        if not files:
+        if m not in curves:
             continue
-        L = stack_seed_curves(files, "overall")
+        L = curves[m]
         diverged = L.max() >= args.cap
-        plot_curve(ax, L, labels[m] + suff, COL[m], band=not diverged)
+        if m in coincident:
+            plot_curve(ax, L, labels[m] + suff, COL[m], band=False,
+                       ls=(0, (4, 4)), lw=1.2, zorder=5)
+        else:
+            plot_curve(ax, L, labels[m] + suff, COL[m], band=not diverged)
         mu, sd = model_tail(summary, index, ds, regime, m, args, a, g)
         if mu is not None and mu < args.cap:
             tail_bits.append(f"{SHORT[m]} {mu:.4g}")
