@@ -28,17 +28,27 @@ when feasible, and degrades **up to 8.4× worse** as infeasibility grows.
 
 **One line:** *FedAVOT corrects participation bias, but it cannot fix clients that are never available.*
 
-## Contents
+## Repo map
+
+Every folder has its own `README.md` index — start there.
 
 | Path | What it is |
 |------|------------|
-| `icasp_paper.ipynb` | Main notebook. IMDb-Wiki age-regression experiments (real ResNet embeddings) + a self-contained **phase-boundary** section |
-| `data/imdb_embeddings.npy` | Cached ResNet18 features (512-d → PCA 128, standardized) for the ~3,300 face crops the experiments use |
-| `data/imdb_wiki.csv` | Age + image-path metadata for the IMDb-Wiki dataset |
-| `scripts/phase_boundary_experiment.py` | Standalone phase-boundary sweep (synthetic, controlled) → `figures/2026-07-27_paper/fedavot_phase_boundary.png` |
-| `scripts/feasibility_diagnostic.py` | Feasible-vs-infeasible IPFP mechanism figure → `figures/2026-07-27_paper/fedavot_mechanism.png` |
-| `scripts/icasp2025.py`, `scripts/lin_reg_last_one.py` | Earlier standalone MNIST / linear-regression experiments |
-| `figures/` | Generated output figures (`.png` / `.pdf`), in dated per-experiment subfolders (see `figures/README.md`) |
+| [`figures/`](figures/README.md) | **All generated figures**, in dated per-experiment subfolders. The paper figures are `figures/2026-07-27_paper/`; the sweep-pipeline figures are `figures/2026-08-10_sweep_pipeline/` |
+| [`scripts/`](scripts/README.md) | All experiment scripts, grouped by study (paper experiments, CVaR study, RAM study, the unified sweep pipeline) |
+| [`results/`](results/README.md) | Dated run/analysis folders. The raw ~15 GB sweep is git-ignored; the committed folders are the derived deliverables (beats-baseline table, core-metrics figures + `core_metrics_report.html`) |
+| [`sheets_export/`](sheets_export/README.md) | Curated CSVs behind the Google Sheets deliverable |
+| [`data/`](data/README.md) | Committed datasets (IMDb-Wiki embeddings, Adult) + saved loss curves (`*_curves.npz`) for replotting without retraining |
+| [`paper/`](paper/README.md) | LaTeX fragments for the ICASSP 2026 paper (arXiv:2509.14444, accepted) + the `complete.tex` review |
+| `icasp_paper.ipynb` | The original notebook (IMDb-Wiki age regression + phase boundary); newer work lives in `scripts/` |
+| `CLAUDE.md` | The full working log: notation warning (code vs paper), conventions, and the numbered research findings |
+
+**Guided tour:** the mechanism and phase-boundary story is in `figures/2026-07-27_paper/`;
+the 10×10 (α, γ) sweep outputs are in `figures/2026-08-10_sweep_pipeline/` (best-config
+curves, pinned (0.3, 0.3) curves, heatmaps); the per-algorithm comparison deliverable —
+point-ranges, per-client curves, per-group regret heatmaps — is
+`results/2026-08-15_herlock_core_metrics/` (open `core_metrics_report.html` for everything
+on one page).
 
 Scripts are run from the repo root (paths inside them are root-relative), e.g.
 `python scripts/phase_boundary_experiment.py`.
