@@ -18,5 +18,6 @@ data/mnist_cache.npz
 # re-included explicitly below (their contents are KB-scale, not raw sweeps)
 results/*
 results_*/
+!results/README.md
 !results/2026-08-14_worst_group_vs_baseline/
 !results/2026-08-15_herlock_core_metrics/
