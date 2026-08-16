@@ -14,5 +14,9 @@ paper/*.pdf
 data/mnist_cache.npz
 
 # experiment CSVs from scripts/run_experiments.py (up to ~15 GB)
-results/
+# results/* ignores each run folder; small derived analysis folders are
+# re-included explicitly below (their contents are KB-scale, not raw sweeps)
+results/*
 results_*/
+!results/2026-08-14_worst_group_vs_baseline/
+!results/2026-08-15_herlock_core_metrics/
