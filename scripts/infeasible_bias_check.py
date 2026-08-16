@@ -1,5 +1,5 @@
 # Bridge between Sec 3.3 theory and the IMDb-Wiki infeasible experiment
-# (complete_tex_review.md, Problem 2). The paper's bound (eq. infeasible-rate):
+# (paper/complete_tex_review.md, Problem 2). The paper's bound (eq. infeasible-rate):
 #
 #   E[F_p(theta_T) - F_p(theta*)] <= DG/sqrt(T) + 2B*||p - p_hat||_1
 #

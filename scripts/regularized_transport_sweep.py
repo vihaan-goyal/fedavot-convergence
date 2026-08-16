@@ -1,5 +1,5 @@
 # Lambda-penalized (unbalanced) masked transport on the INFEASIBLE IMDb-Wiki regime —
-# the second half of the Problem-2 bridge (complete_tex_review.md). Sec 3.3 of
+# the second half of the Problem-2 bridge (paper/complete_tex_review.md). Sec 3.3 of
 # complete.tex claims the bias 2B||p - p_hat||_1 is TUNABLE through the marginal
 # penalty lambda in eq. (general-reg-failure); no experiment ever runs that variant.
 #
