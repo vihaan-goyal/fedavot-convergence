@@ -195,13 +195,23 @@ def plot_curve(ax, L, label, color, band=True, ls="-", lw=1.4, zorder=2):
         ax.fill_between(x, np.maximum(mean - std, 1e-3), mean + std, color=color, alpha=0.15)
 
 
+def fig_subdir(prefix, stem):
+    # mirrors the committed figures/2026-08-10_sweep_pipeline layout
+    if stem.endswith("_heatmap"):
+        return "heatmaps"
+    if "a03g03" in prefix or "a03g03" in stem:
+        return "pinned_a03g03"
+    return "best_config"
+
+
 def save_fig(fig, args, stem):
-    os.makedirs(args.fig_dir, exist_ok=True)
+    out = os.path.join(args.fig_dir, fig_subdir(args.prefix, stem))
+    os.makedirs(out, exist_ok=True)
     for ext in args.formats:
-        path = os.path.join(args.fig_dir, f"{args.prefix}{stem}.{ext}")
+        path = os.path.join(out, f"{args.prefix}{stem}.{ext}")
         fig.savefig(path, dpi=args.dpi if ext == "png" else None, bbox_inches="tight")
     plt.close(fig)
-    print(f"saved {os.path.join(args.fig_dir, args.prefix + stem)}.{'/'.join(args.formats)}")
+    print(f"saved {os.path.join(out, args.prefix + stem)}.{'/'.join(args.formats)}")
 
 
 def resolve_shown_configs(summary, index, ds, regime, models, args):
