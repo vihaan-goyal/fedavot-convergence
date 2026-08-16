@@ -139,7 +139,7 @@ def validate_against_enumerated_ipfp(n=12, k=3, seed=1):
     counts = np.bincount(key_of[code], minlength=len(subsets)).astype(float)
     q = counts / counts.sum()
 
-    # enumerated masked IPFP (same code path as scripts/imdbwiki_cvar_grid.py)
+    # enumerated masked IPFP (same code path as scripts/cvar_study/runs/imdbwiki_cvar_grid.py)
     M = np.zeros((n, len(subsets)), dtype=bool)
     for j, s in enumerate(subsets):
         for i in s:

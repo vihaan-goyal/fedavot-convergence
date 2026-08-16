@@ -18,7 +18,7 @@
 # freedom (a singleton batch's normalized weight is 1), so FedAVOT is exactly
 # FedAvg-relay and only CVaR can move anything.  As R grows the transport gains room
 # and, once R >= 6 here, can hit the uniform target p_i = 1/N exactly (feasibility
-# p_i <= pi_i; see scripts/ram_feasibility_diagnostic.py).  So the two mechanisms are
+# p_i <= pi_i; see scripts/ram_study/ram_feasibility_diagnostic.py).  So the two mechanisms are
 # not competing -- they act on different axes (across rounds vs within a round), and
 # which one wins is decided by R.
 #
@@ -228,7 +228,7 @@ print()
 
 METHODS = ('fedavg_relay', 'fedcvar_relay', 'fedavot', 'fedavot_cvar', 'ht_relay')
 # FedAVOT is dashed because at R=1 it coincides exactly with FedAvg-relay and would
-# otherwise hide it.  scripts/ram_replot.py rebuilds these figures from the saved npz.
+# otherwise hide it.  scripts/ram_study/ram_replot.py rebuilds these figures from the saved npz.
 STYLE = {'fedavg_relay': ("FedAvg (RAM relay)", "tab:orange", "-"),
          'fedcvar_relay': ("FED-CVaR-AVG (theirs)", "tab:purple", "-"),
          'fedavot': ("FedAVOT", "tab:blue", "--"),

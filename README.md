@@ -51,7 +51,7 @@ point-ranges, per-client curves, per-group regret heatmaps — is
 on one page).
 
 Scripts are run from the repo root (paths inside them are root-relative), e.g.
-`python scripts/phase_boundary_experiment.py`.
+`python scripts/paper_experiments/synthetic/phase_boundary_experiment.py`.
 
 ## Setup & run
 

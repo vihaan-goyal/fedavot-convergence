@@ -2,7 +2,7 @@
 
 Curated CSVs for the **Google Sheets deliverable** (2026-08-10), cut down from the raw
 sweep in `results/2026-08-10_main_sweep/`. Also the input for
-`scripts/metric_summary_figures.py`.
+`scripts/pipeline/metric_summary_figures.py`.
 
 | File | Contents |
 |---|---|

@@ -12,7 +12,7 @@ retraining — always prefer replotting from these).
 | `imdb_embeddings.npy` | 128-d ResNet face embeddings keyed by image path — committed so **no 7 GB image download or PyTorch is needed** |
 | `adult.csv` | Adult (Census Income) cache for the fairness experiments |
 | `ICASP_2026.zip` | Original notebook-era bundle |
-| `mnist_cache.npz` | *(git-ignored)* MNIST cache; regenerate with `scripts/prep_mnist_cache.py` |
+| `mnist_cache.npz` | *(git-ignored)* MNIST cache; regenerate with `scripts/ram_study/prep_mnist_cache.py` |
 
 ## Saved curves (file → producing script)
 

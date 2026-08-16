@@ -62,7 +62,7 @@ the synthetic scripts are similar. Only the notebook's MNIST cell and `icasp2025
 are heavy. To iterate, lower `ROUNDS`/`SEEDS` in the ALL-CAPS config block at the top
 (no CLI — except `run_experiments.py`/`plot_experiments.py`, which are argparse-driven
 by design). Newer scripts save raw curves to `data/*_curves.npz`; prefer replotting from
-those over retraining (see `scripts/cvar_alpha_trend.py` for the pattern).
+those over retraining (see `scripts/cvar_study/cvar_alpha_trend.py` for the pattern).
 
 ### Scripts
 
@@ -232,12 +232,12 @@ full experimental story:
    in the mirrored IMDb-Wiki regime p_hat ≈ min(p, pi) renormalized, ||p - p_hat||_1 =
    1.58. Linear regression → closed-form optima: F_p optimum 82.9 (matches measured
    full 83.07), surrogate floor F_p(theta_phat*) = 105.9, so the marginal shift alone
-   explains 22.9 of the 33.3 measured gap (`scripts/infeasible_bias_check.py`).
+   explains 22.9 of the 33.3 measured gap (`scripts/paper_experiments/theory_checks/infeasible_bias_check.py`).
    Running Sec 3.3's lambda-penalized transport (unbalanced Sinkhorn; kappa =
    lambda/(lambda+1) row-power update; kappa=0 IS uniform averaging, kappa=1 IS plain
    IPFP) shows **lambda tunes variance, not bias, under severe infeasibility**: floors
    flat at 104-106 for all lambda, measured loss rises 108.3 → 116.5 with lambda
-   (`scripts/regularized_transport_sweep.py`). This resolves finding 4's open question:
+   (`scripts/paper_experiments/theory_checks/regularized_transport_sweep.py`). This resolves finding 4's open question:
    uniform wins because same floor + minimal weight variance. Footguns: the damped form
    Y *= (p/rowsum)^kappa has a kappa-independent fixed point (wrong problem); the u-v
    scaling form overflows at kappa=1 (use dense bounded-Y IPFP there).
@@ -273,7 +273,7 @@ full experimental story:
    loss is bounded (CE here vs unbounded MSE in the IMDb-Wiki runs).
 
 Known estimation artifact (pre-existing, now FIXED in the RAM scripts): 1M MC samples
-can't cover C(100,3)=161,700 subsets. `scripts/ram_feasibility_diagnostic.py` replaces
+can't cover C(100,3)=161,700 subsets. `scripts/ram_study/ram_feasibility_diagnostic.py` replaces
 enumeration entirely: masked IPFP converges to a product form `Y[i,S] = u_i v_S 1{i in S}`,
 so column-normalizing gives `w_i(S) = u_i / sum_{j in S} u_j` and the whole plan is fixed
 by the N-vector `u` solving `E_S[w_i(S) 1{i in S}] = p_i`. Fit it by multiplicative

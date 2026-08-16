@@ -2,7 +2,7 @@
 # one argparse-driven script that runs {FedAVOT, FedAVOT+CVaR, FedCVaR, FedAvg} x
 # {feasible, infeasible} x (alpha, gamma) grid x {imdbwiki, adult} and writes per-round
 # CSVs (overall / per-critical-group / per-user train loss) plus <outdir>/summary.csv.
-# Figures are built separately by scripts/plot_experiments.py from the CSVs alone.
+# Figures are built separately by scripts/pipeline/plot_experiments.py from the CSVs alone.
 #
 # Engine: every subset-trained model is a ROW of a config table pushed through ONE
 # vectorized local-step function (config axis C). FedAVOT and FedAvg are the CVaR step

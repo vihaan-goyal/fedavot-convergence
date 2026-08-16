@@ -1,5 +1,5 @@
 # Rebuild the RAM-setting figure from the saved curves, without retraining
-# (same pattern as scripts/cvar_alpha_trend.py).  Run ram_cvar_vs_fedavot.py first.
+# (same pattern as scripts/cvar_study/cvar_alpha_trend.py).  Run ram_cvar_vs_fedavot.py first.
 #
 # The one plotting subtlety: at R = 1 FedAVOT and FedAvg-relay are the SAME run (a
 # singleton batch has one transport weight and it is 1), so the two curves lie exactly
