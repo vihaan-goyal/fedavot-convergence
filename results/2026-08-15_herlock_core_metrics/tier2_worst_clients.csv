@@ -1,0 +1,21 @@
+algorithm,dataset,regime,worst10_mean,worst10_std,max_client_loss
+FedAVOT,adult,feasible,0.628349,0.00413043,0.70663
+FedAvg (unif-K),adult,feasible,0.614451,0.00423448,0.695071
+FedAVOT+CVaR,adult,feasible,0.518695,0.0053549,0.579376
+FedCVaR,adult,feasible,0.512699,0.00518876,0.571078
+FedAvg (full),adult,feasible,0.628448,0,0.698445
+FedAVOT,adult,infeasible,0.52062,0.00337756,0.562423
+FedAvg (unif-K),adult,infeasible,0.502453,0.00149057,0.545565
+FedAVOT+CVaR,adult,infeasible,0.493504,0.00241344,0.542161
+FedCVaR,adult,infeasible,0.470602,0.000856808,0.50519
+FedAvg (full),adult,infeasible,0.628448,0,0.698445
+FedAVOT,imdbwiki,feasible,259.117,3.4398,370.019
+FedAvg (unif-K),imdbwiki,feasible,244.688,2.28699,306.946
+FedAVOT+CVaR,imdbwiki,feasible,256.476,3.2404,369.963
+FedCVaR,imdbwiki,feasible,236.083,2.62624,295.343
+FedAvg (full),imdbwiki,feasible,253.267,0,369.807
+FedAVOT,imdbwiki,infeasible,278.153,3.0216,469.956
+FedAvg (unif-K),imdbwiki,infeasible,250.503,2.27208,390.719
+FedAVOT+CVaR,imdbwiki,infeasible,278.308,3.02404,470.114
+FedCVaR,imdbwiki,infeasible,250.59,2.27631,390.888
+FedAvg (full),imdbwiki,infeasible,253.267,0,369.807

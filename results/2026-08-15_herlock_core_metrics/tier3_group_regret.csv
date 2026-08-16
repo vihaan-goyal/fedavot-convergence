@@ -1,0 +1,101 @@
+algorithm,dataset,regime,group,regret_mean,regret_std
+FedAVOT,adult,feasible,White,0.000846638,0.00221184
+FedAVOT,adult,feasible,Black,0.00146227,0.00102456
+FedAVOT,adult,feasible,Asian-Pac-Islander,-0.000592586,0.00402712
+FedAVOT,adult,feasible,Amer-Indian-Eskimo,0.00117947,0.00253115
+FedAVOT,adult,feasible,Other,0.000898135,0.000307816
+FedAvg (unif-K),adult,feasible,White,-0.00455151,0.00218028
+FedAvg (unif-K),adult,feasible,Black,-0.000353344,0.00106155
+FedAvg (unif-K),adult,feasible,Asian-Pac-Islander,-0.00370437,0.0039227
+FedAvg (unif-K),adult,feasible,Amer-Indian-Eskimo,0.00908146,0.00274408
+FedAvg (unif-K),adult,feasible,Other,0.00442555,0.000320871
+FedAVOT+CVaR,adult,feasible,White,-0.0292961,0.00149022
+FedAVOT+CVaR,adult,feasible,Black,0.0323182,0.0012866
+FedAVOT+CVaR,adult,feasible,Asian-Pac-Islander,0.00240682,0.00287481
+FedAVOT+CVaR,adult,feasible,Amer-Indian-Eskimo,0.0457354,0.00393601
+FedAVOT+CVaR,adult,feasible,Other,0.0307226,0.00106078
+FedCVaR,adult,feasible,White,-0.0308589,0.00126474
+FedCVaR,adult,feasible,Black,0.0318859,0.00104737
+FedCVaR,adult,feasible,Asian-Pac-Islander,0.00487334,0.00270853
+FedCVaR,adult,feasible,Amer-Indian-Eskimo,0.0498348,0.00442924
+FedCVaR,adult,feasible,Other,0.0338979,0.00164812
+FedAvg (full),adult,feasible,White,0,0
+FedAvg (full),adult,feasible,Black,0,0
+FedAvg (full),adult,feasible,Asian-Pac-Islander,0,0
+FedAvg (full),adult,feasible,Amer-Indian-Eskimo,0,0
+FedAvg (full),adult,feasible,Other,0,0
+FedAVOT,adult,infeasible,White,-0.0455228,0.00109683
+FedAVOT,adult,infeasible,Black,0.00629348,0.00140719
+FedAVOT,adult,infeasible,Asian-Pac-Islander,0.042335,0.00299125
+FedAVOT,adult,infeasible,Amer-Indian-Eskimo,0.0539751,0.00371957
+FedAVOT,adult,infeasible,Other,0.0366525,0.00216989
+FedAvg (unif-K),adult,infeasible,White,-0.0538856,0.000251902
+FedAvg (unif-K),adult,infeasible,Black,0.029043,0.00120095
+FedAvg (unif-K),adult,infeasible,Asian-Pac-Islander,0.0715038,0.00230683
+FedAvg (unif-K),adult,infeasible,Amer-Indian-Eskimo,0.0670441,0.0037841
+FedAvg (unif-K),adult,infeasible,Other,0.0576965,0.00318335
+FedAVOT+CVaR,adult,infeasible,White,-0.0472805,0.00082423
+FedAVOT+CVaR,adult,infeasible,Black,0.0177299,0.00128435
+FedAVOT+CVaR,adult,infeasible,Asian-Pac-Islander,0.038037,0.00245681
+FedAVOT+CVaR,adult,infeasible,Amer-Indian-Eskimo,0.0607172,0.00308357
+FedAVOT+CVaR,adult,infeasible,Other,0.0471051,0.00141975
+FedCVaR,adult,infeasible,White,-0.0505917,0.000354787
+FedCVaR,adult,infeasible,Black,0.0384667,0.0013372
+FedCVaR,adult,infeasible,Asian-Pac-Islander,0.0645639,0.00222022
+FedCVaR,adult,infeasible,Amer-Indian-Eskimo,0.0808874,0.0042558
+FedCVaR,adult,infeasible,Other,0.0773219,0.00347984
+FedAvg (full),adult,infeasible,White,0,0
+FedAvg (full),adult,infeasible,Black,0,0
+FedAvg (full),adult,infeasible,Asian-Pac-Islander,0,0
+FedAvg (full),adult,infeasible,Amer-Indian-Eskimo,0,0
+FedAvg (full),adult,infeasible,Other,0,0
+FedAVOT,imdbwiki,feasible,tier1,6.23065,1.23735
+FedAVOT,imdbwiki,feasible,tier2,5.45369,0.969019
+FedAVOT,imdbwiki,feasible,tier3,5.39392,2.06981
+FedAVOT,imdbwiki,feasible,tier4,6.28452,1.54104
+FedAVOT,imdbwiki,feasible,tier5,5.52577,1.18525
+FedAvg (unif-K),imdbwiki,feasible,tier1,10.7801,1.05847
+FedAvg (unif-K),imdbwiki,feasible,tier2,-0.755689,0.230611
+FedAvg (unif-K),imdbwiki,feasible,tier3,-7.42055,1.39395
+FedAvg (unif-K),imdbwiki,feasible,tier4,-8.10573,0.645263
+FedAvg (unif-K),imdbwiki,feasible,tier5,-6.17593,0.384022
+FedAVOT+CVaR,imdbwiki,feasible,tier1,6.8556,1.29224
+FedAVOT+CVaR,imdbwiki,feasible,tier2,5.21239,0.893439
+FedAVOT+CVaR,imdbwiki,feasible,tier3,6.06763,2.06101
+FedAVOT+CVaR,imdbwiki,feasible,tier4,8.17221,1.59111
+FedAVOT+CVaR,imdbwiki,feasible,tier5,5.39702,1.14605
+FedCVaR,imdbwiki,feasible,tier1,11.9677,1.14014
+FedCVaR,imdbwiki,feasible,tier2,-0.810011,0.290759
+FedCVaR,imdbwiki,feasible,tier3,-6.71407,1.48438
+FedCVaR,imdbwiki,feasible,tier4,-4.74978,0.664764
+FedCVaR,imdbwiki,feasible,tier5,-6.51268,0.420894
+FedAvg (full),imdbwiki,feasible,tier1,0,0
+FedAvg (full),imdbwiki,feasible,tier2,0,0
+FedAvg (full),imdbwiki,feasible,tier3,0,0
+FedAvg (full),imdbwiki,feasible,tier4,0,0
+FedAvg (full),imdbwiki,feasible,tier5,0,0
+FedAVOT,imdbwiki,infeasible,tier1,41.037,0.813727
+FedAVOT,imdbwiki,infeasible,tier2,21.5656,1.50904
+FedAVOT,imdbwiki,infeasible,tier3,-1.62123,2.02406
+FedAVOT,imdbwiki,infeasible,tier4,-17.9836,0.691655
+FedAVOT,imdbwiki,infeasible,tier5,-1.80757,1.09568
+FedAvg (unif-K),imdbwiki,infeasible,tier1,31.2917,0.971279
+FedAvg (unif-K),imdbwiki,infeasible,tier2,18.7938,0.638776
+FedAvg (unif-K),imdbwiki,infeasible,tier3,-2.13659,1.19946
+FedAvg (unif-K),imdbwiki,infeasible,tier4,-14.8944,0.568419
+FedAvg (unif-K),imdbwiki,infeasible,tier5,-28.975,0.48025
+FedAVOT+CVaR,imdbwiki,infeasible,tier1,41.1431,0.812365
+FedAVOT+CVaR,imdbwiki,infeasible,tier2,21.6653,1.51252
+FedAVOT+CVaR,imdbwiki,infeasible,tier3,-1.51201,2.02434
+FedAVOT+CVaR,imdbwiki,infeasible,tier4,-17.8604,0.696064
+FedAVOT+CVaR,imdbwiki,infeasible,tier5,-1.68882,1.09572
+FedCVaR,imdbwiki,infeasible,tier1,31.3245,0.971534
+FedCVaR,imdbwiki,infeasible,tier2,18.8137,0.639702
+FedCVaR,imdbwiki,infeasible,tier3,-2.10743,1.19931
+FedCVaR,imdbwiki,infeasible,tier4,-14.8613,0.568928
+FedCVaR,imdbwiki,infeasible,tier5,-28.9314,0.480319
+FedAvg (full),imdbwiki,infeasible,tier1,0,0
+FedAvg (full),imdbwiki,infeasible,tier2,0,0
+FedAvg (full),imdbwiki,infeasible,tier3,0,0
+FedAvg (full),imdbwiki,infeasible,tier4,0,0
+FedAvg (full),imdbwiki,infeasible,tier5,0,0

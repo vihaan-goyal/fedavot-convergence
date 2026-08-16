@@ -1,0 +1,21 @@
+algorithm,dataset,regime,mean,std
+FedAVOT,adult,feasible,0.356097,0.00179977
+FedAvg (unif-K),adult,feasible,0.351348,0.00176863
+FedAVOT+CVaR,adult,feasible,0.334395,0.00127382
+FedCVaR,adult,feasible,0.33317,0.00106726
+FedAvg (full),adult,feasible,0.355228,0
+FedAVOT,adult,infeasible,0.31934,0.000723902
+FedAvg (unif-K),adult,infeasible,0.315722,5.06965e-05
+FedAVOT+CVaR,adult,infeasible,0.319032,0.00051158
+FedCVaR,adult,infeasible,0.319591,0.000379751
+FedAvg (full),adult,infeasible,0.355228,0
+FedAVOT,imdbwiki,feasible,99.3403,0.851502
+FedAvg (unif-K),imdbwiki,feasible,91.227,0.372133
+FedAVOT+CVaR,imdbwiki,feasible,99.9036,0.837048
+FedCVaR,imdbwiki,feasible,92.1988,0.448382
+FedAvg (full),imdbwiki,feasible,93.5626,0
+FedAVOT,imdbwiki,infeasible,101.801,0.294556
+FedAvg (unif-K),imdbwiki,infeasible,94.3785,0.464329
+FedAVOT+CVaR,imdbwiki,infeasible,101.912,0.294099
+FedCVaR,imdbwiki,infeasible,94.4102,0.464322
+FedAvg (full),imdbwiki,infeasible,93.5626,0
