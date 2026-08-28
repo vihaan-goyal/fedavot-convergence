@@ -6,8 +6,11 @@
 #                + the two CVaR models at their best (alpha, gamma) from the summary
 #                (pin a specific config with --alpha/--gamma)
 #   groups     : per-critical-group loss curves, 2x3 panels (5 groups + tail bars)
-#   users      : per-user loss heat-strips (users sorted by importance rank), the
-#                readable form of "loss per user for each round"
+#   users      : per-user loss heat-strips (users sorted by importance rank, mean over
+#                all seeds), the readable form of "loss per user for each round"
+#   users-cv   : companion heat-strips of the coefficient of variation (std/mean over
+#                seeds) per (round, user) -- a heatmap can't show a std band like a line
+#                can, so this is where per-user seed variance is surfaced
 #   heatmaps   : (alpha, gamma) grid of tail overall / tail worst-group per CVaR model;
 #                the gamma=1.00 row must match the grid-free fedavot/fedavg values
 #                (built-in identity check); diverged cells are masked "DIV"
@@ -57,8 +60,9 @@ def parse_args(argv=None):
                     help="where the CSVs live (one dated run folder)")
     ap.add_argument("--fig-dir", default="figures/2026-08-10_sweep_pipeline", help="output directory")
     ap.add_argument("--figures", nargs="+", default=["overview", "groups", "users",
-                                                     "heatmaps", "best-table"],
-                    choices=["overview", "groups", "users", "heatmaps", "best-table"])
+                                                     "users-cv", "heatmaps", "best-table"],
+                    choices=["overview", "groups", "users", "users-cv", "heatmaps",
+                             "best-table"])
     ap.add_argument("--datasets", nargs="+", default=None, help="subset filter")
     ap.add_argument("--regimes", nargs="+", default=None, help="subset filter")
     ap.add_argument("--models", nargs="+", default=None, help="subset filter")
@@ -355,6 +359,27 @@ def fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel):
     save_fig(fig, args, f"{ds}_{regime}_groups")
 
 
+def _stack_user_matrix(files, args):
+    # -> (S, R, N) stacked across seed files, rounds/N aligned by truncating to the
+    # shortest seed (mirrors stack_seed_curves) and downsampling rounds for plotting.
+    mats, rounds = [], None
+    for f in files:
+        d = pd.read_csv(f)
+        ucols = [c for c in d.columns if c.startswith("user_")]
+        U = d[ucols].values           # (R, N), NaN on non-logged rounds
+        r = d["round"].values
+        logged = ~np.isnan(U).all(axis=1)
+        U, r = U[logged], r[logged]
+        mats.append(U)
+        rounds = r if rounds is None else rounds
+    n = min(len(mat) for mat in mats)
+    mats = [mat[:n] for mat in mats]
+    rounds = rounds[:n]
+    stride = args.user_round_stride or max(1, n // 1000)
+    S = np.stack(mats)[:, ::stride, :]   # (S, R', N)
+    return S, rounds[::stride], len(ucols)
+
+
 def fig_users(summary, index, ds, regime, args, labels, xlabel):
     shown = resolve_shown_configs(summary, index, ds, regime,
                                   args.models or MODELS_ORDER, args)
@@ -366,15 +391,9 @@ def fig_users(summary, index, ds, regime, args, labels, xlabel):
         axes = [axes]
     ims = []
     for ax, (m, a, g, suff) in zip(axes, shown):
-        files, _ = config_files(index, ds, regime, m, a, g)
-        d = pd.read_csv(files[0])
-        ucols = [c for c in d.columns if c.startswith("user_")]
-        U = d[ucols].values           # (R, N), NaN on non-logged rounds
-        rounds = d["round"].values
-        logged = ~np.isnan(U).all(axis=1)
-        U, rounds = U[logged], rounds[logged]
-        stride = args.user_round_stride or max(1, len(rounds) // 1000)
-        U, rounds = U[::stride], rounds[::stride]
+        files, seeds = config_files(index, ds, regime, m, a, g)
+        S, rounds, n_users = _stack_user_matrix(files, args)
+        U = np.nanmean(S, axis=0)     # mean over seeds, (R', N)
         finite = U[np.isfinite(U) & (U < args.cap)]
         Umask = np.where(U >= args.cap, np.nan, U)
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -382,15 +401,55 @@ def fig_users(summary, index, ds, regime, args, labels, xlabel):
         vmin, vmax = (np.nanpercentile(logU, [2, 98]) if finite.size else (0, 1))
         im = ax.imshow(logU.T, aspect="auto", origin="upper", cmap="viridis",
                        vmin=vmin, vmax=vmax,
-                       extent=[rounds[0], rounds[-1], len(ucols), 0])
+                       extent=[rounds[0], rounds[-1], n_users, 0])
         ims.append(im)
         ax.set_ylabel("user (by p rank)", fontsize=8)
-        ax.set_title(labels[m] + suff + " (seed 0)", fontsize=9, loc="left")
+        ax.set_title(labels[m] + suff + f" (mean over {len(seeds)} seeds)",
+                     fontsize=9, loc="left")
         ax.tick_params(labelsize=8)
     axes[-1].set_xlabel(xlabel)
     fig.colorbar(ims[0], ax=axes, fraction=0.02, pad=0.02, label="log10 loss")
-    fig.suptitle(f"{DS_LABEL[ds]}, {regime.upper()} regime: per-user loss", fontsize=12)
+    fig.suptitle(f"{DS_LABEL[ds]}, {regime.upper()} regime: per-user loss "
+                 f"(mean over seeds)", fontsize=12)
     save_fig(fig, args, f"{ds}_{regime}_users")
+
+
+def fig_users_cv(summary, index, ds, regime, args, labels, xlabel):
+    # companion to fig_users: a heatmap can't show a std band the way a line can, so
+    # this plots the coefficient of variation (std/mean across seeds) per (round, user)
+    # on the same layout, so Herlock can see where seed variance is high.
+    shown = resolve_shown_configs(summary, index, ds, regime,
+                                  args.models or MODELS_ORDER, args)
+    if not shown:
+        return
+    fig, axes = plt.subplots(len(shown), 1, figsize=(11, 2.2 * len(shown) + 1.5),
+                             sharex=True)
+    if len(shown) == 1:
+        axes = [axes]
+    ims = []
+    for ax, (m, a, g, suff) in zip(axes, shown):
+        files, seeds = config_files(index, ds, regime, m, a, g)
+        S, rounds, n_users = _stack_user_matrix(files, args)
+        S = np.where(S >= args.cap, np.nan, S)
+        mean = np.nanmean(S, axis=0)
+        std = np.nanstd(S, axis=0, ddof=0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            CV = np.where(mean > 0, std / mean, np.nan)
+        finite = CV[np.isfinite(CV)]
+        vmax = np.nanpercentile(finite, 98) if finite.size else 1.0
+        im = ax.imshow(CV.T, aspect="auto", origin="upper", cmap="magma",
+                       vmin=0, vmax=max(vmax, 1e-6),
+                       extent=[rounds[0], rounds[-1], n_users, 0])
+        ims.append(im)
+        ax.set_ylabel("user (by p rank)", fontsize=8)
+        ax.set_title(labels[m] + suff + f" ({len(seeds)} seeds)", fontsize=9, loc="left")
+        ax.tick_params(labelsize=8)
+    axes[-1].set_xlabel(xlabel)
+    fig.colorbar(ims[0], ax=axes, fraction=0.02, pad=0.02,
+                label="coefficient of variation (std/mean over seeds)")
+    fig.suptitle(f"{DS_LABEL[ds]}, {regime.upper()} regime: per-user seed variance "
+                 f"(companion to per-user loss)", fontsize=12)
+    save_fig(fig, args, f"{ds}_{regime}_users_cv")
 
 
 def fig_heatmaps(summary, index, ds, regime, args, labels):
@@ -518,6 +577,8 @@ def main(argv=None):
                 fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel)
             if "users" in args.figures:
                 fig_users(summary, index, ds, regime, args, labels, xlabel)
+            if "users-cv" in args.figures:
+                fig_users_cv(summary, index, ds, regime, args, labels, xlabel)
             if "heatmaps" in args.figures:
                 fig_heatmaps(summary, index, ds, regime, args, labels)
     if "best-table" in args.figures:
