@@ -10,7 +10,10 @@
 #                readable form of "loss per user for each round"
 #   heatmaps   : (alpha, gamma) grid of tail overall / tail worst-group per CVaR model;
 #                the gamma=1.00 row must match the grid-free fedavot/fedavg values
-#                (built-in identity check); diverged cells are masked "DIV"
+#                (built-in identity check); diverged cells are masked "DIV"; the
+#                colour range clips extreme outliers (see _robust_clim) so one
+#                blow-up cell cannot flatten the grid -- clipping shows as a
+#                colorbar arrow, and every cell is annotated with its exact value
 #   best-table : best (alpha, gamma) per model -> stdout + <fig-dir>/<prefix>best_table.csv
 #
 # summary.csv is preferred for tail stats / best-config selection; if it is missing,
@@ -393,6 +396,33 @@ def fig_users(summary, index, ds, regime, args, labels, xlabel):
     save_fig(fig, args, f"{ds}_{regime}_users")
 
 
+def _robust_clim(H):
+    """Color limits for a heatmap that one blow-up cell would otherwise flatten.
+
+    The (alpha, gamma) grids span ~1.2x end to end, except imdbwiki/infeasible
+    fedavot_cvar, where the unstable (0.1, 0.1) corner reaches 7159 against a
+    116-130 background and drives every other cell to the same shade. Clip to the
+    "far out" fence (q3 + 3*IQR) only when the extreme is more than 2x beyond it,
+    so the well-behaved grids keep their full range untouched. Returns the limits
+    plus the colorbar `extend` that flags the clipping.
+    """
+    v = H[np.isfinite(H)]
+    if v.size == 0:
+        return None, None, "neither"
+    lo, hi = float(v.min()), float(v.max())
+    q1, q3 = np.percentile(v, [25, 75])
+    iqr = q3 - q1
+    if iqr > 0:
+        if hi > 2.0 * (q3 + 3.0 * iqr):
+            hi = float(q3 + 3.0 * iqr)
+        if lo < (q1 - 3.0 * iqr) / 2.0:
+            lo = float(q1 - 3.0 * iqr)
+    under, over = lo > v.min(), hi < v.max()
+    ext = ("both" if under and over else
+           "max" if over else "min" if under else "neither")
+    return lo, hi, ext
+
+
 def fig_heatmaps(summary, index, ds, regime, args, labels):
     if summary is None:
         print("  heatmaps need summary.csv (run run_experiments.py --rebuild-summary)")
@@ -420,7 +450,9 @@ def fig_heatmaps(summary, index, ds, regime, args, labels):
         for ax, H, name in ((axs[0], Ho, "tail overall"), (axs[1], Hw, "tail worst-group")):
             cmap = plt.get_cmap("viridis").copy()
             cmap.set_bad("lightgray")
-            im = ax.imshow(H, origin="lower", cmap=cmap, aspect="auto")
+            vmin, vmax, extend = _robust_clim(H)
+            im = ax.imshow(H, origin="lower", cmap=cmap, aspect="auto",
+                           vmin=vmin, vmax=vmax)
             ax.set_xticks(range(len(alphas)))
             ax.set_xticklabels([f"{float(a):g}" for a in alphas], fontsize=7)
             ax.set_yticks(range(len(gammas)))
@@ -434,7 +466,10 @@ def fig_heatmaps(summary, index, ds, regime, args, labels):
                 hmin = np.nanmin(H)
                 ties = np.argwhere(np.abs(H - hmin) <= 1e-9 * max(abs(hmin), 1e-12))
                 for by, bx in ties:
-                    ax.plot(bx, by, marker="*", color="red",
+                    # tuck a tie star into the cell corner; centred, a rim of ~19
+                    # tied cells would sit on top of its own annotation
+                    off = 0.30 if len(ties) > 1 else 0.0
+                    ax.plot(bx - off, by + off, marker="*", color="red",
                             ms=7 if len(ties) > 1 else 14, mec="white", ls="none")
             for yi in range(len(gammas)):
                 for xi in range(len(alphas)):
@@ -442,10 +477,16 @@ def fig_heatmaps(summary, index, ds, regime, args, labels):
                         ax.text(xi, yi, "DIV", ha="center", va="center",
                                 fontsize=6, color="red")
                     elif not args.no_annot and np.isfinite(H[yi, xi]):
+                        # pick black on the bright end of viridis, white on the dark
+                        # end -- clipped cells sit at the top colour, where white is
+                        # unreadable
+                        r, g, b, _ = im.cmap(im.norm(H[yi, xi]))
+                        lum = 0.299 * r + 0.587 * g + 0.114 * b
                         ax.text(xi, yi, f"{H[yi, xi]:.4g}", ha="center", va="center",
-                                fontsize=5.5, color="white")
+                                fontsize=5.5,
+                                color="black" if lum > 0.55 else "white")
             ax.set_title(name, fontsize=10)
-            fig.colorbar(im, ax=ax, fraction=0.046)
+            fig.colorbar(im, ax=ax, fraction=0.046, extend=extend)
         base = labels["fedavot" if m == "fedavot_cvar" else "fedavg"]
         fig.suptitle(f"{DS_LABEL[ds]}, {regime.upper()}: {labels[m]} over (α, γ) "
                      f"(mean over seeds; ★ = best incl. ties; γ=1 row and α=1 column "
