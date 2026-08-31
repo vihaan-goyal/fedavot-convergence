@@ -256,33 +256,39 @@ def fig_overview(summary, index, ds, regime, args, labels, ylabels, xlabel):
     coincident = {m for m, pm in partner.items()
                   if m in curves and pm in curves
                   and np.allclose(curves[m], curves[pm])}
-    tail_bits = []
+    # tail stats ride in the legend label: the curves fill the axes, so a
+    # separate text box would cover them or collide with the legend
+    tails = {m: model_tail(summary, index, ds, regime, m, args, a, g)
+             for m, a, g, _ in shown if m in curves}
     live_means = {}
     for m, a, g, suff in shown:
         if m not in curves:
             continue
         L = curves[m]
         diverged = L.max() >= args.cap
+        mu, sd = tails[m]
+        lbl = labels[m] + suff
+        if mu is not None and mu < args.cap:
+            sdtxt = "0" if sd < 1e-12 else f"{sd:.2g}"
+            lbl += f"  —  tail-{args.tail} {mu:.4g} ± {sdtxt}"
         if m in coincident:
-            plot_curve(ax, L, labels[m] + suff, COL[m], band=False,
+            plot_curve(ax, L, lbl, COL[m], band=False,
                        ls=(0, (4, 4)), lw=1.2, zorder=5)
         else:
-            plot_curve(ax, L, labels[m] + suff, COL[m], band=not diverged)
-        mu, sd = model_tail(summary, index, ds, regime, m, args, a, g)
+            plot_curve(ax, L, lbl, COL[m], band=not diverged)
         if mu is not None and mu < args.cap:
-            tail_bits.append(f"{SHORT[m]} {mu:.4g}")
             live_means[m] = np.mean(L, axis=0)
-    # axis conventions of the figures already in the paper (replot_paper_figures.py):
-    # adult trajectory panels pin ylim to (0.18, 3.0) (line 103); imdb figures use
-    # 0.85x min / 1.35x max of the FedAVOT and full-coverage MEAN curves (lines 60-62)
-    if ds == "adult":
-        ax.set_ylim(0.18, 3.0)
-    else:
-        anch = ([live_means[m] for m in ("fedavot", "full") if m in live_means]
-                or list(live_means.values()))
-        if anch:
-            ax.set_ylim(0.85 * min(c.min() for c in anch),
-                        1.35 * max(c.max() for c in anch))
+    # 0.85x min / 1.35x max of the anchor MEAN curves, the imdb rule from the
+    # paper figures (replot_paper_figures.py lines 60-62). The paper's adult
+    # panels instead pin ylim to (0.18, 3.0), but that pin exists for the m/K
+    # FedAvg(K) blow-up -- a model this pipeline does not run -- and here it
+    # left ~80% of the adult axis empty. Diverged curves are dropped from
+    # live_means, so the anchored rule is safe for both datasets.
+    anch = ([live_means[m] for m in ("fedavot", "full") if m in live_means]
+            or list(live_means.values()))
+    if anch:
+        ax.set_ylim(0.85 * min(c.min() for c in anch),
+                    1.35 * max(c.max() for c in anch))
     for m, a, g, suff in shown:
         if m not in live_means and config_files(index, ds, regime, m, a, g)[0]:
             ax.annotate(f"{labels[m]} diverges (pinned at cap)", xy=(0.03, 0.96),
@@ -293,9 +299,37 @@ def fig_overview(summary, index, ds, regime, args, labels, ylabels, xlabel):
     n_seeds = len(config_files(index, ds, regime, shown[0][0],
                                shown[0][1], shown[0][2])[0])
     ax.set_title(f"{DS_LABEL[ds]}, {regime.upper()} regime, {n_seeds} seeds\n"
-                 f"tail overall: " + ", ".join(tail_bits), fontsize=11)
-    ax.legend(fontsize=9)
+                 f"tail-{args.tail} = mean over the last {args.tail} iterations,"
+                 f" then mean ± std across seeds", fontsize=11)
+    ax.legend(fontsize=8.5)
     ax.grid(alpha=0.3, which="both")
+    # when every live method lands within ~6% of the others, the full-range view
+    # is a single overlapping line (adult pins ylim to the paper's (0.18, 3.0),
+    # so a 0.5% spread is ~2 px) -- add a linear-scale zoom of the tail
+    mus = [tails[m][0] for m in live_means]
+    if len(mus) >= 2 and max(mus) / min(mus) < 1.06:
+        R = len(next(iter(live_means.values())))
+        x0 = R // 2
+        axi = ax.inset_axes([0.40, 0.30, 0.56, 0.32])
+        for m, a, g, suff in shown:
+            if m not in live_means:
+                continue
+            L = curves[m][:, x0:]
+            mean, std = L.mean(0), L.std(0)
+            xs = np.arange(x0, R)
+            if m not in coincident:
+                axi.fill_between(xs, mean - std, mean + std, color=COL[m], alpha=0.10)
+            axi.plot(xs, mean, color=COL[m], lw=1.0,
+                     ls=(0, (4, 4)) if m in coincident else "-",
+                     zorder=5 if m in coincident else 2)
+        lo = min(c[x0:].min() for c in live_means.values())
+        hi = max(c[x0:].max() for c in live_means.values())
+        pad = 0.2 * (hi - lo + 1e-12)
+        axi.set_ylim(lo - pad, hi + pad)
+        axi.set_xlim(x0, R - 1)
+        axi.set_title(f"zoom: iterations {x0}–{R - 1}, linear scale", fontsize=7.5)
+        axi.tick_params(labelsize=7)
+        axi.grid(alpha=0.25)
     save_fig(fig, args, f"{ds}_{regime}_overview")
 
 
@@ -316,12 +350,22 @@ def fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel):
         n = min(len(d) for d in per_seed)
         for gc in gcols:
             curves[(m, gc)] = np.stack([d[gc].values[:n] for d in per_seed])
+    # same degeneracy as fig_overview: at a risk-neutral best config the CVaR
+    # model IS its base run, so the base's line would be buried. Overlay dashed.
+    partner = {"fedavot": "fedavot_cvar", "fedavg": "fedcvar"}
+    coincident = {m for m, pm in partner.items()
+                  if any(k[0] == m for k in curves) and any(k[0] == pm for k in curves)
+                  and all(np.allclose(curves[(m, gc)], curves[(pm, gc)]) for gc in gcols)}
     fig, axes = plt.subplots(2, 3, figsize=(14, 9))
     for gi, gc in enumerate(gcols[:5]):
         ax = axes[gi // 3, gi % 3]
         for m, a, g, suff in shown:
             L = curves[(m, gc)]
-            plot_curve(ax, L, labels[m], COL[m], band=L.max() < args.cap)
+            if m in coincident:
+                plot_curve(ax, L, labels[m], COL[m], band=False,
+                           ls=(0, (4, 4)), lw=1.1, zorder=5)
+            else:
+                plot_curve(ax, L, labels[m], COL[m], band=L.max() < args.cap)
         ax.set_yscale("log")
         finite = [np.mean(curves[(m, gc)], axis=0) for m, *_ in shown
                   if curves[(m, gc)].max() < args.cap]
@@ -333,7 +377,17 @@ def fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel):
         ax.grid(alpha=0.3, which="both")
         ax.tick_params(labelsize=8)
         if gi == 0:
-            ax.legend(fontsize=7)
+            ax.legend(fontsize=7, loc="upper left")
+        # tail-500 mean per method, on the panel itself (top-right, colour-keyed);
+        # best non-reference method bold
+        gt = {m: curves[(m, gc)][:, -args.tail:].mean() for m, *_ in shown
+              if curves[(m, gc)].max() < args.cap}
+        best_gt = min((v for k, v in gt.items() if k != "full"), default=None)
+        for li, m in enumerate(m for m, *_ in shown if m in gt):
+            ax.text(0.975, 0.965 - 0.068 * li, f"{SHORT[m]} {gt[m]:.4g}",
+                    transform=ax.transAxes, ha="right", va="top", fontsize=7.5,
+                    color=COL[m],
+                    weight="bold" if m != "full" and gt[m] == best_gt else "normal")
     # 6th panel: tail bars
     ax = axes[1, 2]
     xs = np.arange(len(gcols))
