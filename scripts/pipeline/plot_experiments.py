@@ -69,6 +69,10 @@ def parse_args(argv=None):
                     help="pin the CVaR alpha shown in overview/groups/users "
                          "(default: best by tail overall from summary)")
     ap.add_argument("--gamma", type=float, default=None, help="pin the CVaR gamma")
+    ap.add_argument("--select", default="overall", choices=["overall", "worst-group"],
+                    help="which tail metric picks the shown (alpha, gamma) per CVaR "
+                         "model: overall_tail (default) or worst_group_tail "
+                         "(worst-group needs summary.csv; figures get a _wgopt stem)")
     ap.add_argument("--tail", type=int, default=500,
                     help="tail window when recomputing without a summary")
     ap.add_argument("--vocab", default="fl", choices=["fl", "defed"],
@@ -155,10 +159,13 @@ def best_config(summary, index, ds, regime, model, args):
                       & (summary.model == model) & (summary.alpha != "")]
         if len(sub) == 0:
             return None
-        grp = sub.groupby(["alpha", "gamma"])["overall_tail"].agg(["mean", lambda v: v.std(ddof=0)])
+        col = "worst_group_tail" if args.select == "worst-group" else "overall_tail"
+        grp = sub.groupby(["alpha", "gamma"])[col].agg(["mean", lambda v: v.std(ddof=0)])
         grp.columns = ["mean", "std"]
         a, g = grp["mean"].idxmin()
         return a, g, grp.loc[(a, g), "mean"], grp.loc[(a, g), "std"]
+    if args.select == "worst-group":
+        raise SystemExit("--select worst-group needs summary.csv in the results dir")
     # no summary: scan all grid files for this model (slow path)
     sub = index[(index.dataset == ds) & (index.regime == regime)
                 & (index.model == model) & (index.alpha != "")]
@@ -362,10 +369,10 @@ def fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel):
         for m, a, g, suff in shown:
             L = curves[(m, gc)]
             if m in coincident:
-                plot_curve(ax, L, labels[m], COL[m], band=False,
+                plot_curve(ax, L, labels[m] + suff, COL[m], band=False,
                            ls=(0, (4, 4)), lw=1.1, zorder=5)
             else:
-                plot_curve(ax, L, labels[m], COL[m], band=L.max() < args.cap)
+                plot_curve(ax, L, labels[m] + suff, COL[m], band=L.max() < args.cap)
         ax.set_yscale("log")
         finite = [np.mean(curves[(m, gc)], axis=0) for m, *_ in shown
                   if curves[(m, gc)].max() < args.cap]
@@ -405,11 +412,14 @@ def fig_groups(summary, index, ds, regime, args, labels, ylabels, xlabel):
     ax.set_ylabel(f"tail-{args.tail} group loss", fontsize=8)
     ax.set_title("final per-group loss", fontsize=10)
     ax.grid(axis="y", alpha=0.3)
-    grp_word = "critical groups" if args.vocab == "defed" else "critical groups"
-    fig.suptitle(f"{DS_LABEL[ds]}, {regime.upper()} regime: loss per critical group",
-                 fontsize=12)
+    sel_note = ("; (α, γ) minimise the WORST-GROUP tail loss"
+                if args.select == "worst-group"
+                else "; (α, γ) minimise the overall tail loss")
+    fig.suptitle(f"{DS_LABEL[ds]}, {regime.upper()} regime: loss per critical group"
+                 f"{sel_note}", fontsize=12)
     fig.tight_layout()
-    save_fig(fig, args, f"{ds}_{regime}_groups")
+    stem_suffix = "_wgopt" if args.select == "worst-group" else ""
+    save_fig(fig, args, f"{ds}_{regime}_groups{stem_suffix}")
 
 
 def fig_users(summary, index, ds, regime, args, labels, xlabel):
