@@ -33,13 +33,14 @@
 % errors (undefined \@svsechd); use a plain unnumbered run-in heading instead.
 \renewcommand{\paragraph}[1]{\par\medskip\noindent{\bf #1}\hspace{0.5em}\ignorespaces}
 \hyphenation{op-tical net-works semi-conduc-tor}
+\renewcommand{\topfraction}{0.95}\renewcommand{\textfraction}{0.03}\setcounter{topnumber}{3}\setcounter{totalnumber}{4}
 \begin{document}
 \title{Optimally Transport Weighted Stochastic Gradient Descent to Mitigate Distribution Shift\vspace{-8pt}}
 % make the title area
 \maketitle
 
 \begin{abstract}
-Stochastic gradient descent implicitly assumes that mini-batches are exchangeable draws from a fixed population, but real datasets are often organized into critical groups, such as demographic categories, recording sites, or data sources, whose relative importance in the objective may need to be set explicitly rather than inherited from raw sample counts. This is straightforward when every group can appear in every batch; it breaks down when batches can only reveal a subset of groups at a time, which is the rule rather than the exception whenever collection logistics, storage layout, or access constraints determine which groups can co-occur. Naive fixes, such as fixed reweighting or oversampling, either ignore which groups a given batch can actually show or inflate variance and discard data. We propose a fair stochastic gradient descent framework that treats per-batch reweighting as a masked optimal transport problem, coupling the distribution over observable batch patterns to a target group distribution through a support mask determined by which groups can co-occur. Solving this transport problem yields per-batch weights that make the resulting stochastic gradient exactly unbiased for the target objective whenever a feasible transport plan exists, and a classical max-flow/min-cut feasibility condition, specialized to our masked setting, characterizes exactly when it does. We show the resulting projected algorithm converges at the standard rate for convex objectives, and that when exact feasibility fails, an entropy-regularized projection recovers the closest achievable target distribution together with an explicit, controllable bound on the resulting bias. We validate the approach, instantiated as FedAVOT, on income classification with demographic fairness metrics and on age regression under a realistic mismatch between how often a group is observable and how much it should count, where it tracks full-coverage performance whenever the underlying transport problem is feasible, improves on the uniform batch average by a margin that a closed-form feasibility diagnostic predicts before training, and remains stable in regimes where the standard fixed-multiplier correction diverges.
+Stochastic gradient descent implicitly assumes that mini-batches are exchangeable draws from a fixed population, but real datasets are often organized into critical groups, such as demographic categories, recording sites, or data sources, whose relative importance in the objective may need to be set explicitly rather than inherited from raw sample counts. This is straightforward when every group can appear in every batch; it breaks down when batches can only reveal a subset of groups at a time, which is the rule rather than the exception whenever collection logistics, storage layout, or access constraints determine which groups can co-occur. We propose a fair stochastic gradient descent framework that treats per-batch reweighting as a masked optimal transport problem, coupling the distribution over observable batch patterns to a target group distribution through a support mask determined by which groups can co-occur. Solving this transport problem yields per-batch weights that make the resulting stochastic gradient exactly unbiased for the target objective whenever a feasible transport plan exists, and a classical max-flow/min-cut feasibility condition, specialized to our masked setting, characterizes exactly when it does. We show the resulting projected algorithm converges at the standard rate for convex objectives, and that when exact feasibility fails, an entropy-regularized projection recovers the closest achievable target distribution together with an explicit, controllable bound on the resulting bias. We validate the approach, instantiated as FedAVOT, on income classification with demographic fairness metrics and on age regression under a realistic mismatch between how often a group is observable and how much it should count, where it tracks full-coverage performance whenever the underlying transport problem is feasible, improves on the uniform batch average by a margin that a closed-form feasibility diagnostic predicts before training, and remains stable in regimes where the standard fixed-multiplier correction diverges.
 \end{abstract}
 \section{Introduction}
 
@@ -59,7 +60,6 @@ To correct this imbalance, we define a \emph{target group measure} $\mu=(\mu_1,\
 When $\mu=\nu$, this reduces to standard ERM; otherwise, it enforces fairness or domain alignment by up/down-weighting subgroups. Naïve oversampling or undersampling approximates this by modifying the data distribution, but these techniques may increase variance or discard data~\cite{buda2018systematic, he2009learning}.
 
 In practice, optimization proceeds via stochastic gradient descent (SGD). At iteration $t$, a random subset (mini-batch) $\xi_t\subset\{1,\ldots,N\}$ is drawn \emph{without replacement}. Let $\mathcal{A}_1,\ldots,\mathcal{A}_{2^m-1}$ denote all non-empty subsets of $\mathcal{K}$ that may appear in a batch, and let $q_j$ be the probability that the active batch at iteration $t$ contains exactly the subgroup pattern $\mathcal{A}_j$.
-Throughout the analysis we treat $q$ as known; when it is not available in closed form, it can be estimated offline by Monte Carlo simulation of the batch sampler, which is how our experiments obtain it (Section~\ref{sec:experiments}).
 \paragraph{Weighted Gradient Aggregation.}
 When the mini-batch $\xi_t$ belongs to $\mathcal{A}_j$, each group $i\in\mathcal{A}_j$ contributes a normalized proportion $Y[i,j]$ to the aggregated gradient. The joint allocation of group mass is given by:
 \[
@@ -88,7 +88,6 @@ Let $I\subseteq[N]$, $\mathcal{N}(I):=\{j\mid \exists i\in I,\ (i,j)\in\mathcal{
 \end{theorem}
 
 Given feasibility, $T$ can be computed efficiently using the \textit{Iterative Proportional Fitting Procedure (IPFP)}~\cite{sinkhorn1967concerning, knight2008sinkhorn}, also known as \textit{Sinkhorn scaling}, which alternates between row and column normalization.
-If $p$ and $q$ satisfy~\eqref{eq:feasibility}, IPFP converges to a feasible solution of~\eqref{eq:mot}~\cite{sinkhorn1967concerning, knight2008sinkhorn}.
 \section{Convergence of Projected Transport-Weighted SGD (FedAVOT)}
 We analyze the projected SGD algorithm that uses the transport weights described earlier to produce an unbiased stochastic gradient of the \emph{target} (fair) objective
 \begin{equation}\label{eq:target-objective}
@@ -97,11 +96,7 @@ F(\theta) \;:=\; \sum_{i=1}^m \mu_i \,\mathbb{E}_{(x,y)\sim \mathcal{D}_i}\!\big
 \end{equation}
 where $\mathcal{D}_i$ is the (unknown) data distribution within group $K_i$ and $(\mu_1,\dots,\mu_m)$ is the desired target measure over groups. We assume $F$ is convex on a nonempty, closed, convex, and compact constraint set $\mathcal{C}\subseteq\Theta$; the projection $\Pi_{\mathcal{C}}$ is therefore well-defined. Let $\theta^\star\in\arg\min_{\theta\in\mathcal{C}}F(\theta)$.
 \paragraph{Sampling and weighting.}
-At iteration $t$, a mini-batch $\xi_t$ is drawn (without replacement) from the dataset; let $j_t\in\{1,\dots,M\}$ index the \emph{active group-subset} $\mathcal{A}_{j_t}\subseteq\{1,\dots,m\}$ observed in that batch. As in the setup, let $q_j=\mathbb{P}(j_t=j)$ be the probability of subset $\mathcal{A}_j$ under the sampling scheme, and let $Y[i,j]\ge 0$ denote the normalized contribution (weight) assigned to group $i$ when the active subset is $j$ (so $Y[i,j]=0$ if $i\notin\mathcal{A}_j$). Define $T[i,j]=q_j Y[i,j]$ and recall the masking and marginal constraints
-\begin{equation}\label{eq:marginals}
-\sum_{j=1}^M T[i,j]=\mu_i,\quad \sum_{i=1}^m T[i,j]=q_j,\quad T[i,j]=0 \ \text{if}\ i\notin\mathcal{A}_j.
-\end{equation}
-Hence $\sum_{j} q_j Y[i,j]=\mu_i$ for all $i$.
+At iteration $t$, a mini-batch $\xi_t$ is drawn (without replacement) from the dataset; let $j_t\in\{1,\dots,M\}$ index the \emph{active group-subset} $\mathcal{A}_{j_t}\subseteq\{1,\dots,m\}$ observed in that batch. As in the setup, let $q_j=\mathbb{P}(j_t=j)$ be the probability of subset $\mathcal{A}_j$ under the sampling scheme, and let $Y[i,j]\ge 0$ denote the normalized contribution (weight) assigned to group $i$ when the active subset is $j$ (so $Y[i,j]=0$ if $i\notin\mathcal{A}_j$)..
 Within batch $\xi_t$, we compute the (per-sample) gradients and aggregate them group-wise, then scale by the transport weights so that the stochastic gradient estimator is
 \begin{equation}\label{eq:gt}
 g_t \;=\; \sum_{i\in\mathcal{A}_{j_t}} Y[i,j_t]\;\widehat{g}_{t,i},
@@ -117,13 +112,13 @@ There exists $G>0$ such that for all $\theta\in\mathcal{C}$,
 \]
 \end{assumption}
 \begin{lemma}[\textbf{Unbiasedness}]\label{lem:unbiased}
-Under \eqref{eq:marginals}, the estimator $g_t$ in \eqref{eq:gt} is conditionally unbiased:
+Under \eqref{eq:constraints}, the estimator $g_t$ in \eqref{eq:gt} is conditionally unbiased:
 \[
 \mathbb{E}\!\left[g_t \,\big|\, \theta_t\right] \;=\; \nabla F(\theta_t).
 \]
 \end{lemma}
 \begin{proof}
-Condition on $\theta_t$, take expectation over $j_t\sim q$, and use $\sum_j q_j Y[i,j]=\mu_i$ from \eqref{eq:marginals}.
+Condition on $\theta_t$, take expectation over $j_t\sim q$, and use $\sum_j q_j Y[i,j]=\mu_i$ from \eqref{eq:constraints}.
 \end{proof}
 \subsection{Convergence Rate}
 Let $D:=\sup_{\theta,\theta'\in\mathcal{C}}\|\theta-\theta'\|$ denote the (finite) diameter of $\mathcal{C}$ in the Euclidean norm. Consider the averaged iterate $\bar{\theta}_T := \frac{1}{T}\sum_{t=1}^T \theta_t$.
@@ -145,6 +140,21 @@ In particular, with the choice $\eta_t \equiv \eta = \frac{D}{G\sqrt{T}}$,
 \begin{proof}[Proof sketch]
 Non-expansiveness of $\Pi_{\mathcal{C}}$ gives $\|\theta_{t+1}-\theta^\star\|^2 \le \|\theta_t-\theta^\star\|^2 - 2\eta_t \langle g_t, \theta_t-\theta^\star\rangle + \eta_t^2 \|g_t\|^2$; taking conditional expectation, applying Lemma~\ref{lem:unbiased}, convexity and Assumption~\ref{assump:gradient_bound}, telescoping over $t$, and using Jensen's inequality on $\bar{\theta}_T$ gives \eqref{eq:key-bound}; the constant step $\eta=D/(G\sqrt{T})$ gives \eqref{eq:rate}. The same rate holds for $\eta_t=\eta_0/\sqrt{t}$ up to constants.
 \end{proof}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.56\textwidth]{adult_race_K3_4000rounds_decay.pdf}
+  \caption{Adult income classification with a uniform importance target over
+  race ($m=100$ groups, $K=3$, $4000$ iterations, $5$ seeds). Left column:
+  prevalence availability (every group equally observable) makes the fairness
+  target infeasible purely from category imbalance; FedAVOT ($0.227$) stays
+  within $10\%$ of full coverage ($0.207$) and $8.5\%$ below the uniform
+  average ($0.248$), while the fixed-multiplier correction is unstable, and
+  the residual loss concentrates on the smallest race categories (bottom
+  row). Right column: importance-aligned availability is feasible; FedAVOT
+  and the uniform average both sit on top of full coverage and the
+  fixed-multiplier correction diverges.}
+  \label{fig:adult}
+\end{figure*}
 \subsection{Infeasible Masks and Entropy-Regularized Projection of Target Marginals}
 \label{subsec:infeasible}
 The subset constraints \eqref{eq:feasibility} ensure that the target weights $p=\mu$ are realizable given the batch-sampling structure (mask) $\mathcal{E}$.
@@ -175,37 +185,43 @@ This term persists regardless of $T$ and quantifies the structural error caused 
 \section{Experiments}
 \label{sec:experiments}
 \paragraph{Common Protocol for the Availability-Mismatch Experiments}
-In the experiments of this section the batch structure is availability-driven: at each iteration the sampler exposes an active set $S^t$ of $K$ of the $m$ critical groups, drawn without replacement with probabilities proportional to per-group availability weights $r$, which induces the batch law $q$ over the $M=\binom{m}{K}$ observable patterns $\mathcal{A}_j$; we estimate $q$ from $10^6$ Monte Carlo draws of this sampler ($4\times10^5$ in the synthetic study) and fit the plan $T$ by Sinkhorn scaling under the membership mask, normalizing each column to the FedAVOT weights $Y[i,j]=T[i,j]/q_j$. Every exposed group performs $H=5$ local epochs of full-batch gradient descent on its own data before aggregation, with the decaying step size $\eta_t = \eta_\theta/(1+t/T_0)$, $T_0 = 1000$, and four aggregation rules are updated in parallel from the same draw $S^t$, so their trajectories are directly comparable: FedAVOT; the \emph{uniform average} $\frac{1}{K}\sum_{i\in S^t}\theta_i$ over the exposed groups, which ignores importance altogether and is the natural baseline; the fixed-multiplier $m/K$ correction; and the full-coverage reference. We report the importance-weighted objective $F(\theta^t)$ per iteration (squared loss for the regression tasks, cross-entropy for Adult); final values average the last $500$ iterations and are given as mean $\pm$ standard deviation over seeds. Recall that instantiating the feasibility condition~\eqref{eq:feasibility} of Theorem~\ref{thm:feasibility} at the singleton sets $I=\{i\}$ yields the per-group requirement $p_i \le \pi_i := \sum_{j:\, i \in \mathcal{A}_j} q_j$; this ceiling is the operative condition in our designs, and in every regime we call feasible, IPFP converges to machine precision, certifying that the remaining inequalities of~\eqref{eq:feasibility} hold as well. We quantify infeasibility as the importance mass $\sum_{i:\, p_i > \pi_i} p_i$ held by violating groups, and design $r$ to place each experiment on a chosen side of this condition. Throughout, the \emph{full-coverage reference} is the idealized run in which every batch reveals all $m$ groups and each is weighted by its target importance $p_i$; it is the objective value the transport is trying to recover, not a competing method.
+In the experiments of this section the batch structure is availability-driven: at each iteration the sampler exposes an active set $S^t$ of $K$ of the $m$ critical groups, drawn without replacement with probabilities proportional to per-group availability weights $r$, which induces the batch law $q$ over the $M=\binom{m}{K}$ observable patterns $\mathcal{A}_j$; we estimate $q$ from $10^6$ Monte Carlo draws of this sampler ($4\times10^5$ in the synthetic study) and fit the plan $T$ by Sinkhorn scaling under the membership mask, normalizing each column to the FedAVOT weights $Y[i,j]=T[i,j]/q_j$. Every exposed group performs $H=5$ local epochs of full-batch gradient descent on its own data before aggregation, with the decaying step size $\eta_t = \eta_\theta/(1+t/T_0)$, $T_0 = 1000$, and four aggregation rules are updated in parallel from the same draw $S^t$, so their trajectories are directly comparable: FedAVOT; the \emph{uniform average} $\frac{1}{K}\sum_{i\in S^t}\theta_i$ over the exposed groups, which ignores importance altogether and is the natural baseline; the fixed-multiplier $m/K$ correction; and the full-coverage reference. We report the importance-weighted objective $F(\theta^t)$ per iteration (squared loss for the regression tasks, cross-entropy for Adult); final values average the last $500$ iterations and are given as mean $\pm$ standard deviation over seeds. We quantify infeasibility as the importance mass $\sum_{i:\, p_i > \pi_i} p_i$ held by violating groups, and design $r$ to place each experiment on a chosen side of this condition. Throughout, the \emph{full-coverage reference} is the idealized run in which every batch reveals all $m$ groups and each is weighted by its target importance $p_i$; it is the objective value the transport is trying to recover, not a competing method.
 \paragraph{IMDb-Wiki Age Regression Under Availability--Importance Mismatch} We take celebrity identity as the group attribute and use the first $m=100$ identities with at least $30$ training images as the critical groups, each holding $30$ images represented by $128$-dimensional face embeddings from a pretrained ResNet; the task is linear regression of mean-centered age on the embedding, with $K=3$, learning rate $\eta_\theta=10^{-2}$, $4000$ iterations, and $5$ seeds. All availability regimes share the same cubic importance $p_i \propto (m{+}1{-}i)^3$ and differ only in $r$, which we parametrize as $r_i \propto i^{\beta}$. The \emph{uniform} regime ($\beta=0$) is the default one gets when every identity is equally observable; even so, the cubic target is infeasible for the $9$ most important groups ($\max_i p_i/\pi_i = 1.30$), which hold $31\%$ of the importance mass. Increasing $\beta$ tilts availability against importance, up to the \emph{mirrored} regime $\beta=3$, where $r$ is the exact mirror image of $p$ and $41$ of $100$ groups holding approximately $88\%$ of the importance mass are infeasible; we sweep $\beta \in \{0, 0.5, 1, 1.5, 2, 3\}$. In the \emph{aligned} regime, $r_i \propto m{+}1{-}i$ is a linear skew in the same direction as $p$; feasibility then holds for every group ($\max_i p_i/\pi_i = 0.66$), while the cubic-versus-linear shape mismatch still requires nontrivial transport reweighting.
 \paragraph{Adult Income Classification: A Group-Uniform Fairness Target Across Race}
 The Adult (Census Income) dataset, derived from the 1994 U.S.\ Census, contains $48{,}842$ individuals with $14$ demographic and socioeconomic attributes; the task is binary classification of whether income exceeds \$50{,}000, trained by logistic regression under the cross-entropy loss on one-hot-encoded categorical and standardized numerical features ($d=109$ including an intercept). The critical groups are homogeneous with respect to race: each of the $m=100$ groups holds $30$ samples from exactly one race category, and the number of groups per category is proportional to that category's prevalence in the data (White/Black/Asian-Pac-Islander/Amer-Indian-Eskimo/Other $= 85/10/3/1/1$). The importance distribution is the fairness target itself: uniform across the five race categories, $1/5$ per category divided equally among that category's groups, so groups drawn from the smallest categories carry individual importance up to $p_i = 0.2$. Availability defines two regimes under the common protocol. In the \emph{prevalence} regime every group is equally observable ($r$ uniform), the default one gets when exposure mirrors data prevalence; the five groups belonging to the three smallest race categories then hold $60\%$ of the importance mass against inclusion probabilities $\pi_i \approx K/m = 0.03$, so the fairness target is infeasible purely because the categories are imbalanced. In the \emph{aligned} regime availability is proportional to importance ($r \propto p$), which restores feasibility; the family $r \propto p^{\beta}$, $\beta \in \{0, 0.25, 0.5, 0.75, 1\}$, interpolates between the two. We train with $K=3$, $\eta_\theta = 0.1$, $H=5$, $4000$ iterations, and $5$ seeds.
 % ---------------------------------------------------------------- figures
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.6\linewidth]{imdbwiki_infeasible_K3_4000rounds_decay.pdf}
+  \includegraphics[width=0.54\linewidth]{imdbwiki_infeasible_K3_4000rounds_decay.pdf}
   \caption{IMDb-Wiki age regression under uniform availability ($\beta=0$;
   $p_i \propto (m{+}1{-}i)^3$, $r$ uniform; $5$ seeds, shaded $\pm 1$ std).
   The cubic target is infeasible for $9$ groups holding $31\%$ of the
   importance mass, yet FedAVOT ($86.1$) recovers two thirds of the gap
-  between the uniform average ($91.6$) and full coverage ($82.9$); the
-  fixed-multiplier correction is unstable and off scale.}
+  between the uniform average ($91.6$) and full coverage ($82.9$).}
   \label{fig:imdb-infeasible}
 \end{figure}
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.8\linewidth]{adult_race_K3_4000rounds_decay.pdf}
-  \caption{Adult income classification with a uniform importance target over
-  race ($m=100$ groups, $K=3$, $4000$ iterations, $5$ seeds). Left column:
-  prevalence availability (every group equally observable) makes the fairness
-  target infeasible purely from category imbalance; FedAVOT ($0.227$) stays
-  within $10\%$ of full coverage ($0.207$) and $8.5\%$ below the uniform
-  average ($0.248$), while the fixed-multiplier correction is unstable, and
-  the residual loss concentrates on the smallest race categories (bottom
-  row). Right column: importance-aligned availability is feasible; FedAVOT
-  and the uniform average both sit on top of full coverage and the
-  fixed-multiplier correction diverges.}
-  \label{fig:adult}
-\end{figure}
+\begin{table}[t]
+  \centering\footnotesize\setlength{\tabcolsep}{3.5pt}
+  \caption{IMDb-Wiki availability sweep, $r_i \propto i^{\beta}$, $5$ seeds,
+  final importance-weighted MSE (full coverage: $82.9$). $F^{\dagger}$ are the
+  closed-form floors, i.e.\ the minimizers of the objective each rule
+  optimizes in expectation; $\Delta$ is the measured margin of FedAVOT over
+  the uniform average, which follows the floor gap and changes sign where
+  the floors meet.}
+  \label{tab:sweep}
+  \begin{tabular}{crrrrrr}
+    \hline
+    $\beta$ & inf.\ mass & $F^{\dagger}_{\mathrm{FedAVOT}}$ & $F^{\dagger}_{\mathrm{unif}}$ & FedAVOT & uniform & $\Delta$ \\
+    \hline
+    $0$   & $31\%$ & $83.4$  & $90.4$  & $86.1$  & $91.6$  & $+5.6$ \\
+    $0.5$ & $59\%$ & $90.1$  & $95.8$  & $93.2$  & $96.7$  & $+3.5$ \\
+    $1$   & $70\%$ & $95.3$  & $99.0$  & $97.9$  & $99.9$  & $+2.1$ \\
+    $1.5$ & $77\%$ & $98.7$  & $101.2$ & $101.2$ & $101.8$ & $+0.6$ \\
+    $2$   & $82\%$ & $101.4$ & $103.0$ & $103.8$ & $103.7$ & $0.0$ \\
+    $3$   & $88\%$ & $105.9$ & $105.9$ & $108.4$ & $106.1$ & $-2.3$ \\
+    \hline
+  \end{tabular}
+\end{table}
 % ---------------------------------------------------------------- results prose
 The uniform and aligned regimes bracket the feasibility condition
 (Fig.~\ref{fig:imdb-infeasible}). Under
@@ -238,36 +254,7 @@ at every $\beta$, and its sign flips exactly where the floors cross: FedAVOT
 wins by $5.6$, $3.5$, $2.1$ and $0.6$ at $\beta \le 1.5$, ties at
 $\beta=2$, and trails by $2.3$ in the mirrored regime. The floor gap is a
 function of $(p,q,\mathcal{E})$ alone, so it can be computed before training
-to decide whether transport reweighting will help. The step-size schedule is
-what makes the bias visible: at a constant step size FedAVOT trails the
-uniform average at every $\beta$ (e.g.\ $95.6$ versus $94.8$ at $\beta=0$
-and $116.4$ versus $108.5$ at $\beta=3$), because its per-batch weights
-concentrate mass on the few important groups present, which lowers the
-effective batch size and raises the variance of the iterate; the decaying
-schedule removes this variance term and exposes the bias that the transport
-corrects.
-\begin{table}[t]
-  \centering\footnotesize\setlength{\tabcolsep}{3.5pt}
-  \caption{IMDb-Wiki availability sweep, $r_i \propto i^{\beta}$, $5$ seeds,
-  final importance-weighted MSE (full coverage: $82.9$). $F^{\dagger}$ are the
-  closed-form floors, i.e.\ the minimizers of the objective each rule
-  optimizes in expectation; $\Delta$ is the measured margin of FedAVOT over
-  the uniform average, which follows the floor gap and changes sign where
-  the floors meet.}
-  \label{tab:sweep}
-  \begin{tabular}{crrrrrr}
-    \hline
-    $\beta$ & inf.\ mass & $F^{\dagger}_{\mathrm{FedAVOT}}$ & $F^{\dagger}_{\mathrm{unif}}$ & FedAVOT & uniform & $\Delta$ \\
-    \hline
-    $0$   & $31\%$ & $83.4$  & $90.4$  & $86.1$  & $91.6$  & $+5.6$ \\
-    $0.5$ & $59\%$ & $90.1$  & $95.8$  & $93.2$  & $96.7$  & $+3.5$ \\
-    $1$   & $70\%$ & $95.3$  & $99.0$  & $97.9$  & $99.9$  & $+2.1$ \\
-    $1.5$ & $77\%$ & $98.7$  & $101.2$ & $101.2$ & $101.8$ & $+0.6$ \\
-    $2$   & $82\%$ & $101.4$ & $103.0$ & $103.8$ & $103.7$ & $0.0$ \\
-    $3$   & $88\%$ & $105.9$ & $105.9$ & $108.4$ & $106.1$ & $-2.3$ \\
-    \hline
-  \end{tabular}
-\end{table}
+to decide whether transport reweighting will help.
 \paragraph{Adult Results: Equal Availability Does Not Make a Fair Target Reachable}
 The Adult experiment (Fig.~\ref{fig:adult}) transfers the same dichotomy
 to a fairness setting. In the prevalence regime the transport is
