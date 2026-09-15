@@ -3,6 +3,7 @@ SRC = r"C:\Users\vihaa\fedavot-overleaf\complete.tex"
 DST = r"C:\Users\vihaa\fedavot-overleaf\complete_short.tex"
 L = io.open(SRC, encoding="utf-8").read().split("\n")
 def R(a, b): return L[a-1:b]          # 1-indexed inclusive
+NL = chr(10)
 
 out = []
 out += R(1, 43)                        # preamble, title, abstract (verbatim)
@@ -10,7 +11,7 @@ intro = R(45, 51)                      # introduction (verbatim minus the 4th pa
 intro = [x.replace(" Existing remedies do not resolve this: importance-sampling and variance-reduction methods for SGD assume itemwise access rather than subset-masked batches, distributionally robust and fairness-reweighting methods operate on the objective rather than on the batch-level aggregation constraint, and methods that correct for a known per-group observation rate assume a fixed correction factor rather than one that adapts to which combinations of groups can jointly appear.", "")
          .replace(" We summarize our contributions below.", "") for x in intro]
 out += intro
-pass                                   # related work dropped entirely
+# related work dropped entirely
 out += R(76, 77) + R(84, 84)           # section 2 intro + critical-groups definition
 out += [""] + R(93, 97)                # target measure + fair objective
 out += [""] + R(99, 99)                # SGD / subset patterns
@@ -27,22 +28,26 @@ out += [r"\begin{proof}[Proof sketch]",
         r"Non-expansiveness of $\Pi_{\mathcal{C}}$ gives $\|\theta_{t+1}-\theta^\star\|^2 \le \|\theta_t-\theta^\star\|^2 - 2\eta_t \langle g_t, \theta_t-\theta^\star\rangle + \eta_t^2 \|g_t\|^2$; taking conditional expectation, applying Lemma~\ref{lem:unbiased}, convexity and Assumption~\ref{assump:gradient_bound}, telescoping over $t$, and using Jensen's inequality on $\bar{\theta}_T$ gives \eqref{eq:key-bound}; the constant step $\eta=D/(G\sqrt{T})$ gives \eqref{eq:rate}. The same rate holds for $\eta_t=\eta_0/\sqrt{t}$ up to constants.",
         r"\end{proof}"]
 out += R(309, 314)                     # infeasible masks intro
-out += R(323, 335) + R(351, 358)       # entropic projection + final bias bound (Interpretation and the surrogate-rate display dropped)
+out += R(323, 335) + R(351, 358)       # entropic projection + final bias bound
 proto = R(390, 394)                    # experiments: protocol + IMDb
 proto = [re.sub(r" Theorem~\\ref\{thm:main\} analyzes a single weighted gradient step per iteration;.*?since every rule consumes the same local updates\.", "", x) for x in proto]
 out += proto
 out += R(396, 397)                     # adult setup
-out += [x.replace(r"width=\linewidth", r"width=0.68\linewidth") for x in R(398, 409)]   # IMDb infeasible figure
-out += [x.replace(r"width=0.88\textwidth", r"width=0.86\linewidth").replace(r"\begin{figure*}[t]", r"\begin{figure}[t]").replace(r"\end{figure*}", r"\end{figure}") for x in R(421, 435)]   # adult figure, single column
-prose = [x.replace(r"(Figs.~\ref{fig:imdb-infeasible} and~\ref{fig:imdb-feasible})", r"(Fig.~\ref{fig:imdb-infeasible})") for x in R(459, 523)]
-out += prose
-adult = "\n".join(R(538, 562))         # adult results (CVaR paragraph dropped)
+out += [x.replace(r"width=\linewidth", r"width=0.6\linewidth") for x in R(398, 409)]   # IMDb infeasible figure
+out += [x.replace(r"width=0.88\textwidth", r"width=0.8\linewidth").replace(r"\begin{figure*}[t]", r"\begin{figure}[t]").replace(r"\end{figure*}", r"\end{figure}") for x in R(421, 435)]   # adult figure, single column
+prose = NL.join(R(459, 523)).replace(r"(Figs.~\ref{fig:imdb-infeasible} and~\ref{fig:imdb-feasible})", r"(Fig.~\ref{fig:imdb-infeasible})")
+a = prose.index("The" + NL + "fixed-multiplier correction is unstable here"); b = prose.index("In the aligned regime the same")
+prose = prose[:a] + prose[b:]          # my fixed-multiplier aside dropped
+out += prose.split(NL)
+adult = NL.join(R(538, 562))           # adult results (CVaR paragraph dropped)
 i = adult.index("Along the"); j = adult.index("In the aligned regime")
 adult = adult[:i] + adult[j:]
-out += adult.split("\n")
-tail = "\n".join(L[565:])              # bias-validation paragraph dropped; keep bibliography lines
-out += tail[tail.index(r"\bibliographystyle"):].split("\n")
-s = "\n".join(out)
+k = adult.index("Equal observability for every"); adult = adult[:k].rstrip()   # closing sentence dropped
+adult = adult.replace(", with the" + NL + "uniform average worse still at $0.189$ and $0.119$)", ")")   # my clause dropped
+out += adult.split(NL)
+tail = NL.join(L[565:])                # bias-validation paragraph dropped; keep bibliography lines
+out += tail[tail.index(r"\bibliographystyle"):].split(NL)
+s = NL.join(out)
 for ref in sorted(set(re.findall(r"\\(?:eq)?ref\{([^}]*)\}", s))):
     if ("\\label{%s}" % ref) not in s: print("DANGLING REF:", ref)
 io.open(DST, "w", encoding="utf-8", newline="\n").write(s)

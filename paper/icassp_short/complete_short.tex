@@ -182,7 +182,7 @@ The Adult (Census Income) dataset, derived from the 1994 U.S.\ Census, contains 
 % ---------------------------------------------------------------- figures
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.68\linewidth]{imdbwiki_infeasible_K3_4000rounds_decay.pdf}
+  \includegraphics[width=0.6\linewidth]{imdbwiki_infeasible_K3_4000rounds_decay.pdf}
   \caption{IMDb-Wiki age regression under uniform availability ($\beta=0$;
   $p_i \propto (m{+}1{-}i)^3$, $r$ uniform; $5$ seeds, shaded $\pm 1$ std).
   The cubic target is infeasible for $9$ groups holding $31\%$ of the
@@ -193,7 +193,7 @@ The Adult (Census Income) dataset, derived from the 1994 U.S.\ Census, contains 
 \end{figure}
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.86\linewidth]{adult_race_K3_4000rounds_decay.pdf}
+  \includegraphics[width=0.8\linewidth]{adult_race_K3_4000rounds_decay.pdf}
   \caption{Adult income classification with a uniform importance target over
   race ($m=100$ groups, $K=3$, $4000$ iterations, $5$ seeds). Left column:
   prevalence availability (every group equally observable) makes the fairness
@@ -215,10 +215,7 @@ groups holding $31\%$ of the importance mass, and Sinkhorn scaling stalls
 nevertheless attains a final importance-weighted MSE of $86.06 \pm 0.21$
 against $91.63 \pm 0.56$ for the uniform average and $82.95$ for full
 coverage: it closes two thirds of the uniform average's excess over full
-coverage, and the margin is ten seed standard deviations. The
-fixed-multiplier correction is unstable here (tail mean $8.5\times10^{3}$),
-since its $m/K$ scaling assumes that the per-group weight $(m/K)\,p_i$ is
-bounded, which the cubic target violates. In the aligned regime the same
+coverage, and the margin is ten seed standard deviations. In the aligned regime the same
 importance distribution becomes fully feasible, Sinkhorn converges
 (row-marginal error ${\approx}5\times10^{-9}$), and FedAVOT attains
 $84.28 \pm 0.15$ versus $86.37 \pm 0.34$ for the uniform average, within
@@ -283,14 +280,10 @@ $0.2073$ for full coverage, i.e., within $10\%$ of the full-coverage
 objective and $8.5\%$ below the uniform average; but the unrecoverable loss
 concentrates precisely on the categories the uniform target was meant to
 protect (final per-category cross-entropy $0.175$ versus full coverage's
-$0.123$ for Amer-Indian-Eskimo, $0.073$ versus $0.031$ for Other, with the
-uniform average worse still at $0.189$ and $0.119$). In the aligned regime
+$0.123$ for Amer-Indian-Eskimo, $0.073$ versus $0.031$ for Other). In the aligned regime
 ($\beta=1$, row error ${\approx}3\times10^{-8}$) FedAVOT reaches
 $0.2075 \pm 0.0001$, on top of the full-coverage value, and the
-fixed-multiplier correction again diverges. Equal observability for every
-group is therefore not sufficient for fairness: when category sizes are
-imbalanced, a category-uniform objective violates the feasibility condition,
-and the deficit lands on the protected minorities.
+fixed-multiplier correction again diverges.
 \bibliographystyle{plain}
 \bibliography{refrences}
 \end{document}

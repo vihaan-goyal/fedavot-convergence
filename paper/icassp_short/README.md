@@ -9,5 +9,4 @@ regularization subsection, synthetic sweep + mechanism figures, IMDb feasible fi
 paragraph, bias-validation paragraph. Class is Herlock's 9pt extarticle (ICASSP template is
 10pt article; switching adds ~1 page).
 
-Compile: pdflatex / bibtex / pdflatex x2 (MiKTeX or tectonic). Status at commit: 5 pages, with
-a few lines of Section 4 text still spilling onto the references page; one more short cut needed.
+Compile: pdflatex / bibtex / pdflatex x2 (MiKTeX or tectonic). Status at commit: 4 pages of content + references on page 5 (ICASSP 4+1), compiles clean.
