@@ -38,15 +38,15 @@ FNAME_RE = re.compile(
 MODELS_ORDER = ("fedavot", "fedavot_cvar", "fedcvar", "fedavg", "full")
 GRID_MODELS = ("fedavot_cvar", "fedcvar")
 COL = {"fedavot": "tab:blue", "fedavot_cvar": "tab:green", "fedcvar": "tab:purple",
-       "fedavg": "tab:orange", "full": "tab:red"}
+       "fedavg": "tab:orange", "fedavg_mk": "tab:brown", "full": "tab:red"}
 LBL_FL = {"fedavot": "FedAVOT", "fedavot_cvar": "FedAVOT + CVaR",
-          "fedcvar": "FedCVaR (uniform agg)", "fedavg": "FedAvg (uniform over K)",
+          "fedcvar": "FedCVaR (uniform agg)", "fedavg": "FedAvg (uniform over K)", "fedavg_mk": "FedAvg(K) fixed m/K",
           "full": "FedAvg (full)"}
 LBL_DEFED = {"fedavot": "FedAVOT", "fedavot_cvar": "FedAVOT + CVaR",
-             "fedcvar": "CVaR, uniform average", "fedavg": "Uniform average over K",
+             "fedcvar": "CVaR, uniform average", "fedavg": "Uniform average over K", "fedavg_mk": "Fixed multiplier $m/K$",
              "full": "Full coverage"}
 SHORT = {"fedavot": "FedAVOT", "fedavot_cvar": "+CVaR", "fedcvar": "FedCVaR",
-         "fedavg": "FedAvg(unif)", "full": "full"}
+         "fedavg": "FedAvg(unif)", "fedavg_mk": "FedAvg(m/K)", "full": "full"}
 DS_LABEL = {"imdbwiki": "IMDb-Wiki age regression", "adult": "Adult income classification"}
 YLABEL_FL = {"imdbwiki": "Global p-weighted MSE (log)",
              "adult": r"Objective $F(\theta)$ (group-uniform CE, log)"}

@@ -38,9 +38,10 @@ import numpy as np
 import pandas as pd
 
 GRID_MODELS = ("fedavot_cvar", "fedcvar")     # swept over the (alpha, gamma) grid
-FREE_MODELS = ("fedavot", "fedavg")           # single config each (no alpha/gamma)
+FREE_MODELS = ("fedavot", "fedavg", "fedavg_mk")           # single config each (no alpha/gamma)
 ALL_MODELS = GRID_MODELS + FREE_MODELS + ("full",)
 UNIF_AGG = {"fedcvar", "fedavg"}              # rows aggregated uniformly (1/K)
+MK_AGG = {"fedavg_mk"}                        # the paper's fixed multiplier: (N/K) * p_i (not convex)
 
 DATASET_LR = {"imdbwiki": 0.01, "adult": 0.1}
 DATASET_ETA_T = {"imdbwiki": 0.05, "adult": 0.005}   # adult = LR/20 heuristic (untested
@@ -86,6 +87,15 @@ def parse_args(argv=None):
     ap.add_argument("--k", type=int, default=3, help="users drawn per round")
     ap.add_argument("--num-users", type=int, default=100, help="population size")
     ap.add_argument("--samples-per-user", type=int, default=30, help="samples per user")
+    ap.add_argument("--r-power", type=float, default=None,
+                    help="override the regime's availability to sweep infeasibility severity. "
+                         "imdbwiki: r_i ~ i**BETA (3 = mirrored cubic = the infeasible anchor, "
+                         "0 = uniform; importance p stays reversed-cubic). adult: r_i ~ p_i**BETA "
+                         "(0 = uniform = the infeasible anchor, 1 = aligned = the feasible anchor). "
+                         "Requires a non-default --outdir; filenames do not encode it.")
+    ap.add_argument("--lr-decay", type=float, default=None,
+                    help="learning-rate decay horizon T0: lr_t = lr / (1 + t / T0). "
+                         "Default None = constant lr (the anchors). Requires non-default --outdir.")
     ap.add_argument("--lr", type=float, default=None,
                     help="learning rate (default per dataset: imdbwiki 0.01, adult 0.1)")
     ap.add_argument("--eta-t", type=float, default=None,
@@ -357,9 +367,19 @@ def load_adult(args):
 
 def dataset_distributions(dataset, regime, data, args):
     if dataset == "imdbwiki":
-        return make_imdb_distributions(args.num_users, regime)
-    p = data["p"]
-    r = np.ones(args.num_users) / args.num_users if regime == "infeasible" else p.copy()
+        p, r = make_imdb_distributions(args.num_users, regime)
+    else:
+        p = data["p"]
+        r = np.ones(args.num_users) / args.num_users if regime == "infeasible" else p.copy()
+    if args.r_power is not None:
+        if dataset == "imdbwiki":
+            r = np.arange(1, args.num_users + 1, dtype=float) ** args.r_power   # 3 == mirrored cubic
+            what = "r ~ i^beta"
+        else:
+            r = p ** args.r_power                                              # 0 == uniform, 1 == aligned
+            what = "r ~ p^beta"
+        r = r / r.sum()
+        print(f"  --r-power {args.r_power}: availability {what} overrides regime '{regime}'")
     return p, r
 
 
@@ -451,6 +471,7 @@ def run_unit(dataset, regime, seed, table, has_full, data, tp, groups, args, lr,
     A = np.array([row["alpha"] if row["alpha"] is not None else 1.0 for row in table])
     G = np.array([row["gamma"] if row["gamma"] is not None else 1.0 for row in table])
     unif = np.array([row["model"] in UNIF_AGG for row in table], dtype=bool)
+    mk = np.array([row["model"] in MK_AGG for row in table], dtype=bool)
 
     draws = np.searchsorted(tp["q_cum"], np.random.RandomState(seed).rand(R))
     user_every = max(1, args.user_log_every)
@@ -479,17 +500,20 @@ def run_unit(dataset, regime, seed, table, has_full, data, tp, groups, args, lr,
             j = draws[t]
             users = tp["subs0"][j]
             wj = tp["Wcols"][j]
+            lr_t = lr if args.lr_decay is None else lr / (1.0 + t / args.lr_decay)
             if C:
                 Wl, Tvl = grid_local_step(X_all[users], y_all[users], W_grid, t_grid,
-                                          A, G, H, lr, eta_t, task)
+                                          A, G, H, lr_t, eta_t, task)
                 Agg = np.where(unif[:, None], 1.0 / Kk, wj[None, :])      # (C, K)
+                if mk.any():
+                    Agg = np.where(mk[:, None], (N / Kk) * p[users][None, :], Agg)
                 W_new = np.einsum('ck,ckd->cd', Agg, Wl)
                 t_new = (Agg * Tvl).sum(axis=1)
                 W_grid = np.where(alive[:C, None], W_new, W_grid)
                 t_grid = np.where(alive[:C], t_new, t_grid)
             if has_full and alive[C]:
                 Wf, _ = grid_local_step(X_all, y_all, w_full[None, :], ZERO1, ONE1, ONE1,
-                                        H, lr, eta_t, task)
+                                        H, lr_t, eta_t, task)
                 w_full = p @ Wf[0]
             W_stack = np.vstack([W_grid, w_full[None, :]]) if has_full else W_grid
             ul = eval_losses(W_stack, X2, y_all, task)
@@ -786,6 +810,9 @@ def main(argv=None):
                           f"({per_unit_files} configs{' vectorized' if args.sweep else ''})")
         return
 
+    if (args.r_power is not None or args.lr_decay is not None) and             os.path.abspath(args.outdir) == os.path.abspath("results/2026-08-10_main_sweep"):
+        raise SystemExit("--r-power / --lr-decay change the experiment but not the filenames: "
+                         "pass a dedicated --outdir (results/<date>_<desc>).")
     t_all = time.time()
     smoke_stats = {}
     for ds in args.datasets:

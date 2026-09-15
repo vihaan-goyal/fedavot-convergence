@@ -156,6 +156,32 @@ Diagnosis + paper experiments (2026-07):
   0.2076 ≈ full 0.2068, **FedAvg(K) diverges**. Design is new (Amtej's Oct-2025 Adult
   pipeline was never committed) — needs Herlock's sign-off before entering the paper.
 
+- **2026-09-14 severity study** (Herlock's rejection of the 8/30 package, see finding 8):
+  `run_experiments.py` gained `--r-power BETA` (imdbwiki: r ~ i^beta, 3 = mirrored-cubic
+  anchor, 0 = uniform availability; adult: r ~ p^beta, 0 = uniform anchor, 1 = aligned
+  anchor), `--lr-decay T0` (lr_t = lr/(1+t/T0); None = the anchors), and the model
+  `fedavg_mk` (the paper's fixed multiplier (N/K)*p_i, non-convex; reproduces 129.3 on the
+  mirrored anchor). Both flags refuse the default outdir (filenames omit them).
+  `scripts/pipeline/severity_sweep.sh` = 23 cells x 5 seeds (6 IMDb skews, 5 Adult skews,
+  const vs decay1000, + IMDb feasible decay) -> `results/2026-09-14_severity_sweep/<cell>/`;
+  `plot_severity_sweep.py` -> `figures/2026-09-14_severity_sweep/` (loss vs infeasible mass
+  with the exact floors dashed; internal figure, NOT for the paper).
+  `scripts/pipeline/alignment_diagnostic.py` -> p_hat / p_tilde / exact floors for the four
+  8/10 cells from the cached transport plans (no retraining).
+  `scripts/paper_experiments/replot_paper_figures_decay.py` -> `figures/2026-09-14_paper/`,
+  the three paper figures in the OLD style but from the decay runs (IMDb infeasible panel =
+  uniform-availability regime, beta=0). `scripts/pipeline/build_paper_package.sh` stages
+  the four paper cells (incl. the full 10x10 CVaR grid with decay, run 2026-09-15) as
+  `results/2026-09-15_paper_cells/` in the plotter's layout (the Adult aligned cell is
+  RENAMED from `adult_infeasible_*`, since it was run as `--regimes infeasible --r-power 1`)
+  and regenerates the 8/30 figure set into `figures/2026-09-15_paper_package/`. With decay
+  CVaR never improves the overall objective in any cell (best grid point = gamma=1 corner),
+  and costs 14-25% at (0.1, 0.1); only Adult worst-race CE moves (0.362 vs 0.390).
+  The paper itself (Herlock's Overleaf `complete.tex`) was edited locally on 2026-09-15 at
+  `C:\Users\vihaa\fedavot-overleaf\` (not in this repo). FOOTGUN: the laptop's modern standby throttles
+  background runs to ~1%; `severity_sweep.sh` is paired with a keep-awake
+  (`results/.../keepawake.ps1`) for that reason.
+
 ## Paper text (`paper/`)
 
 - `experimental_setup.tex`, `experimental_results.tex` — fragments in the PAPER notation,
@@ -271,6 +297,23 @@ full experimental story:
    exactly the 16 infeasible ones; at R=6 all weights are <= 0.83). So "unbounded" should
    not be written as "diverges" — the severity depends on the ratio and on whether the
    loss is bounded (CE here vs unbounded MSE in the IMDb-Wiki runs).
+
+8. **Herlock's 2026-09-14 verdict and the fix (deadline ~09-16).** The 8/30 package had
+   FedAVOT beating the uniform-over-K baseline in 1 of 4 cells; IMDb infeasible was a
+   significant LOSS (116.4 vs 108.5). Closed-form floors (`alignment_diagnostic.py`) show
+   why: in the mirrored-cubic regime the FedAVOT and uniform optima coincide (105.88 vs
+   105.90), so the gap is pure weight variance at constant LR, and the paper's L1
+   falsifiability test (||p-p_hat|| < ||p-p_tilde||) predicts "helps" in ALL four cells,
+   i.e. it does not predict the sign; the floor gap does (4/4). Under milder infeasibility
+   the floors separate (uniform availability, cubic p: 83.4 vs 90.4 with 9/100 users, 31%
+   mass infeasible). With LR decay (lr/(1+t/1000)) the measured losses track the floors:
+   IMDb beta=0 FedAVOT 86.06 +- 0.21 vs uniform 91.63 +- 0.56 vs full 82.95 (wins at 4/6
+   skews, tie at beta=2, loses only at beta=3 = the old anchor); Adult beta=0 0.2269 vs
+   0.2479 vs 0.2073 (wins at every skew, matches full to 3 decimals at beta 0.5-0.75).
+   Without decay FedAVOT loses everywhere on IMDb. Paper story: mild-infeasible regime is
+   the headline, mirrored cubic is the support-collapse limit, bias (floor gap) and
+   variance (measured - floor) reported separately. The fixed multiplier m/K is 8504 (5-seed tail, spiky) at
+   IMDb beta=0 and diverges on Adult aligned, as before.
 
 Known estimation artifact (pre-existing, now FIXED in the RAM scripts): 1M MC samples
 can't cover C(100,3)=161,700 subsets. `scripts/ram_study/ram_feasibility_diagnostic.py` replaces
