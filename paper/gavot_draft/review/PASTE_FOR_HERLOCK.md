@@ -1,0 +1,384 @@
+# Paste-ready edits for main.tex (Herlock's GAVOT draft), 2026-09-15
+
+Each item: the block as it stands in the Overleaf now (FIND), and the block to put in its place (REPLACE WITH).
+Line numbers refer to the Overleaf main.tex as of 9/15. A few lines of unchanged context are included on both sides so the block is easy to locate with Ctrl+F.
+Two more files go with this: figs/severity_imdb.pdf (replaces severity_imdb.png; the includegraphics line below points at it) and, if an appendix page is allowed, appendix.tex pasted after the bibliography.
+
+## Edit 1: Sec. 1 Introduction (Contributions list), around line 129
+
+FIND:
+```latex
+
+\noindent\textbf{Contributions.}
+\begin{enumerate}\itemsep0pt\parskip0pt\topsep2pt
+\item \emph{The reduction} (Sec.~\ref{sec:setup}). Group-blind minibatch SGD is
+agnostic \textsf{FedAvg} with one local step, so the surrogate identity of
+\cite{rahimi2025agnostic} names the function SGD actually minimizes, and
+transport weights make the batch subgradient exactly unbiased for $\nabla F_p$
+(Lemma~\ref{lem:unbiased}).
+```
+
+REPLACE WITH:
+```latex
+
+\noindent\textbf{Contributions.}
+\begin{enumerate}\itemsep0pt\parskip0pt\topsep2pt
+\item \emph{The reduction} (Sec.~\ref{sec:setup}). Group-blind minibatch SGD reduces, under
+uniform-within-batch averaging, to agnostic \textsf{FedAvg} with one local step, so the surrogate identity of
+\cite{rahimi2025agnostic} names the function SGD actually minimizes, and
+transport weights make the batch subgradient exactly unbiased for $\nabla F_p$
+(Lemma~\ref{lem:unbiased}).
+```
+
+## Edit 2: Sec. 2 Group-Blind SGD and its Surrogate, around line 203
+
+FIND:
+```latex
+\begin{proposition}[Surrogate objective]
+\label{prop:surrogate}
+Group-blind minibatch SGD is a stochastic subgradient method on $F_{\tilde p}$,
+$\tilde p_i=\sum_{A\ni i}q(A)\E[\widehat{\pi}^t_i\mid A^t=A]$, which is $\pi$
+for i.i.d.\ sampling and $\sum_{A\ni i}q(A)/|A|$ for uniform-within-batch
+averaging. Consequently, for every $\theta$,
+\begin{equation}
+```
+
+REPLACE WITH:
+```latex
+\begin{proposition}[Surrogate objective]
+\label{prop:surrogate}
+Group-blind minibatch SGD is a stochastic subgradient method on $F_{\tilde p}$,
+$\tilde p_i=\sum_{A\ni i}q(A)\E[\widehat{\pi}^t_i\mid A^t=A]$ (a probability
+vector), which is $\pi$
+for i.i.d.\ sampling and $\sum_{A\ni i}q(A)/|A|$ for uniform-within-batch
+averaging. Consequently, for every $\theta$,
+\begin{equation}
+```
+
+## Edit 3: Sec. 3 Alignment by Masked Optimal Transport, around line 369
+
+FIND:
+```latex
+\begin{proof}
+$Y[\cdot,j]$ is a probability vector on $A_j$, so
+$\|\sum_i Y[i,j]g_i\|^2\le\sum_i Y[i,j]\|g_i\|^2$ by convexity; take
+expectations and apply Lemma~\ref{lem:unbiased} to $\|g_i\|^2$.
+\end{proof}
+
+\begin{theorem}[Rate]
+```
+
+REPLACE WITH:
+```latex
+\begin{proof}
+$Y[\cdot,j]$ is a probability vector on $A_j$, so
+$\|\sum_i Y[i,j]g_i\|^2\le\sum_i Y[i,j]\|g_i\|^2$ by convexity; take
+expectations and use the row-marginal identity of Lemma~\ref{lem:unbiased}.
+\end{proof}
+
+\begin{theorem}[Rate]
+```
+
+## Edit 4: Sec. 3 Alignment by Masked Optimal Transport, around line 392
+
+FIND:
+```latex
+
+\noindent\textbf{Outside the feasible region.}
+When the Hall condition fails, \eqref{eq:mot} has no solution and Sinkhorn does
+not diverge: it converges to the $I$-projection, the coupling whose reachable
+row marginal $\hat p$ minimizes $\KL(\cdot\,\|\,p)$ over the polytope
+$\{T\ge 0:\ \mathbf{1}^\top T=q,\ \mathrm{supp}(T)\subseteq E\}$
+\cite{csiszar1975,peyre2019}. The column marginal is met exactly, so
+Lemmas~\ref{lem:unbiased} and~\ref{lem:variance} hold with $p$ replaced by
+$\hat p$, and the loss is a bias of exactly the shape of
+Proposition~\ref{prop:surrogate}.
+```
+
+REPLACE WITH:
+```latex
+
+\noindent\textbf{Outside the feasible region.}
+When the Hall condition fails, \eqref{eq:mot} has no solution and Sinkhorn does
+not diverge: its iterates accumulate at the coupling whose reachable row
+marginal $\hat p$ is the KL-closest to $p$ over the polytope
+$\{T\ge 0:\ \mathbf{1}^\top T=q,\ \mathrm{supp}(T)\subseteq E\}$
+\cite{csiszar1975,gietl2013ipfp,peyre2019}. The column marginal is met exactly, so
+Lemmas~\ref{lem:unbiased} and~\ref{lem:variance} hold with $p$ replaced by
+$\hat p$, and the loss is a bias of exactly the shape of
+Proposition~\ref{prop:surrogate}.
+```
+
+## Edit 5: Sec. 3 Alignment by Masked Optimal Transport, around line 408
+
+FIND:
+```latex
+\begin{equation}
+\E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)
+\;=\;\underbrace{\Phi(\hat p)-\Phi(p)}_{\text{alignment floor}}
+\;+\;\underbrace{\varepsilon_T(\hat p)}_{\le\,DG/\sqrt{T}} ,
+\label{eq:infeasible}
+\end{equation}
+and group-blind averaging obeys \eqref{eq:infeasible} with $\tilde p$ for
+```
+
+REPLACE WITH:
+```latex
+\begin{equation}
+\E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)
+\;=\;\underbrace{\Phi(\hat p)-\Phi(p)}_{\text{alignment floor}}
+\;+\;\underbrace{\varepsilon_T(\hat p)}_{\text{optimization residual}} ,
+\label{eq:infeasible}
+\end{equation}
+and group-blind averaging obeys \eqref{eq:infeasible} with $\tilde p$ for
+```
+
+## Edit 6: Sec. 3 Alignment by Masked Optimal Transport, around line 418
+
+FIND:
+```latex
+The floors are bounded by $\Phi(w)-\Phi(p)\le 2M\|p-w\|_1$.
+\end{theorem}
+\begin{proof}
+Theorem~\ref{thm:rate} applied to $F_{\hat p}$ bounds the optimization term;
+the floor term is $F_p$ evaluated at the two limits and is exact by definition.
+The $\ell_1$ bound follows from $0\le f_i\le M$ as in
+Proposition~\ref{prop:surrogate}.
+\end{proof}
+
+Both terms of \eqref{eq:infeasible} are available before training: $\hat p$ and
+$\tilde p$ from $(p,r,E)$, and on instances with a closed-form frontier
+$\Phi$ exactly. The $\ell_1$ bound is the weaker object and we report both,
+because it turns out to be too loose to discriminate.
+
+```
+
+REPLACE WITH:
+```latex
+The floors are bounded by $\Phi(w)-\Phi(p)\le 2M\|p-w\|_1$.
+\end{theorem}
+\begin{proof}
+The floor term is $F_p$ evaluated at the two limits and is exact by definition.
+Theorem~\ref{thm:rate} applied to $F_{\hat p}$ bounds its suboptimality by
+$DG/\sqrt{T}$; $\varepsilon_T$ also carries the $p$-versus-$\hat p$ mismatch
+along the trajectory, vanishing as $\bar\theta_T\to\theta^\dagger$.
+The $\ell_1$ bound follows from $0\le f_i\le M$ as in
+Proposition~\ref{prop:surrogate}.
+\end{proof}
+
+Both terms of \eqref{eq:infeasible} are available before training: $\hat p$ and
+$\tilde p$ from $(p,q,E)$, and on instances with a closed-form frontier
+$\Phi$ exactly. The $\ell_1$ bound is the weaker object and we report both,
+because it turns out to be too loose to discriminate.
+
+```
+
+## Edit 7: Sec. 5 Experiments, around line 490
+
+FIND:
+```latex
+\label{sec:exp}
+
+\noindent\textbf{Instances.}
+\emph{Adult} income classification \cite{uci_adult} with a uniform importance
+target over the five race groups, and \emph{IMDb-Wiki} age regression
+\cite{rothe2018imdbwiki} with a skewed importance target over age tiers. Both
+are posed over $m=100$ critical groups with $K=3$ observed per step, $4000$
+steps, $5$ seeds, tail-500 statistics. Availability rates $r$ are swept through
+a family indexed by $\beta$, from prevalence-proportional to importance-aligned
+on Adult and through increasing skew on IMDb-Wiki, giving eleven instances whose
+```
+
+REPLACE WITH:
+```latex
+\label{sec:exp}
+
+\noindent\textbf{Instances.}
+\emph{Adult} income classification \cite{uci_adult} (logistic regression,
+$\eta{=}0.1$) with a uniform importance target over the five race groups, $100$
+race-homogeneous groups of $30$ samples split $85/10/3/1/1$ by prevalence, and
+\emph{IMDb-Wiki} age regression \cite{rothe2018imdbwiki} (linear regression on
+ResNet embeddings, $\eta{=}10^{-2}$) over $100$ identities with a cubically
+skewed importance target. Both use $K=3$ observed groups per step,
+$H{=}5$ local steps per observed group before the weighted average, $4000$
+steps, $5$ seeds, tail-500 statistics. Availability rates $r$ are swept through
+a family indexed by $\beta$, from prevalence-proportional to importance-aligned
+on Adult and through increasing skew on IMDb-Wiki, giving eleven instances whose
+```
+
+## Edit 8: Sec. 5 Experiments, around line 515
+
+FIND:
+```latex
+\toprule
+Instance & \avot{} & unif.\ avg & $m/K$ & full \\
+\midrule
+Adult, prevalence ($\nu{=}.60$) & $\best{0.2269}$ & $0.2479$ & div. & $0.2073$ \\
+Adult, aligned ($\nu{=}0$)      & $0.2075$ & $0.2077$ & div. & $0.2073$ \\
+IMDb, skewed ($\nu{=}.31$)      & $\best{86.06}$ & $91.63$ & $8504$ & $82.95$ \\
+IMDb, aligned ($\nu{=}0$)       & $\best{84.28}$ & $86.37$ & div. & $82.95$ \\
+```
+
+REPLACE WITH:
+```latex
+\toprule
+Instance & \avot{} & unif.\ avg & $m/K$ & full \\
+\midrule
+Adult, prevalence ($\nu{=}.60$) & $\best{0.2269}$ & $0.2479$ & $0.670$ & $0.2073$ \\
+Adult, aligned ($\nu{=}0$)      & $0.2075$ & $0.2077$ & div. & $0.2073$ \\
+IMDb, skewed ($\nu{=}.31$)      & $\best{86.06}$ & $91.63$ & $8504$ & $82.95$ \\
+IMDb, aligned ($\nu{=}0$)       & $\best{84.28}$ & $86.37$ & div. & $82.95$ \\
+```
+
+## Edit 9: Sec. 5 Experiments, around line 526
+
+FIND:
+```latex
+% ----------------------------------------------------------- Fig 2
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.99\columnwidth]{figs/severity_imdb.png}
+\caption{IMDb-Wiki severity sweep. Solid, measured tail-500 ($\pm1$ std);
+dashed, the exact floor $\Phi(\cdot)$ each rule converges to. Left, constant
+stepsize: the optimization residual swamps the alignment gain and transport
+```
+
+REPLACE WITH:
+```latex
+% ----------------------------------------------------------- Fig 2
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{figs/severity_imdb.pdf}
+\caption{IMDb-Wiki severity sweep. Solid, measured tail-500 ($\pm1$ std);
+dashed, the exact floor $\Phi(\cdot)$ each rule converges to. Left, constant
+stepsize: the optimization residual swamps the alignment gain and transport
+```
+
+## Edit 10: Sec. 5 Experiments, around line 545
+
+FIND:
+```latex
+Adult with importance-aligned availability the two coincide at the oracle
+value, which is what Proposition~\ref{prop:surrogate} predicts when
+$\tilde p=p$: there is nothing to correct and transport does not manufacture a
+difference. The fixed multiplier diverges on every instance, confirming that
+naive rescaling is not an alternative to solving \eqref{eq:mot}.
+
+% ----------------------------------------------------------- Table 2
+\begin{table}[t]
+\centering
+\caption{IMDb-Wiki severity sweep, decaying stepsize. $\Delta_{\mathrm{floor}}$
+is the alignment gain of Theorem~\ref{thm:infeasible}, \emph{gain} the measured
+advantage of transport. The excess residual transport pays averages $1.9$, and
+the sign flips exactly where $\Delta_{\mathrm{floor}}$ crosses it. The five
+Adult skews all sit above their crossover and are omitted.}
+\label{tab:severity}
+\setlength{\tabcolsep}{3.0pt}
+\begin{tabular}{ccccc}
+```
+
+REPLACE WITH:
+```latex
+Adult with importance-aligned availability the two coincide at the oracle
+value, which is what Proposition~\ref{prop:surrogate} predicts when
+$\tilde p=p$: there is nothing to correct and transport does not manufacture a
+difference. The fixed multiplier diverges on both aligned instances and is far
+off on the other two, so naive rescaling is no alternative to solving \eqref{eq:mot}.
+
+% ----------------------------------------------------------- Table 2
+\begin{table}[t]
+\centering
+\caption{IMDb-Wiki severity sweep, decaying stepsize. $\Delta_{\mathrm{floor}}$
+is the alignment gain of Theorem~\ref{thm:infeasible}, \emph{gain} the measured
+advantage of transport, $t$ its Welch statistic (population std). The excess
+residual transport pays averages $1.9$, and the sign flips exactly where
+$\Delta_{\mathrm{floor}}$ crosses it. The five Adult skews all sit above their
+crossover and are omitted.}
+\label{tab:severity}
+\setlength{\tabcolsep}{3.0pt}
+\begin{tabular}{ccccc}
+```
+
+## Edit 11: Sec. 5 Experiments, around line 575
+
+FIND:
+```latex
+\noindent\textbf{E2: the crossover, and where the sign comes from.}
+Table~\ref{tab:severity} and Fig.~\ref{fig:severity} are the paper's main
+evidence. On Adult, whose five skews are omitted from the table, the measured gain tracks
+$\Delta_{\mathrm{floor}}$ almost exactly, within $4\%$ at three of five
+($.0134$ against $.0129$, $.0050$ against $.0049$, $.0002$ against $.0003$):
+the alignment floor is not merely an upper bound but a prediction. On IMDb-Wiki the gain is
+uniformly below the floor by an excess optimization residual that is close to
+constant in $\beta$, mean $1.9$ in MSE units, and the measured sign flips
+precisely where $\Delta_{\mathrm{floor}}$ crosses that value, between
+$\beta{=}1.5$ ($2.56$, gain $+0.58$) and $\beta{=}2.0$ ($1.62$, gain $-0.03$).
+This is the content of Theorem~\ref{thm:infeasible} read at finite $T$, and it
+converts the sign of the comparison from an empirical surprise into a quantity
+one computes in advance.
+
+\noindent\textbf{E3: the $\ell_1$ bound is too loose to be the criterion.}
+The distances $\|p-\hat p\|_1$ and $\|p-\tilde p\|_1$ are also computed on every
+instance, and $\|p-\hat p\|_1<\|p-\tilde p\|_1$ holds in all eleven, including
+the three where transport loses or ties. The $\ell_1$ form of
+Theorem~\ref{thm:infeasible} therefore never predicts a loss and cannot serve as
+the criterion; the exact floors, which order the same eleven instances
+correctly once the residual is accounted for, can. We report this because the
+weaker bound is the one a reader would reach for first.
+
+\noindent\textbf{E4: the residual is a stepsize artifact.}
+The left panel of Fig.~\ref{fig:severity} runs the identical instances at
+```
+
+REPLACE WITH:
+```latex
+\noindent\textbf{E2: the crossover, and where the sign comes from.}
+Table~\ref{tab:severity} and Fig.~\ref{fig:severity} are the paper's main
+evidence. On Adult, whose five skews are omitted from the table, the measured gain tracks
+$\Delta_{\mathrm{floor}}$ within $4\%$ at three of five
+($.0134$ against $.0129$, $.0050$ against $.0049$, $.0002$ against $.0003$)
+and exceeds it at the two most infeasible ($.0210$ against $.0110$, $.0181$
+against $.0144$), group-blind averaging sitting further above its floor. On IMDb-Wiki the gain is
+uniformly below the floor by an excess optimization residual that is close to
+constant in $\beta$, mean $1.9$ in MSE units, and the measured sign flips
+precisely where $\Delta_{\mathrm{floor}}$ crosses that value, between
+$\beta{=}1.5$ ($2.56$, gain $+0.58$) and $\beta{=}2.0$ ($1.62$, gain $-0.03$).
+This is Theorem~\ref{thm:infeasible} read at finite $T$: the sign of the
+comparison is a quantity one computes in advance.
+
+\noindent\textbf{E3: the $\ell_1$ bound is too loose to be the criterion.}
+The distances $\|p-\hat p\|_1$ and $\|p-\tilde p\|_1$ are also computed on every
+instance, and $\|p-\hat p\|_1<\|p-\tilde p\|_1$ holds in all eleven, including
+the three where transport loses or ties. The $\ell_1$ form of
+Theorem~\ref{thm:infeasible} therefore never predicts a loss and cannot serve as
+the criterion; the exact floors can.
+
+\noindent\textbf{E4: the residual is a stepsize artifact.}
+The left panel of Fig.~\ref{fig:severity} runs the identical instances at
+```
+
+## Edit 12: Sec. 6 Conclusion / bibliography, around line 740
+
+FIND:
+```latex
+G.~Peyr\'{e} and M.~Cuturi, \emph{Computational Optimal Transport}. Now
+Publishers, 2019.
+
+\bibitem{csiszar1975}
+I.~Csisz\'{a}r, ``$I$-divergence geometry of probability distributions and
+minimization problems,'' \emph{Ann. Probab.}, vol.~3, no.~1, pp. 146--158, 1975.
+```
+
+REPLACE WITH:
+```latex
+G.~Peyr\'{e} and M.~Cuturi, \emph{Computational Optimal Transport}. Now
+Publishers, 2019.
+
+\bibitem{gietl2013ipfp}
+C.~Gietl and F.~P. Reffel, ``Accumulation points of the iterative proportional
+fitting procedure,'' \emph{Statistics}, vol.~47, no.~6, pp. 1321--1335, 2013.
+
+\bibitem{csiszar1975}
+I.~Csisz\'{a}r, ``$I$-divergence geometry of probability distributions and
+minimization problems,'' \emph{Ann. Probab.}, vol.~3, no.~1, pp. 146--158, 1975.
+```

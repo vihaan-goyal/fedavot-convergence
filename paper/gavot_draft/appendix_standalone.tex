@@ -1,0 +1,63 @@
+% =====================================================================
+%  Group-Fair Stochastic Gradient Descent via Masked Optimal Transport
+%  ICASSP submission -- 4 pages + 1 page references
+%
+%  Compile:  pdflatex main ; pdflatex main
+%  Replace the local stand-in spconf.sty with the official ICASSP one
+%  before submitting. Nothing in this file needs to change.
+%
+%  Markers you should sweep before submission:
+%     %%FILLIN   -- a number or description only you can supply
+%     %%CHECK    -- a claim worth re-reading against the code
+% =====================================================================
+\documentclass{article}
+\usepackage{spconf,amsmath,amssymb,amsthm,graphicx,booktabs,multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
+
+% ---------------------------------------------------------------- macros
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\Nn}[1]{[#1]}
+\newcommand{\simplex}[1]{\Delta^{#1-1}}
+\newcommand{\CVaR}{\mathrm{CVaR}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Proj}{\Pi_{\mathcal{C}}}
+\newcommand{\avot}{\textsf{GAVOT}}
+\newcommand{\avotcvar}{\textsf{GAVOT+CVaR}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\newcommand{\best}[1]{\textbf{#1}}
+
+% ---------------------------------------------------------------- title
+\title{Group-Fair Stochastic Gradient Descent \\ via Masked Optimal Transport}
+
+\name{Herlock (SeyedAbolfazl) Rahimi \qquad Dionysis Kalogerias%
+\thanks{This work is supported by NSF under Grant 2242215.}}
+\address{Department of Electrical and Computer Engineering, Yale University, New Haven, CT, USA\\
+\texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}}
+
+\begin{document}
+\ninept
+\maketitle
+% ---- stubs so the appendix cross-references resolve standalone
+\begin{lemma}\label{lem:unbiased}stub\end{lemma}\begin{lemma}\label{lem:variance}stub\end{lemma}\begin{theorem}\label{thm:rate}stub\end{theorem}\begin{theorem}\label{thm:infeasible}stub\end{theorem}\begin{corollary}\label{cor:batchsize}stub\end{corollary}\begin{table}\caption{stub}\label{tab:severity}\end{table}
+\begin{theorem}\label{thm:feas}stub\end{theorem}\begin{equation}\label{eq:hall}\end{equation}\begin{equation}\label{eq:ipfp}\end{equation}
+\begin{proposition}\label{prop:surrogate}stub\end{proposition}
+\clearpage
+\input{appendix}
+\end{document}

@@ -1,0 +1,41 @@
+Adult prevalence: GAVOT 0.2269+-0.0006 | unif 0.2479+-0.0010 | m/K 0.6701+-0.0348 (capped seeds 0/5) | full 0.2073 | t sample=40.0 pop=44.7
+Adult aligned: GAVOT 0.2075+-0.0001 | unif 0.2077+-0.0000 | m/K 1e+12+-0 (capped seeds 5/5) | full 0.2073 | t sample=6.3 pop=7.1
+IMDb skewed (beta=0): GAVOT 86.0612+-0.2356 | unif 91.6295+-0.6315 | m/K 8504+-1.87e+04 (capped seeds 0/5) | full 82.9485 | t sample=18.5 pop=20.7
+IMDb aligned: GAVOT 84.2785+-0.1651 | unif 86.3716+-0.3754 | m/K 1e+12+-0 (capped seeds 5/5) | full 82.9485 | t sample=11.4 pop=12.8
+IMDb sweep beta: gain, t(sample), t(pop)
+  0.00: +5.57  18.5  20.7
+  0.50: +3.46  10.1  11.3
+  1.00: +2.05  4.9  5.4
+  1.50: +0.58  1.0  1.1
+  2.00: -0.03  -0.1  -0.1
+  3.00: -2.28  -7.1  -7.9
+Adult sweep beta: gain, t(sample)
+  0.00: +0.0210  40.0
+  0.25: +0.0181  62.1
+  0.50: +0.0134  31.5
+  0.75: +0.0050  32.1
+  1.00: +0.0002  6.3
+floor gaps / nu / measured gain / residual (severity_sweep_table.csv, decay):
+  adult beta=0.0: nu=0.60 dfloor=0.0110 gain=+0.0210 residual(dfloor-gain)=-0.0100
+  adult beta=0.25: nu=0.60 dfloor=0.0144 gain=+0.0181 residual(dfloor-gain)=-0.0037
+  adult beta=0.5: nu=0.40 dfloor=0.0129 gain=+0.0134 residual(dfloor-gain)=-0.0006
+  adult beta=0.75: nu=0.00 dfloor=0.0049 gain=+0.0050 residual(dfloor-gain)=-0.0001
+  adult beta=1.0: nu=0.00 dfloor=0.0003 gain=+0.0002 residual(dfloor-gain)=+0.0001
+  imdbwiki beta=0.0: nu=0.31 dfloor=6.9930 gain=+5.5683 residual(dfloor-gain)=+1.4247
+  imdbwiki beta=0.5: nu=0.59 dfloor=5.7128 gain=+3.4558 residual(dfloor-gain)=+2.2570
+  imdbwiki beta=1.0: nu=0.70 dfloor=3.6717 gain=+2.0506 residual(dfloor-gain)=+1.6211
+  imdbwiki beta=1.5: nu=0.77 dfloor=2.5565 gain=+0.5753 residual(dfloor-gain)=+1.9812
+  imdbwiki beta=2.0: nu=0.82 dfloor=1.6242 gain=-0.0274 residual(dfloor-gain)=+1.6516
+  imdbwiki beta=3.0: nu=0.88 dfloor=0.0208 gain=-2.2808 residual(dfloor-gain)=+2.3016
+IMDb mean excess residual = 1.87
+adult/infeasible fedavot_cvar: best overall 0.2269 @a=0.10 g=1.00
+adult/infeasible fedcvar: best overall 0.2479 @a=0.10 g=1.00
+adult/feasible fedavot_cvar: best overall 0.2075 @a=0.90 g=0.90
+adult/feasible fedcvar: best overall 0.2077 @a=0.10 g=1.00
+imdbwiki/infeasible fedavot_cvar: best overall 86.0612 @a=0.10 g=1.00
+imdbwiki/infeasible fedcvar: best overall 91.6295 @a=0.10 g=1.00
+imdbwiki/feasible fedavot_cvar: best overall 84.2785 @a=0.10 g=1.00
+imdbwiki/feasible fedcvar: best overall 86.3716 @a=0.10 g=1.00
+Adult prevalence best worst-group fedavot_cvar: worst=0.3624 overall=0.2348 @a=0.20 g=0.70
+  plain worst-group: fedavot 0.3679 fedavg 0.3994 full 0.3786
+Adult per-race tail-500: {'fedavot': {'White': 0.3391, 'Black': 0.1792, 'Asian-Pac-Islander': 0.3679, 'Amer-Indian-Eskimo': 0.1752, 'Other': 0.0732}, 'fedavg': {'White': 0.3323, 'Black': 0.1995, 'Asian-Pac-Islander': 0.3994, 'Amer-Indian-Eskimo': 0.1888, 'Other': 0.1194}, 'full': {'White': 0.3786, 'Black': 0.1768, 'Asian-Pac-Islander': 0.3275, 'Amer-Indian-Eskimo': 0.1227, 'Other': 0.0309}}

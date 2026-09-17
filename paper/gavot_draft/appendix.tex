@@ -1,0 +1,93 @@
+% =====================================================================
+%  Appendix (one page). Standalone block: nothing in main.tex references it.
+%  Paste after the bibliography if the venue permits an appendix page.
+% =====================================================================
+\appendix
+\section{Appendix}
+
+\noindent\textbf{A. Proofs.}
+\emph{Theorem~\ref{thm:feas} (sketch).} Route supply $p_i$ from a source through group $i$, along the edges of $E$
+with infinite capacity, into composition $j$ with demand $q_j$, and to a sink.
+A coupling exists iff the maximum flow saturates every source edge, which by
+max-flow/min-cut \cite{fordfulkerson1956} is the right inequality of
+\eqref{eq:hall}; the left one is the same statement for the reversed network.
+On singletons \eqref{eq:hall} is Hall's condition \cite{hall1935}.
+
+\noindent\emph{Corollary~\ref{cor:batchsize}.} For $I=\{i\}$, $\mathcal{N}(I)$ is the set of compositions containing $i$, of
+total mass $r_i$, and $\mathcal{S}(I)=\{j:A_j=\{i\}\}$. Substitute
+$r_i=1-(1-\pi_i)^b$ and $r_i=K/N$.
+
+\noindent\emph{Theorem~\ref{thm:rate}.} By non-expansiveness of $\Proj$,
+$\|\theta^{t}-\theta^\star\|^2\le\|\theta^{t-1}-\theta^\star\|^2
+-2\eta\langle\hat g^t,\theta^{t-1}-\theta^\star\rangle+\eta^2\|\hat g^t\|^2$.
+Conditioning on $\theta^{t-1}$, Lemma~\ref{lem:unbiased} and convexity bound
+the inner product below by $F_p(\theta^{t-1})-F_p(\theta^\star)$, and
+Lemma~\ref{lem:variance} bounds the last term by $\eta^2G^2$. Summing,
+telescoping, and applying Jensen to $\bar\theta_T$ gives
+$\E F_p(\bar\theta_T)-F_p(\theta^\star)\le D^2/(2\eta T)+\eta G^2/2$, and the
+stated $\eta$ balances the two terms \cite{nemirovski2009}.
+In full: $\E\|\theta^{t}-\theta^\star\|^2\le\E\|\theta^{t-1}-\theta^\star\|^2-2\eta\,\E[F_p(\theta^{t-1})-F_p(\theta^\star)]+\eta^2G^2$;
+summing over $t\le T$, telescoping, dropping the terminal distance and applying Jensen to $\bar\theta_T$ gives
+$\E F_p(\bar\theta_T)-F_p(\theta^\star)\le D^2/(2\eta T)+\eta G^2/2$, which is $DG/\sqrt{T}$ at $\eta=D/(G\sqrt{T})$;
+the same bound holds for $\eta_t=\eta_0/\sqrt{t}$ up to constants.
+
+\noindent\emph{Theorem~\ref{thm:infeasible}.} Add and subtract $F_p(\theta^\dagger)=\Phi(\hat p)$; the floor is exact by
+definition and $\Phi(p)=F_p(\theta^\star)$. Theorem~\ref{thm:rate} applied to
+$F_{\hat p}$ gives the residual bound on the surrogate; the residual on $F_p$
+differs from it by $(F_p-F_{\hat p})(\bar\theta_T)-(F_p-F_{\hat p})(\theta^\dagger)$,
+which vanishes as $\bar\theta_T\to\theta^\dagger$ (for instance under strong
+convexity, which both of our instances satisfy). The $\ell_1$ bound is the
+two-point argument of Proposition~\ref{prop:surrogate} with $w$ for $\tilde p$.
+
+\medskip
+\noindent\textbf{B. The infeasible regime in closed form (IMDb-Wiki, $\beta=3$).}
+On the mirrored instance, where $41$ of $100$ groups violate $p_i\le r_i$ and hold
+$88\%$ of the importance mass, the Sinkhorn limit truncates the target at the
+observation-rate ceiling, $\hat p_i\approx\min(p_i,r_i)$ up to renormalization
+(maximum deviation $0.023$), giving $\|p-\hat p\|_1=1.58$ of a maximum possible $2$.
+Because the task is linear regression, the minimizers $\theta^\star$ of $F_p$ and
+$\theta^\dagger$ of $F_{\hat p}$ are available in closed form:
+$\Phi(p)=F_p(\theta^\star)=82.9$ (matching the measured full-coverage plateau, $82.95$)
+and $\Phi(\hat p)=F_p(\theta^\dagger)=105.9$. The alignment floor is therefore
+$23.0$, and the realized bias equals its exact expression
+$|(p-\hat p)^\top L(\theta^\dagger)|=30.7$, where $L(\theta)$ collects the per-group
+risks. The $\ell_1$ form $2M\|p-\hat p\|_1$ of Theorem~\ref{thm:infeasible} holds but is
+conservative here, since any uniform bound satisfies $M\ge\max_i L_i(\theta^\dagger)\approx 454$.
+The group-blind surrogate $\tilde p_i=r_i/K$ has the same floor to two decimals
+($\Phi(\tilde p)=105.9$): both surrogates starve the same groups, which is why
+$\Delta_{\mathrm{floor}}$ vanishes at this endpoint of Table~\ref{tab:severity}.
+
+\medskip
+\noindent\textbf{C. Adult severity sweep.} The five Adult skews omitted from
+Table~\ref{tab:severity}, same conventions.
+\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ccccc}
+\toprule
+$\beta$ & $\nu$ & $\Delta_{\mathrm{floor}}$ & gain & $t$ \\
+\midrule
+$0$    & $.60$ & $.0110$ & $\best{+.0210}$ & $44.7$ \\
+$0.25$ & $.60$ & $.0144$ & $\best{+.0181}$ & $69.4$ \\
+$0.5$  & $.40$ & $.0129$ & $\best{+.0134}$ & $35.2$ \\
+$0.75$ & $0$   & $.0049$ & $\best{+.0050}$ & $35.8$ \\
+$1$    & $0$   & $.0003$ & $+.0002$ & $7.1$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+\noindent\textbf{D. Adult per-race cross-entropy, prevalence regime.}
+Tail-500 over $5$ seeds, decaying stepsize.
+\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+ & White & Black & Asian-Pac. & Amer-Ind. & Other \\
+\midrule
+\avot{}            & $.339$ & $\best{.179}$ & $\best{.368}$ & $\best{.175}$ & $\best{.073}$ \\
+group-blind avg.   & $\best{.332}$ & $.200$ & $.399$ & $.189$ & $.119$ \\
+full               & $.379$ & $.177$ & $.328$ & $.123$ & $.031$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Transport improves four of five categories and regresses only the majority group,
+the expected effect of reweighting toward a category-uniform target; the residual
+loss on the two smallest categories is the unreachable mass of Cor.~\ref{cor:batchsize}.
