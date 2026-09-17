@@ -56,7 +56,15 @@ what he wants. His files are never edited in place: the zip he sent is kept verb
 - Fresh Secs. 2, 3, 5: written, compile with zero undefined references, about one page over
   the 4-page limit even with four proofs moved to the appendix. Cut list in REWRITE_NOTES.md.
 - Herlock's 9/15 metric request: lead with the loss on the least represented group rather
-  than the overall objective. Per-group losses exist in every run CSV; the rare-group versions
-  of Fig. 2 and Table 1 are not built yet. Accuracy would need a rerun (runner logs loss only).
+  than the overall objective. Built 2026-09-17 from the existing run CSVs by
+  `scripts/pipeline/plot_rare_group.py` -> `figures/2026-09-17_rare_group/` (figures
+  `rare_group_adult.*`, `rare_group_imdb.*`, copies in `figs/`; numbers in
+  `rare_group_headline.md`). Rare group = Adult race "Other" (also Amer-Indian), IMDb tier 1
+  (20 top-importance identities, least observed for beta > 0). Decay, headline cells:
+  Adult prevalence Other CE .073 (GAVOT) vs .119 (group-blind) vs .031 (full); Adult aligned
+  .031 vs .035 vs .031; IMDb skewed tier-1 MSE 77.0 vs 86.4 vs 72.2; IMDb aligned 73.6 vs
+  79.9 vs 72.2. GAVOT wins the rare group on every Adult skew and on IMDb up to nu = .70,
+  loses at the three most infeasible IMDb skews (same crossover as the overall objective).
+  Accuracy would need a rerun (runner logs loss only).
 - Open for Herlock: appendix page allowed?, exact-penalty arXiv number (his FILLIN), t-stat
   convention (population std kept), whether E5/CVaR stays.
