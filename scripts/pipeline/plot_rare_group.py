@@ -58,11 +58,9 @@ def pick(ds, grp, tag, mdl):
 LBL_LONG = {"fedavot": "FedAVOT (transport weights)",
             "fedavg": "group-blind average (uniform over the observed groups)",
             "full": "full coverage (every group every step, weighted by $p$)"}
-TITLE = {"adult": "Adult income: cross-entropy on the least represented race, Other "
-                  "(1 of 100 groups, 30 samples; the uniform-over-races target gives it $p_i=0.2$)",
-         "imdbwiki": "IMDb-Wiki age regression: MSE on the 20 highest-importance identities "
-                     "(the least observed ones once $\\beta>0$)"}
-SUB = r"$K{=}3$ groups observed per step, $H{=}5$ local steps, 4000 steps; mean $\pm$ std of the last 500 steps over 5 seeds; lower is better"
+TITLE = {"adult": "Adult: loss on the least represented race (Other)",
+         "imdbwiki": "IMDb-Wiki: loss on the least observed identities (top-importance tier)"}
+SUB = None   # protocol details live in the paper's figure caption, not on the figure
 PANEL = {"const": r"constant stepsize $\eta$", "decay1000": r"decaying stepsize $\eta_t=\eta/(1+t/1000)$"}
 for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Other", "rare_group_adult")]:
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.7), sharey=True)
@@ -85,11 +83,11 @@ for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Othe
         ax.grid(alpha=0.3)
     axes[0].set_ylabel(YLBL[ds], fontsize=7.5)
     axes[1].legend(fontsize=6.5, frameon=False, loc="upper left")
-    fig.suptitle(TITLE[ds] + "\n" + SUB, fontsize=7.5, y=1.03)
+    fig.suptitle(TITLE[ds], fontsize=8.5, y=1.0)
     if ds == "adult":
-        fig.supxlabel(r"observation rate $r\propto p^{\beta}$, from aligned with the target ($\beta{=}1$, feasible) to uniform, i.e. prevalence ($\beta{=}0$); $\nu$ = infeasible mass", fontsize=7.5)
+        fig.supxlabel(r"observation rate $r\propto p^{\beta}$ ($\beta{=}1$ aligned, $\beta{=}0$ uniform); $\nu$ = infeasible mass", fontsize=7.5)
     else:
-        fig.supxlabel(r"infeasible mass $\nu$ (%): share of the target held by groups observed less often than their importance ($\beta$ = 0, 0.5, 1, 1.5, 2, 3 left to right)", fontsize=7.5)
+        fig.supxlabel(r"infeasible mass $\nu$ (%)", fontsize=7.5)
     fig.tight_layout(pad=0.4)
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(OUT, f"{fname}.{ext}"), dpi=200, bbox_inches="tight")

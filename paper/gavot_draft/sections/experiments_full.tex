@@ -83,6 +83,37 @@ the two terms of \eqref{eq:infeasible} dominates, not by the regime label.}
 \label{fig:severity}
 \end{figure}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.99\columnwidth]{figs/rare_group_adult.pdf}\\[2pt]
+\includegraphics[width=0.99\columnwidth]{figs/rare_group_imdb.pdf}
+\caption{Loss on the least represented group, the metric the fairness target
+is about. Top, Adult: cross-entropy on race Other, one group of $30$ out of
+$100$, to which the category-uniform target assigns $p_i=0.2$; the axis is
+the observation-rate exponent, $\beta{=}1$ aligned, $\beta{=}0$ uniform
+(prevalence). Bottom, IMDb-Wiki: MSE on the $20$ highest-importance
+identities, the least observed ones once $\beta>0$, against $\nu$. Left
+panels constant stepsize, right panels decaying. Same protocol as the
+tables ($K{=}3$, $H{=}5$, $4000$ steps, tail-500 mean $\pm$ std over $5$
+seeds); lower is better. Curves are the group-wise entries of the same runs
+as Table~\ref{tab:overall} and Fig.~\ref{fig:severity}.}
+\label{fig:rare}
+\end{figure}
+
+\noindent\textbf{The least represented group.}
+Fig.~\ref{fig:rare} reads the same runs on the group the target exists for.
+On Adult, transport lowers the loss on race Other at every skew and under
+both stepsizes: $.073$ against $.119$ for group-blind averaging on the
+prevalence instance (full coverage $.031$), and $.031$ against $.035$ on the
+aligned one, where it matches full coverage. Amer-Indian, the other
+single-group race, behaves the same way. On IMDb-Wiki the top-importance
+identities show the crossover of Table~\ref{tab:severity} one step earlier:
+under decay transport wins at $\nu\le.70$ ($77.0$ against $86.4$ at
+$\nu{=}.31$, full $72.2$; $73.6$ against $79.9$ when aligned) and loses at
+the three most infeasible skews, while at constant stepsize it wins only at
+$\nu{=}.31$. The overall objective and the rare-group loss therefore tell
+the same story, with the rare group the more sensitive of the two.
+
 \noindent\textbf{E1: the headline cells.}
 Table~\ref{tab:overall} reports the four instances a practitioner would
 recognize. Transport wins on three: Adult under prevalence-proportional
@@ -152,7 +183,7 @@ decays, the measured curves fall onto their dashed floors, and every sign
 reversal attributable to the stepsize disappears. The residual is a property of
 the schedule, not of the estimator.
 
-\noindent\textbf{E6: the decomposition in closed form.}
+\noindent\textbf{E5: the decomposition in closed form.}
 The mirrored IMDb-Wiki instance ($\nu{=}.88$) is where
 Theorem~\ref{thm:infeasible} can be read off exactly. The Sinkhorn limit
 truncates the target at the observation-rate ceiling,
@@ -170,7 +201,7 @@ two rules at this endpoint of Table~\ref{tab:severity} is residual, which is
 why it is the one instance where transport still loses by a significant
 margin under decay ($\beta{=}2$, where the floors are $1.6$ apart, is a tie).
 
-\noindent\textbf{E5: risk aversion, and where it does not help.}
+\noindent\textbf{E6: risk aversion, and where it does not help.}
 Sweeping $(\alpha,\gamma)$ on a $10\times10$ grid, the overall objective is
 minimized on the $\gamma=1$ edge on every instance, which is
 $\kappa(1,\gamma)=1$ made visible and confirms that risk aversion costs the
