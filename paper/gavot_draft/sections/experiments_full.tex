@@ -46,8 +46,8 @@ instances $\argmin F_w$ is available to machine precision (closed form for
 least squares, Newton for the logistic loss), so the floors
 $\Phi(p),\Phi(\hat p),\Phi(\tilde p)$ of Theorem~\ref{thm:infeasible} are
 exact rather than estimated, and in every instance with $\nu=0$ the
-iteration \eqref{eq:ipfp} converges to $10^{-8}$, certifying the remaining
-inequalities of \eqref{eq:hall}.
+iteration \eqref{eq:ipfp} converges to a row error below $3\cdot10^{-8}$,
+certifying the remaining inequalities of \eqref{eq:hall}.
 
 % ----------------------------------------------------------- Table 1
 \begin{table}[t]
@@ -167,7 +167,8 @@ Group-blind averaging has the same floor to two decimals,
 $\Phi(\tilde p)=105.9$: both surrogates starve the same groups, so
 $\Delta_{\mathrm{floor}}$ vanishes and the entire measured gap between the
 two rules at this endpoint of Table~\ref{tab:severity} is residual, which is
-why it is the one instance where transport still loses under decay.
+why it is the one instance where transport still loses by a significant
+margin under decay ($\beta{=}2$, where the floors are $1.6$ apart, is a tie).
 
 \noindent\textbf{E5: risk aversion, and where it does not help.}
 Sweeping $(\alpha,\gamma)$ on a $10\times10$ grid, the overall objective is

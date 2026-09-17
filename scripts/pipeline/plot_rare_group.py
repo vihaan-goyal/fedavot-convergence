@@ -55,8 +55,17 @@ def pick(ds, grp, tag, mdl):
     return sorted([r for r in rows if r["dataset"] == ds and r["group"] == grp and r["tag"] == tag
                    and r["model"] == mdl and r["regime"] == "infeasible"], key=lambda r: r["nu"])
 
+LBL_LONG = {"fedavot": "FedAVOT (transport weights)",
+            "fedavg": "group-blind average (uniform over the observed groups)",
+            "full": "full coverage (every group every step, weighted by $p$)"}
+TITLE = {"adult": "Adult income: cross-entropy on the least represented race, Other "
+                  "(1 of 100 groups, 30 samples; the uniform-over-races target gives it $p_i=0.2$)",
+         "imdbwiki": "IMDb-Wiki age regression: MSE on the 20 highest-importance identities "
+                     "(the least observed ones once $\\beta>0$)"}
+SUB = r"$K{=}3$ groups observed per step, $H{=}5$ local steps, 4000 steps; mean $\pm$ std of the last 500 steps over 5 seeds; lower is better"
+PANEL = {"const": r"constant stepsize $\eta$", "decay1000": r"decaying stepsize $\eta_t=\eta/(1+t/1000)$"}
 for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Other", "rare_group_adult")]:
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 1.9), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.7), sharey=True)
     for ax, tag in zip(axes, ["const", "decay1000"]):
         for mdl in ["fedavot", "fedavg", "full"]:
             pts = pick(ds, grp, tag, mdl)
@@ -66,17 +75,21 @@ for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Othe
             else:
                 x = [100 * r["nu"] for r in pts]
             y = [r["rare_mean"] for r in pts]; s = [r["rare_std"] for r in pts]
-            ax.errorbar(x, y, yerr=s, color=COL[mdl], marker="o", ms=3, lw=1.2, capsize=2, label=LBL[mdl])
-        ax.set_title(TAG_LBL[tag], fontsize=8)
+            ax.errorbar(x, y, yerr=s, color=COL[mdl], marker="o", ms=3, lw=1.2, capsize=2, label=LBL_LONG[mdl])
+        ax.set_title(PANEL[tag], fontsize=8)
         if ds == "adult":
             ax.invert_xaxis()
-            ax.set_xlabel(r"$\beta$ in $r\propto p^{\beta}$ (aligned $\to$ prevalence; $\nu$ = 0, 0, .40, .60, .60)", fontsize=7.5)
-        else:
-            ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=8)
+            ax.set_xticks([r["beta"] for r in pts])
+            ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=6.5)
         ax.tick_params(labelsize=7)
         ax.grid(alpha=0.3)
     axes[0].set_ylabel(YLBL[ds], fontsize=7.5)
-    axes[1].legend(fontsize=7, frameon=False)
+    axes[1].legend(fontsize=6.5, frameon=False, loc="upper left")
+    fig.suptitle(TITLE[ds] + "\n" + SUB, fontsize=7.5, y=1.03)
+    if ds == "adult":
+        fig.supxlabel(r"observation rate $r\propto p^{\beta}$, from aligned with the target ($\beta{=}1$, feasible) to uniform, i.e. prevalence ($\beta{=}0$); $\nu$ = infeasible mass", fontsize=7.5)
+    else:
+        fig.supxlabel(r"infeasible mass $\nu$ (%): share of the target held by groups observed less often than their importance ($\beta$ = 0, 0.5, 1, 1.5, 2, 3 left to right)", fontsize=7.5)
     fig.tight_layout(pad=0.4)
     for ext in ("pdf", "png"):
         fig.savefig(os.path.join(OUT, f"{fname}.{ext}"), dpi=200, bbox_inches="tight")
