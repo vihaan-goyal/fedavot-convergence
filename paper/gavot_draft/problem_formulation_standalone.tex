@@ -1,0 +1,93 @@
+% =====================================================================
+%  Group-Fair Stochastic Gradient Descent via Masked Optimal Transport
+%  ICASSP submission -- 4 pages + 1 page references
+%
+%  Compile:  pdflatex main ; pdflatex main
+%  Replace the local stand-in spconf.sty with the official ICASSP one
+%  before submitting. Nothing in this file needs to change.
+%
+%  Markers you should sweep before submission:
+%     %%FILLIN   -- a number or description only you can supply
+%     %%CHECK    -- a claim worth re-reading against the code
+% =====================================================================
+\documentclass{article}
+\usepackage{spconf,amsmath,amssymb,amsthm,graphicx,booktabs,multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
+
+% ---------------------------------------------------------------- macros
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\Nn}[1]{[#1]}
+\newcommand{\simplex}[1]{\Delta^{#1-1}}
+\newcommand{\CVaR}{\mathrm{CVaR}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Proj}{\Pi_{\mathcal{C}}}
+\newcommand{\avot}{\textsf{GAVOT}}
+\newcommand{\avotcvar}{\textsf{GAVOT+CVaR}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\newcommand{\best}[1]{\textbf{#1}}
+
+% ---------------------------------------------------------------- title
+\title{Group-Fair Stochastic Gradient Descent \\ via Masked Optimal Transport}
+
+\name{Herlock (SeyedAbolfazl) Rahimi \qquad Dionysis Kalogerias%
+\thanks{This work is supported by NSF under Grant 2242215.}}
+\address{Department of Electrical and Computer Engineering, Yale University, New Haven, CT, USA\\
+\texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}}
+
+\bibcite{buolamwini2018gender}{1}
+\bibcite{hashimoto2018repeated}{2}
+\bibcite{sagawa2020dro}{3}
+\bibcite{mohri2019agnostic}{4}
+\bibcite{li2020fair}{5}
+\bibcite{rahimi2025fedavot}{6}
+\bibcite{rahimi2025agnostic}{7}
+\bibcite{wang2020objective}{8}
+\bibcite{cho2022biased}{9}
+\bibcite{mcmahan2017fedavg}{10}
+\bibcite{agarwal2018reductions}{11}
+\bibcite{cotter2019twoplayer}{12}
+\bibcite{chamon2020pacc}{13}
+\bibcite{chamon2023nonconvex}{14}
+\bibcite{rahimi2026exactpenalty}{15}
+\bibcite{rizk2021importance}{16}
+\bibcite{katharopoulos2018not}{17}
+\bibcite{sinkhorn1967}{18}
+\bibcite{cuturi2013}{19}
+\bibcite{peyre2019}{20}
+\bibcite{gietl2013ipfp}{21}
+\bibcite{csiszar1975}{22}
+\bibcite{hall1935}{23}
+\bibcite{fordfulkerson1956}{24}
+\bibcite{villani2009}{25}
+\bibcite{rockafellar2000cvar}{26}
+\bibcite{curi2020adaptive}{27}
+\bibcite{levy2020large}{28}
+\bibcite{namkoong2017variance}{29}
+\bibcite{nemirovski2009}{30}
+\bibcite{li2020fedprox}{31}
+\bibcite{karimireddy2020scaffold}{32}
+\bibcite{uci_adult}{33}
+\bibcite{rothe2018imdbwiki}{34}
+\bibcite{theodoropoulos2024restricted}{35}
+\title{Sec. 2 Problem Formulation}
+\name{}\address{}
+\begin{document}\ninept\maketitle
+\input{sections/problem_formulation}
+\end{document}

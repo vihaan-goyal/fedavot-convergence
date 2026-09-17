@@ -1,0 +1,415 @@
+% =====================================================================
+%  Group-Fair Stochastic Gradient Descent via Masked Optimal Transport
+%  ICASSP submission -- 4 pages + 1 page references
+%
+%  Compile:  pdflatex main ; pdflatex main
+%  Replace the local stand-in spconf.sty with the official ICASSP one
+%  before submitting. Nothing in this file needs to change.
+%
+%  Markers you should sweep before submission:
+%     %%FILLIN   -- a number or description only you can supply
+%     %%CHECK    -- a claim worth re-reading against the code
+% =====================================================================
+\documentclass{article}
+\usepackage{spconf,amsmath,amssymb,amsthm,graphicx,booktabs,multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
+
+% ---------------------------------------------------------------- macros
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\Nn}[1]{[#1]}
+\newcommand{\simplex}[1]{\Delta^{#1-1}}
+\newcommand{\CVaR}{\mathrm{CVaR}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Proj}{\Pi_{\mathcal{C}}}
+\newcommand{\avot}{\textsf{GAVOT}}
+\newcommand{\avotcvar}{\textsf{GAVOT+CVaR}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\newcommand{\best}[1]{\textbf{#1}}
+
+% ---------------------------------------------------------------- title
+\title{Group-Fair Stochastic Gradient Descent \\ via Masked Optimal Transport}
+
+\name{Herlock (SeyedAbolfazl) Rahimi \qquad Dionysis Kalogerias%
+\thanks{This work is supported by NSF under Grant 2242215.}}
+\address{Department of Electrical and Computer Engineering, Yale University, New Haven, CT, USA\\
+\texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}}
+
+\begin{document}
+\ninept
+\maketitle
+
+\begin{abstract}
+Minibatch SGD is group-blind. Which groups appear in a batch is decided by how
+often they occur in the data, not by how much they are meant to count in the
+objective, and when the two disagree the iterates converge to a
+prevalence-weighted surrogate rather than to the target risk. The gap is a bias,
+so no amount of training removes it. A minibatch is a partial-participation
+event over groups, which makes group-fair training an instance of federated
+aggregation under availability skew, and we carry the masked optimal transport
+construction of \textsf{FedAVOT} across. Aligning the
+batch-composition distribution $q$ with the target importance distribution $p$
+produces per-batch group weights whose induced stochastic subgradient is exactly
+unbiased for the target risk, giving the standard $O(1/\sqrt{T})$ rate in the
+nonsmooth convex regime with a constant that does not depend on how many groups
+a batch happens to cover. Exact alignment is feasible precisely under a Hall-type condition, which reduces
+to the per-group requirement that importance not exceed observation rate; past
+it Sinkhorn returns an information projection and a residual we compute in
+closed form rather than bound. That closed form turns the excess risk into two
+terms, an alignment gain fixed by the instance and an optimization residual paid
+by the estimator, and a severity sweep over eleven availability skews on Adult
+and IMDb-Wiki shows the two crossing: transport wins while the gain exceeds the
+residual and loses past it, at a threshold the decomposition locates in advance.
+The residual is a stepsize artifact, not a property of the method, and a
+decaying schedule removes it on every instance where it had reversed the sign.
+A mean--CVaR layer composed on top reaches the worst group at rate
+$O(\kappa(\alpha,\gamma)/\sqrt{T})$.
+\end{abstract}
+
+\begin{keywords}
+Group fairness, optimal transport, stochastic gradient descent,
+distribution shift, conditional value at risk.
+\end{keywords}
+
+% =====================================================================
+\section{Introduction}
+% =====================================================================
+
+A classifier is rarely asked to minimize one risk. It is asked to minimize one
+while behaving acceptably on subpopulations the training distribution
+under-represents: a diagnostic model across patient groups, a recognition system
+across demographic strata \cite{buolamwini2018gender,hashimoto2018repeated,%
+sagawa2020dro}. The standard response is to change the objective, replacing the
+empirical risk by $F_p(\theta)=\sum_i p_i f_i(\theta)$ with $p$ the weighting
+one actually wants, uniform, inverse to prevalence, or externally dictated
+\cite{mohri2019agnostic,li2020fair}.
+
+This paper is about a gap between writing that objective down and optimizing it.
+Minibatch SGD does not see $p$: it sees a batch, whose group composition is
+governed by prevalence and by the sampler, so averaging the per-example
+gradients descends a different function. The estimator is not merely noisy, it
+is biased, by a fixed vector that survives $T\to\infty$ and any stepsize
+schedule. Rebalancing the sampler is the usual and only partial fix: a group
+whose prevalence is below the resolution of the batch size cannot be sampled
+into every batch however the sampler is tilted, and upscaling the few examples
+that do appear reintroduces an amplitude distortion that destabilizes the
+iterates \cite{rahimi2025fedavot}.
+
+\noindent\textbf{Groups as clients.}
+The same mismatch is the central object of a different literature. In federated
+learning the \emph{availability distribution} $q$ over which clients participate
+in a round rarely matches the \emph{importance distribution} $p$ that defines
+the objective, and \textsf{FedAvg} consequently optimizes a surrogate whose
+weights are induced by the availability process rather than chosen
+\cite{rahimi2025agnostic,wang2020objective,cho2022biased}. \textsf{FedAVOT}
+\cite{rahimi2025fedavot} removes that mismatch by posing aggregation as a masked
+optimal transport (MOT) problem: find a coupling whose column marginal is the
+availability law and whose row marginal is the target $p$, supported only on
+client-round pairs that actually occurred. The observation driving this paper is that a minibatch is a participation
+event: the groups represented in $B^t$ are the active set $S^t$, its law is $q$,
+and the weighting one wants is $p$. Group-fair SGD is federated aggregation with
+the federation collapsed onto one machine. We call the method \avot{} and keep
+the \textsf{FedAVOT} label in figures, the aggregation rule being unchanged.
+
+\noindent\textbf{Contributions.}
+\begin{enumerate}\itemsep0pt\parskip0pt\topsep2pt
+\item \emph{The reduction} (Sec.~\ref{sec:setup}). Group-blind minibatch SGD reduces, under
+uniform-within-batch averaging, to agnostic \textsf{FedAvg} with one local step, so the surrogate identity of
+\cite{rahimi2025agnostic} names the function SGD actually minimizes, and
+transport weights make the batch subgradient exactly unbiased for $\nabla F_p$
+(Lemma~\ref{lem:unbiased}).
+\item \emph{A coverage law and a severity measure} (Cor.~\ref{cor:batchsize}).
+Feasibility is Hall-type and reduces on singletons to $p_i\le r_i$, importance
+below observation rate, so the \emph{infeasible mass}
+$\nu\triangleq\sum_{i:p_i>r_i}p_i$ is the natural severity axis, computable
+before training.
+\item \emph{A two-term decomposition that locates the crossover}
+(Thm.~\ref{thm:infeasible}, Sec.~\ref{sec:exp}). Past the Hall condition the
+excess splits into an \emph{alignment gain} $\Delta_{\mathrm{floor}}$, the
+distance between the two optima each rule actually converges to, and an
+optimization residual. The gain is exact and instance-fixed; the residual is
+paid by the estimator. We sweep eleven skews and watch the two cross.
+\item \emph{Risk-averse layer} (Sec.~\ref{sec:cvar}). Mean--CVaR over groups
+composes with the transport weights without disturbing unbiasedness, at rate
+$O(\kappa(\alpha,\gamma)/\sqrt{T})$,
+$\kappa(\alpha,\gamma)=\gamma+(1-\gamma)/\alpha$.
+\end{enumerate}
+
+\noindent\textbf{Related work.}
+Reduction methods for group fairness return randomized mixtures or carry an
+approximation constant tied to a fixed class
+\cite{agarwal2018reductions,cotter2019twoplayer,chamon2020pacc}.
+Distributionally robust and worst-group objectives
+\cite{sagawa2020dro,hashimoto2018repeated,levy2020large} change the functional
+rather than the sampler and are complementary: our CVaR layer is one such
+functional, obtained on top of transport rather than instead of it. Importance
+sampling for SGD \cite{rizk2021importance,katharopoulos2018not} corrects
+variance, not the identity of the minimized objective.
+
+\input{sections/problem_formulation}
+\input{sections/proposed_solution}
+
+% =====================================================================
+\section{A Risk-Averse Layer over Groups}
+\label{sec:cvar}
+% =====================================================================
+
+Exact alignment delivers the $p$-weighted risk, an average, which can hide a
+group. Where the requirement is on the worst group instead, we compose a
+mean--CVaR functional over groups on top of the transport weights
+\cite{rahimi2025agnostic,rockafellar2000cvar}:
+\begin{equation}
+F_p^{\alpha,\gamma}(\theta)\;\triangleq\;\gamma F_p(\theta)+(1-\gamma)\,
+\CVaR^p_\alpha\big(f(\theta)\big),\quad \alpha,\gamma\in(0,1],
+\label{eq:meancvar}
+\end{equation}
+where $\CVaR^p_\alpha$ is the conditional value at risk of the group-loss vector
+under $p$. The Rockafellar--Uryasev representation turns \eqref{eq:meancvar}
+into a joint minimization over $(\theta,t)$,
+\begin{equation}
+\Phi(\theta,t)=\gamma\sum_i p_i f_i(\theta)+(1-\gamma)\Big(t+\tfrac{1}{\alpha}
+\sum_i p_i\big[f_i(\theta)-t\big]_+\Big),
+\label{eq:ru}
+\end{equation}
+jointly convex, with subgradients in both arguments again $p$-weighted sums of
+per-group quantities, so Lemma~\ref{lem:unbiased} applies unchanged. This is why
+the layers compose rather than interfere: transport fixes \emph{which}
+distribution the expectation is under, CVaR changes \emph{what} is averaged.
+Lines 6 and 8 of Algorithm~\ref{alg:gavot} implement \eqref{eq:ru}.
+
+\begin{theorem}[Rate under mean--CVaR]
+\label{thm:cvar}
+Under the hypotheses of Theorem~\ref{thm:rate}, Algorithm~\ref{alg:gavot} with
+$\eta=\Theta(1/\sqrt{T})$ satisfies
+$\E[F_p^{\alpha,\gamma}(\bar\theta_T)]-\min F_p^{\alpha,\gamma}
+=O\!\big(\kappa(\alpha,\gamma)/\sqrt{T}\big)$ with
+$\kappa(\alpha,\gamma)=\gamma+(1-\gamma)/\alpha$. In the infeasible regime the
+bound of Theorem~\ref{thm:infeasible} acquires the same factor on its
+statistical term, the bias term being unchanged.
+\end{theorem}
+
+Both $\gamma=1$ and $\alpha=1$ recover Theorem~\ref{thm:rate} exactly, so the
+grid contains the risk-neutral method along two edges, visible as the constant
+row and column of every heatmap below. Sending $\alpha\downarrow 0$ drives
+\eqref{eq:meancvar} to the worst group at the cost
+$\kappa(\alpha,\gamma)\to\infty$: the parameter prices robustness in the
+convergence constant, not in the limit.
+
+\begin{remark}[Relation to constrained learning]
+\label{rem:penalty}
+$\max_i f_i$ is the exact-penalty limit of $\min f_0$ s.t.\ $f_i\le c_i$, a
+fixed price on the largest violation matching penalized and constrained values
+once it exceeds the least $\ell_1$ norm on the dual-optimal set
+\cite{rahimi2026exactpenalty}. The $\alpha\downarrow 0$ edge of
+\eqref{eq:meancvar} is thus the scalarization a constrained specification
+selects, with $\kappa$ its price in the rate.
+\end{remark}
+
+\input{sections/experiments_full}
+
+% =====================================================================
+\section{Conclusion}
+% =====================================================================
+
+Group-fair training fails in a specific and fixable place: the aggregation step,
+blind to the weighting the objective declares. Reading a minibatch as a
+partial-participation event makes the fix the masked transport problem that
+corrects availability skew in federated learning, with the same feasibility
+characterization, an $O(1/\sqrt{T})$ guarantee free of batch coverage, and a
+coverage law whose infeasible mass $\nu$ orders instances by severity. Past
+feasibility the excess splits cleanly, into an alignment gain fixed by the
+instance and an optimization residual paid by the estimator, and a sweep over
+eleven skews shows the two crossing where the decomposition says they will. Transport is
+worth applying while the gain exceeds the residual, both are computable before
+training, and the residual is a stepsize artifact a decaying schedule removes.
+The nonconvex case remains open.
+
+% =====================================================================
+\clearpage
+\renewcommand{\refname}{REFERENCES}
+
+\begin{thebibliography}{99}\setlength{\itemsep}{-1pt}\small
+
+\bibitem{buolamwini2018gender}
+J.~Buolamwini and T.~Gebru, ``Gender shades: Intersectional accuracy disparities
+in commercial gender classification,'' in \emph{Proc. Conf. Fairness,
+Accountability and Transparency (FAT*)}, 2018, pp. 77--91.
+
+\bibitem{hashimoto2018repeated}
+T.~Hashimoto, M.~Srivastava, H.~Namkoong, and P.~Liang, ``Fairness without
+demographics in repeated loss minimization,'' in \emph{Proc. Int. Conf. Machine
+Learning (ICML)}, 2018, pp. 1929--1938.
+
+\bibitem{sagawa2020dro}
+S.~Sagawa, P.~W. Koh, T.~Hashimoto, and P.~Liang, ``Distributionally robust
+neural networks for group shifts,'' in \emph{Proc. Int. Conf. Learning
+Representations (ICLR)}, 2020.
+
+\bibitem{mohri2019agnostic}
+M.~Mohri, G.~Sivek, and A.~T. Suresh, ``Agnostic federated learning,'' in
+\emph{Proc. Int. Conf. Machine Learning (ICML)}, 2019, pp. 4615--4625.
+
+\bibitem{li2020fair}
+T.~Li, M.~Sanjabi, A.~Beirami, and V.~Smith, ``Fair resource allocation in
+federated learning,'' in \emph{Proc. Int. Conf. Learning Representations
+(ICLR)}, 2020.
+
+\bibitem{rahimi2025fedavot}
+H.~Rahimi and D.~Kalogerias, ``FedAVOT: Exact distribution alignment in
+federated learning via masked optimal transport,'' in \emph{Proc. IEEE Int.
+Conf. Acoustics, Speech and Signal Processing (ICASSP)}, 2026.
+
+\bibitem{rahimi2025agnostic}
+H.~Rahimi and D.~Kalogerias, ``Convergence of agnostic federated averaging,''
+in \emph{Proc. IEEE Int. Workshop Computational Advances in Multi-Sensor
+Adaptive Processing (CAMSAP)}, 2025.
+
+\bibitem{wang2020objective}
+J.~Wang, Q.~Liu, H.~Liang, G.~Joshi, and H.~V. Poor, ``Tackling the objective
+inconsistency problem in heterogeneous federated optimization,'' in \emph{Adv.
+Neural Inf. Process. Syst. (NeurIPS)}, vol.~33, 2020, pp. 7611--7623.
+
+\bibitem{cho2022biased}
+Y.~J. Cho, J.~Wang, and G.~Joshi, ``Towards understanding biased client
+selection in federated learning,'' in \emph{Proc. Int. Conf. Artificial
+Intelligence and Statistics (AISTATS)}, 2022, pp. 10351--10375.
+
+\bibitem{mcmahan2017fedavg}
+H.~B. McMahan, E.~Moore, D.~Ramage, S.~Hampson, and B.~A. y~Arcas,
+``Communication-efficient learning of deep networks from decentralized data,''
+in \emph{Proc. Int. Conf. Artificial Intelligence and Statistics (AISTATS)},
+2017, pp. 1273--1282.
+
+\bibitem{agarwal2018reductions}
+A.~Agarwal, A.~Beygelzimer, M.~Dud\'{i}k, J.~Langford, and H.~Wallach, ``A
+reductions approach to fair classification,'' in \emph{Proc. Int. Conf. Machine
+Learning (ICML)}, 2018, pp. 60--69.
+
+\bibitem{cotter2019twoplayer}
+A.~Cotter, H.~Jiang, and K.~Sridharan, ``Two-player games for efficient
+non-convex constrained optimization,'' in \emph{Proc. Int. Conf. Algorithmic
+Learning Theory (ALT)}, 2019, pp. 300--332.
+
+\bibitem{chamon2020pacc}
+L.~F.~O. Chamon and A.~Ribeiro, ``Probably approximately correct constrained
+learning,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~33, 2020,
+pp. 16722--16735.
+
+\bibitem{chamon2023nonconvex}
+L.~F.~O. Chamon, S.~Paternain, M.~Calvo-Fullana, and A.~Ribeiro, ``Constrained
+learning with non-convex losses,'' \emph{IEEE Trans. Inf. Theory}, vol.~69,
+no.~3, pp. 1739--1760, 2023.
+
+\bibitem{rahimi2026exactpenalty}
+H.~Rahimi, S.~Pougkakiotis, and D.~Kalogerias, ``An exact penalty method for
+constrained statistical learning over universal RKHSs,'' 2026, submitted.
+%%FILLIN: replace with the arXiv number once posted.
+
+\bibitem{rizk2021importance}
+M.~Rizk, S.~Vlaski, and A.~H. Sayed, ``Optimal importance sampling for
+federated learning,'' in \emph{Proc. IEEE Int. Conf. Acoustics, Speech and
+Signal Processing (ICASSP)}, 2021, pp. 3110--3114.
+
+\bibitem{katharopoulos2018not}
+A.~Katharopoulos and F.~Fleuret, ``Not all samples are created equal: Deep
+learning with importance sampling,'' in \emph{Proc. Int. Conf. Machine
+Learning (ICML)}, 2018, pp. 2525--2534.
+
+\bibitem{sinkhorn1967}
+R.~Sinkhorn, ``Diagonal equivalence to matrices with prescribed row and column
+sums,'' \emph{Amer. Math. Monthly}, vol.~74, no.~4, pp. 402--405, 1967.
+
+\bibitem{cuturi2013}
+M.~Cuturi, ``Sinkhorn distances: Lightspeed computation of optimal transport,''
+in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~26, 2013, pp.
+2292--2300.
+
+\bibitem{peyre2019}
+G.~Peyr\'{e} and M.~Cuturi, \emph{Computational Optimal Transport}. Now
+Publishers, 2019.
+
+\bibitem{gietl2013ipfp}
+C.~Gietl and F.~P. Reffel, ``Accumulation points of the iterative proportional
+fitting procedure,'' \emph{Statistics}, vol.~47, no.~6, pp. 1321--1335, 2013.
+
+\bibitem{csiszar1975}
+I.~Csisz\'{a}r, ``$I$-divergence geometry of probability distributions and
+minimization problems,'' \emph{Ann. Probab.}, vol.~3, no.~1, pp. 146--158, 1975.
+
+\bibitem{hall1935}
+P.~Hall, ``On representatives of subsets,'' \emph{J. London Math. Soc.},
+vol.~10, no.~1, pp. 26--30, 1935.
+
+\bibitem{fordfulkerson1956}
+L.~R. Ford and D.~R. Fulkerson, ``Maximal flow through a network,'' \emph{Canad.
+J. Math.}, vol.~8, pp. 399--404, 1956.
+
+\bibitem{villani2009}
+C.~Villani, \emph{Optimal Transport: Old and New}. Springer, 2009.
+
+\bibitem{rockafellar2000cvar}
+R.~T. Rockafellar and S.~Uryasev, ``Optimization of conditional value-at-risk,''
+\emph{J. Risk}, vol.~2, no.~3, pp. 21--41, 2000.
+
+\bibitem{curi2020adaptive}
+S.~Curi, K.~Y. Levy, S.~Jegelka, and A.~Krause, ``Adaptive sampling for
+stochastic risk-averse learning,'' in \emph{Adv. Neural Inf. Process. Syst.
+(NeurIPS)}, vol.~33, 2020, pp. 1036--1047.
+
+\bibitem{levy2020large}
+D.~Levy, Y.~Carmon, J.~C. Duchi, and A.~Sidford, ``Large-scale methods for
+distributionally robust optimization,'' in \emph{Adv. Neural Inf. Process.
+Syst. (NeurIPS)}, vol.~33, 2020, pp. 8847--8860.
+
+\bibitem{namkoong2017variance}
+H.~Namkoong and J.~C. Duchi, ``Variance-based regularization with convex
+objectives,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~30,
+2017, pp. 2971--2980.
+
+\bibitem{nemirovski2009}
+A.~Nemirovski, A.~Juditsky, G.~Lan, and A.~Shapiro, ``Robust stochastic
+approximation approach to stochastic programming,'' \emph{SIAM J. Optim.},
+vol.~19, no.~4, pp. 1574--1609, 2009.
+
+\bibitem{li2020fedprox}
+T.~Li, A.~K. Sahu, M.~Zaheer, M.~Sanjabi, A.~Talwalkar, and V.~Smith,
+``Federated optimization in heterogeneous networks,'' in \emph{Proc. Machine
+Learning and Systems (MLSys)}, 2020, pp. 429--450.
+
+\bibitem{karimireddy2020scaffold}
+S.~P. Karimireddy, S.~Kale, M.~Mohri, S.~J. Reddi, S.~U. Stich, and A.~T.
+Suresh, ``SCAFFOLD: Stochastic controlled averaging for federated learning,''
+in \emph{Proc. Int. Conf. Machine Learning (ICML)}, 2020, pp. 5132--5143.
+
+\bibitem{uci_adult}
+B.~Becker and R.~Kohavi, ``Adult,'' UCI Machine Learning Repository, 1996.
+
+\bibitem{rothe2018imdbwiki}
+R.~Rothe, R.~Timofte, and L.~Van~Gool, ``Deep expectation of real and apparent
+age from a single image without facial landmarks,'' \emph{Int. J. Comput.
+Vis.}, vol.~126, no.~2--4, pp. 144--157, 2018.
+
+\bibitem{theodoropoulos2024restricted}
+P.~Theodoropoulos, K.~E. Nikolakakis, and D.~Kalogerias, ``Federated learning
+under restricted user availability,'' in \emph{Proc. IEEE Int. Conf. Acoustics,
+Speech and Signal Processing (ICASSP)}, 2024.
+
+\end{thebibliography}
+
+\end{document}

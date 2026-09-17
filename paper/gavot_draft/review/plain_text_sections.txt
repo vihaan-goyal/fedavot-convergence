@@ -1,0 +1,414 @@
+######################################################################
+# SECTION 2: PROBLEM FORMULATION
+######################################################################
+
+=== PROBLEM FORMULATION ===
+
+Groups and objectives.
+Let X ⊆ R^d be a feature space and Y a label
+space, and let the population be partitioned into N groups indexed by
+i ∈ N (demographic categories, devices, environments) with
+prevalences π ∈ ΔN, π_i=P[group i]. Group i
+carries a distribution D_i on XtimesY and
+the risk
+
+ 
+f_i(θ) = E_(X,Y)simD_i[ℓ(m(X;θ),Y)],
+ θinC ⊆ R^d',
+
+where m(· ;θ) is the predictor and ℓ the loss. Empirical risk
+minimization weights the groups by prevalence, F_π= Σ _iπ_i f_i, and a
+majority group therefore dominates the trained model. The remedy is to fix an
+importance distribution p ∈ ΔN and minimize
+
+ 
+F_p(θ) = Σ _i=1^Np_i f_i(θ),
+ 
+θ^* ∈ argmin_θinCF_p(θ).
+
+Uniform p is the category-uniform objective, p_i ∝ 1/π_i the
+inverse-prevalence one, and p may equally encode a fairness constraint or
+be imposed externally . Throughout,
+
+Assumption. 
+
+C is convex and compact with diameter D; each f_i is convex on
+C and 0<= f_i<= M; and every stochastic subgradient
+g_i(θ) of f_i returned by the sampler satisfies
+E\|g_i(θ)\|^2<= G^2 on C.
+
+ These are the assumptions of 
+restated for groups; they place no restriction on p or on π.
+
+Prevalence versus importance.
+Minibatch SGD does not see p. At step t the sampler draws a batch B^t of
+b examples; write
+
+ 
+A^t = \ i ∈ N: B^t contains an example from group i \
+
+for the active set of groups, let \A_j\_j ∈ M enumerate its
+support, and let q_j=P[A^t=A_j] be the composition law.
+The observation rate of group i is r_i=P[i ∈ A^t]= Σ _j: i ∈ A_jq_j;
+under i.i.d. sampling r_i=1-(1-π_i)^b, so a group whose prevalence is
+below the resolution of the batch is absent from most batches whatever p
+says. This is federated learning under partial participation: A^t is the set
+of participating clients, q the availability distribution, p the
+importance distribution . We treat
+q as known; otherwise it is estimated offline by simulating the sampler, as
+in our experiments.
+
+What group-blind SGD minimizes.
+The group-blind update averages the per-example subgradients of B^t, which
+assigns group i ∈ A^t the weight π_widehat^t_i, its share of the
+batch, and assigns absent groups zero. Averaging first over the batch given
+A^t and then over A^t ~ q is the hierarchical experiment of
+, and it names the function SGD is in fact
+minimizing.
+
+Proposition (Surrogate objective). 
+
+Under the assumption, group-blind minibatch SGD is a stochastic
+subgradient method on F_p_tilde with
+
+ 
+p_tilde_i = Σ _j: i ∈ A_j q_j E[π_widehat^t_i | A^t=A_j],
+
+a probability vector. For i.i.d. sampling p_tilde=π; for uniform
+weighting within the batch p_tilde_i= Σ _j: i ∈ A_jq_j/|A_j|, the
+surrogate of agnostic FedAvg .
+Consequently, for every θinC,
+
+ 
+|F_p(θ)-F_p_tilde(θ)| <= M\|p-p\_tilde|_1 ,
+
+and any method that minimizes F_p_tilde exactly incurs the excess
+F_p(θ^*_p_tilde)-F_p(θ^*)<= 2M\|p-p\_tilde|_1 on
+the equation, which does not vanish with T.
+
+Proof. 
+Conditionally on A^t=A_j the within-group averages are unbiased for
+∂ f_i, so
+E[batch subgradient | A^t=A_j]= Σ _i ∈ A_jE[π_widehat^t_i | A_j] ∂ f_i(θ);
+averaging over q gives Σ _ip_tilde_i ∂ f_i=∂ F_p_tilde,
+and Σ _ip_tilde_i= Σ _j q_j Σ _i ∈ A_jE[π_widehat^t_i | A_j]=1.
+Both bounds follow from 0<= f_i<= M and the two-point inequality
+F_p(θ^*_p_tilde)-F_p(θ^*)<=
+[F_p-F_p_tilde](θ^*_p_tilde)+[F_p_tilde-F_p](θ^*).
+
+the proposition says that the choice of p in
+the equation is decorative unless the aggregation step is changed: the
+iterates converge, at the usual rate, to the minimizer of a function whose
+weights are induced by the sampler rather than chosen, and the bias
+p-p_tilde survives every stepsize schedule. Rebalancing the sampler is
+only a partial fix: p_tilde_i<= r_i always, so a group with p_i>r_i
+cannot be sampled into enough batches however the sampler is tilted, while
+upscaling the examples that do appear reintroduces an amplitude distortion
+that destabilizes the iterates . The question is the
+one posed for federated aggregation in , read on
+batches:
+
+The next section answers it, and characterizes exactly when the answer is yes.
+
+
+######################################################################
+# SECTION 3: PROPOSED APPROACH
+######################################################################
+
+=== PROPOSED APPROACH: ALIGNMENT BY MASKED OPTIMAL TRANSPORT ===
+
+Weights as a coupling.
+Let Y[i,j]>= 0 be the weight assigned to group i when the active set is
+A_j, with Y[i,j]=0 for i ∉ A_j, and let T[i,j]= q_jY[i,j]
+be the joint mass carried from composition j to group i. Requiring that
+the weights be a probability vector on each realized composition, and that
+each group receive in expectation the mass p assigns it, is the
+masked optimal transport (MOT) feasibility problem of
+,
+
+ 
+T1_M=p, 1_N^ᵀ T=q, T>= 0,
+ supp(T) ⊆ E,
+
+with mask E=\(i,j): i ∈ A_j\ encoding that a group absent from the batch
+cannot be weighted. Unlike classical transport
+ there is no cost to minimize: any coupling
+respecting the equation serves, and the equation is the Kantorovich
+problem with the indicator cost C[i,j]=∞ off E. the figure
+is the picture.
+
+When alignment is possible.
+Existence of a coupling is a supply-demand question on the bipartite graph
+E, and is settled by flow duality.
+
+Theorem (Feasibility, ). 
+
+For I ⊆ N let N(I)=\j:∃ i ∈ I, (i,j) ∈ E\
+and S(I)=\j: A_j ⊆ I\. Problem the equation is feasible
+if and only if
+
+ 
+ Σ _jinS(I)q_j <= Σ _i ∈ Ip_i <= Σ _jinN(I)q_j
+ ∀ I ⊆ N.
+
+Proofs are in the appendix. Read on singletons, the equation becomes a
+statement one can act on before training starts.
+
+Corollary (Coverage law and severity). 
+
+Feasibility of the equation requires P[A^t=\i\]<= p_i<= r_i for every
+i, with r_i=P[i ∈ A^t] the observation rate of the section.
+Writing
+
+ 
+ν = Σ _i : p_i>r_i p_i
+
+for the infeasible mass, ν=0 iff the upper constraints hold.
+Under i.i.d. sampling of b examples the upper constraint reads
+b>=log(1-p_i)/log(1-π_i); under K-of-N uniform group sampling it
+reads p_i<= K/N.
+
+Severity.
+Importance may not exceed observation rate: a rare group is reachable only
+if the batch is large enough to contain it often enough. The infeasible mass
+ν is the axis we sweep: at ν=0 exact alignment is available, and as
+ν grows more of p sits outside the set of row marginals the mask can
+reach. A feasible and an infeasible regime are two points on
+this continuum, and the section sweeps it instead.
+
+Computing the plan.
+Given feasibility, a coupling is obtained by iterative proportional fitting
+(Sinkhorn scaling) on the masked support
+: starting from any T^(0)>0 on
+E with 1^ᵀ T^(0)=q, alternate
+
+ 
+Tarrowdiag(p ⊘ T1) T, 
+Tarrow T diag(q ⊘ T^ᵀ1)
+
+until \|T1-p\|_1<=ε. Each sweep costs O(|E|) with
+|E|<= NM and M the number of realized compositions rather than
+2^N; the plan is computed once, offline, and the training loop adds one
+lookup and one multiply per group per step. Under the equation the
+iteration converges to a solution of the equation
+, being block-coordinate ascent on the dual of
+the entropic problem min\ Σ _E Tlog T: T1=p, 1^ᵀ T=q\.
+Since 1_N^ᵀ T=q and Y=Tdiag(q)^-1, every column
+Y[·,j] is a probability vector on A_j, the property each bound below
+uses. the algorithm is the resulting method; γ=1 is the
+risk-neutral rule analyzed here and γ<1 the risk-averse layer of
+the section.
+
+Analysis.
+Everything rests on one identity, moved from
+model averaging to gradient averaging. Let g_i(θ) be the stochastic
+subgradient of f_i computed from B^tcap group i and
+g_hat(θ)= Σ _i ∈ A^tY[i,j(t)] g_i(θ) the transport-weighted
+batch subgradient of the algorithm. Transport removes bias; it is
+not a variance reduction device.
+
+Lemma (Unbiasedness). 
+
+Let T satisfy the equation. Then E[g_hat(θ) | θ] ∈ ∂ F_p(θ)
+for every θinC.
+
+Proof. 
+Conditionally on A^t=A_j, E[g_i(θ)] ∈ ∂ f_i(θ) for
+i ∈ A_j. Averaging over A^t ~ q,
+E[g_hat]= Σ _j q_j Σ _i ∈ A_jY[i,j] ∂ f_i(θ)
+= Σ _i( Σ _j T[i,j])∂ f_i(θ)= Σ _i p_i ∂ f_i(θ),
+the row-marginal constraint being used in the last step.
+
+Lemma (Second moment, free of coverage). 
+
+E\|g_hat(θ)\|^2<= G^2 for every θinC, with no
+dependence on |A^t| or on N.
+
+Proof. 
+Y[·,j] is a probability vector on A_j, so
+\| Σ _i Y[i,j]g_i\|^2<= Σ _i Y[i,j]\|g_i\|^2 by convexity of
+\|·\|^2; take expectations and use Σ _j T[i,j]=p_i:
+E\|g\_hat|^2<= Σ _i p_i E\|g_i\|^2<= G^2.
+
+Theorem (Rate). 
+
+Under the assumption, if the equation is feasible then
+the algorithm with γ=1 and η=D/(GsqrtT) satisfies
+
+ 
+E[F_p(θ_bar_T)]-F_p(θ^*) <= fracDGsqrtT .
+
+The constant in the equation is that of full-participation SGD and is
+independent of how many groups appear in a batch: a composition covering two
+groups yields the same bound as one covering all N, though with larger
+realized variance. The proof uses only the two lemmas and never refers to
+|A^t|, which is why the rate of transfers verbatim
+from aggregation of models to aggregation of gradients.
+
+Outside the feasible region.
+When the equation fails, the equation has no solution and the iteration
+the equation does not diverge: its iterates accumulate at the coupling
+whose row marginal p_hat= T1 is the KL-closest to p
+over the reachable polytope
+R(q,E)=\T1: T>= 0, 1^ᵀ T=q, supp(T) ⊆ E\
+. The column marginal is met
+exactly, so Lemmas and hold with p
+replaced by p_hat: the algorithm is then unbiased SGD on the
+surrogate F_p_hat, the closest objective the sampler can reach, and the
+loss on the equation is a bias of exactly the shape of
+the proposition. On singletons p_hat_i<= r_i, so the
+groups with p_i>r_i are truncated at their observation rate and their
+missing mass, ν up to renormalization, is redistributed.
+
+Theorem (Infeasible regime). 
+
+Let p_hat be the row marginal of the Sinkhorn limit,
+θ^† ∈ argmin_CF_p_hat, and write
+Φ(w)= F_p(argmin_C F_w) for the p-risk of
+the minimizer of the w-weighted risk. Then
+
+ 
+E[F_p(θ_bar_T)]-F_p(θ^*)
+ = Φ(p_hat)-Φ(p)_alignment floor
+ + ε_T(p_hat)_optimization residual ,
+
+where ε_T(p_hat)=E F_p(θ_bar_T)-F_p(θ^†)
+satisfies E F_p_hat(θ_bar_T)-F_p_hat(θ^†)<= DG/sqrtT
+and ε_T(p_hat)-> 0 whenever θ_bar_T->θ^†.
+Group-blind averaging obeys the equation with p_tilde in place of
+p_hat. Writing Δ_floor=Φ(p_tilde)-Φ(p_hat)
+for the alignment gain, transport improves on group-blind averaging
+exactly when Δ_floor>ε_T(p_hat)-ε_T(p_tilde),
+and every floor is bounded by Φ(w)-Φ(p)<= 2M\|p-w\|_1.
+
+the theorem replaces the usual bias bound
+ by an exact decomposition, both terms of which
+are available before training: p_hat and p_tilde from (p,q,E), and
+Φ exactly on instances with a closed-form or convex frontier. The gain is
+fixed by the instance and decides the sign of the comparison; the residual is
+paid by the estimator and, as the section shows, is a stepsize
+artifact. The ℓ_1 bound is the weaker object and we report both, because
+it turns out too loose to discriminate.
+
+
+######################################################################
+# SECTION 5: EXPERIMENTS
+######################################################################
+
+=== EXPERIMENTS ===
+
+Instances.
+Adult income classification : logistic regression
+(d=109 with intercept, cross-entropy, η=0.1) on 100
+race-homogeneous groups of 30 samples, the number of groups per race
+proportional to its prevalence (White/Black/Asian-Pac./Amer-Ind./Other
+=85/10/3/1/1); the importance target is the fairness target itself, 1/5
+per race divided equally among its groups, so a group from the smallest
+race carries p_i=0.2. IMDb-Wiki age regression
+: linear regression of age on 128-d ResNet face
+embeddings (η=10^-2) over the first 100 identities with 30
+images, with the cubic importance target p_i ∝ (101-i)^3.
+Observation rates are swept through a one-parameter family: on Adult
+r ∝ p^β, β ∈ \0,tfrac14,tfrac12,tfrac34,1\, from
+uniform observation (prevalence regime, ν=.60: the five groups of the
+three smallest races hold 60\% of the target against r_iapprox K/m)
+to importance-aligned (ν=0); on IMDb-Wiki r_i ∝ i^β,
+β ∈ \0,tfrac12,1,tfrac32,2,3\, from uniform observation
+(ν=.31, nine groups) to the mirror image of p (ν=.88, 41
+groups), plus the aligned r_i ∝ 101-i (ν=0). Eleven instances,
+ν from 0 to .88.
+
+Protocol.
+Each step observes K=3 groups drawn without replacement with
+probabilities ∝ r, which induces q over the binom1003
+compositions; q is estimated from 10^6 draws of the sampler and the plan
+from the equation on the membership mask, once per instance. Each
+observed group takes H=5 local steps on its own data before the weighted
+average, the standard practical deviation from the one-step analysis,
+applied to every rule alike since all rules consume the same local updates
+from the same draw A^t. Rules: GAVOT; group-blind averaging, the
+uniform average over the observed groups (the proposition
+with p_tilde_i=r_i/K); the fixed multiplier m/K, the rescaling
+(m/K) p_i that presumes uniform observation; and full, every group
+every step weighted by p, the reference Φ(p). Stepsize
+η_t=η/(1+t/1000) unless stated, 4000 steps, 5 seeds; we report
+F_p averaged over the last 500 steps, mean pm std over seeds. On both
+instances argmin F_w is available to machine precision (closed form for
+least squares, Newton for the logistic loss), so the floors
+Φ(p),Φ(p_hat),Φ(p_tilde) of the theorem are
+exact rather than estimated, and in every instance with ν=0 the
+iteration the equation converges to 10^-8, certifying the remaining
+inequalities of the equation.
+
+E1: the headline cells.
+the table reports the four instances a practitioner would
+recognize. Transport wins on three: Adult under prevalence-proportional
+availability, 0.2269 against 0.2479 (t=45), and both IMDb cells,
+86.06 against 91.63 (t=21) and 84.28 against 86.37 (t=13). On
+Adult with importance-aligned availability the two coincide at the oracle
+value, which is what the proposition predicts when
+p_tilde=p: there is nothing to correct and transport does not manufacture a
+difference. The fixed multiplier diverges on both aligned instances and is far
+off on the other two, so naive rescaling is no alternative to solving the equation.
+
+E2: the crossover, and where the sign comes from.
+the table and the figure are the paper's main
+evidence. On Adult, whose five skews are omitted from the table, the measured gain tracks
+Δ_floor within 4\% at three of five
+(.0134 against .0129, .0050 against .0049, .0002 against .0003)
+and exceeds it at the two most infeasible (.0210 against .0110, .0181
+against .0144), group-blind averaging sitting further above its floor. On IMDb-Wiki the gain is
+uniformly below the floor by an excess optimization residual that is close to
+constant in β, mean 1.9 in MSE units, and the measured sign flips
+precisely where Δ_floor crosses that value, between
+β=1.5 (2.56, gain +0.58) and β=2.0 (1.62, gain -0.03).
+This is the theorem read at finite T: the sign of the
+comparison is a quantity one computes in advance.
+
+E3: the ℓ_1 bound is too loose to be the criterion.
+The distances \|p-p\_hat|_1 and \|p-p\_tilde|_1 are also computed on every
+instance, and \|p-p\_hat|_1<\|p-p\_tilde|_1 holds in all eleven, including
+the three where transport loses or ties. The ℓ_1 form of
+the theorem therefore never predicts a loss and cannot serve as
+the criterion; the exact floors can.
+
+E4: the residual is a stepsize artifact.
+The left panel of the figure runs the identical instances at
+constant stepsize. There transport loses on all six IMDb skews, by as much as
+7.9, even at ν=.31 where the floors are 6.99 apart. The transport
+weights Y[·,j] concentrate mass on rarely observed groups, so although
+the lemma bounds the second moment identically for both rules,
+the variance about the mean is larger, and at constant stepsize the iterates sit
+on a noise floor proportional to it. Under η_t=η/(1+t/1000) that floor
+decays, the measured curves fall onto their dashed floors, and every sign
+reversal attributable to the stepsize disappears. The residual is a property of
+the schedule, not of the estimator.
+
+E6: the decomposition in closed form.
+The mirrored IMDb-Wiki instance (ν=.88) is where
+the theorem can be read off exactly. The Sinkhorn limit
+truncates the target at the observation-rate ceiling,
+p_hat_iapproxmin(p_i,r_i) up to renormalization (maximum deviation
+.023), with \|p-p\_hat|_1=1.58 of a possible 2. The frontier is least
+squares, so Φ(p)=82.9, matching the measured full plateau 82.95, and
+Φ(p_hat)=105.9: the alignment floor is 23.0 and the realized bias
+equals its exact expression |(p-p_hat)^ᵀ L(θ^†)|=30.7, where
+L collects the per-group risks, while the ℓ_1 form 2M\|p-p\_hat|_1
+is conservative since M>=max_i L_i(θ^†)approx 454.
+Group-blind averaging has the same floor to two decimals,
+Φ(p_tilde)=105.9: both surrogates starve the same groups, so
+Δ_floor vanishes and the entire measured gap between the
+two rules at this endpoint of the table is residual, which is
+why it is the one instance where transport still loses under decay.
+
+E5: risk aversion, and where it does not help.
+Sweeping (α,γ) on a 10 × 10 grid, the overall objective is
+minimized on the γ=1 edge on every instance, which is
+κ(1,γ)=1 made visible and confirms that risk aversion costs the
+average. The one place the CVaR layer earns its keep is the worst race on Adult
+under prevalence availability, where GAVOT+CVaR at (0.2,0.7) reaches
+0.3624 against 0.3679 for GAVOT and 0.3994 for group-blind averaging.
+Per race, transport improves four of five (Black .179 vs .200, Asian-Pac
+.368 vs .399, Am-Ind .175 vs .189, Other .073 vs .119) and regresses
+only the majority group (.339 vs .332), which is what reweighting toward a
+category-uniform target is supposed to do.

@@ -1,0 +1,116 @@
+% =====================================================================
+%  Section 2: Problem Formulation  (replaces "Group-Blind SGD and its
+%  Surrogate" in main.tex; all labels kept so the rest of the paper
+%  resolves unchanged).  Structure follows FedAVOT Sec. 1 and CAMSAP
+%  Sec. 2: objective, sampling model, surrogate identity, the question.
+% =====================================================================
+\section{Problem Formulation}
+\label{sec:setup}
+% =====================================================================
+
+\noindent\textbf{Groups and objectives.}
+Let $\mathcal{X}\subseteq\R^d$ be a feature space and $\mathcal{Y}$ a label
+space, and let the population be partitioned into $N$ groups indexed by
+$i\in\Nn{N}$ (demographic categories, devices, environments) with
+\emph{prevalences} $\pi\in\simplex{N}$, $\pi_i=\PP[\text{group }i]$. Group $i$
+carries a distribution $\mathcal{D}_i$ on $\mathcal{X}\times\mathcal{Y}$ and
+the risk
+\[
+f_i(\theta)\;\triangleq\;\E_{(X,Y)\sim\mathcal{D}_i}\big[\ell(m(X;\theta),Y)\big],
+\qquad \theta\in\mathcal{C}\subseteq\R^{d'},
+\]
+where $m(\cdot\,;\theta)$ is the predictor and $\ell$ the loss. Empirical risk
+minimization weights the groups by prevalence, $F_\pi=\sum_i\pi_i f_i$, and a
+majority group therefore dominates the trained model. The remedy is to fix an
+\emph{importance distribution} $p\in\simplex{N}$ and minimize
+\begin{equation}
+F_p(\theta)\;\triangleq\;\sum_{i=1}^{N}p_i f_i(\theta),
+\qquad
+\theta^\star\in\argmin_{\theta\in\mathcal{C}}F_p(\theta).
+\label{eq:target}
+\end{equation}
+Uniform $p$ is the category-uniform objective, $p_i\propto 1/\pi_i$ the
+inverse-prevalence one, and $p$ may equally encode a fairness constraint or
+be imposed externally \cite{mohri2019agnostic,li2020fair}. Throughout,
+\begin{assumption}
+\label{ass:std}
+$\mathcal{C}$ is convex and compact with diameter $D$; each $f_i$ is convex on
+$\mathcal{C}$ and $0\le f_i\le M$; and every stochastic subgradient
+$g_i(\theta)$ of $f_i$ returned by the sampler satisfies
+$\E\|g_i(\theta)\|^2\le G^2$ on $\mathcal{C}$.
+\end{assumption}
+\noindent These are the assumptions of \cite{rahimi2025agnostic,rahimi2025fedavot}
+restated for groups; they place no restriction on $p$ or on $\pi$.
+
+\noindent\textbf{Prevalence versus importance.}
+Minibatch SGD does not see $p$. At step $t$ the sampler draws a batch $B^t$ of
+$b$ examples; write
+\[
+A^t\;\triangleq\;\{\,i\in\Nn{N}: B^t\ \text{contains an example from group }i\,\}
+\]
+for the \emph{active set} of groups, let $\{A_j\}_{j\in\Nn{M}}$ enumerate its
+support, and let $q_j\triangleq\PP[A^t=A_j]$ be the \emph{composition law}.
+The observation rate of group $i$ is $r_i\triangleq\PP[i\in A^t]=\sum_{j:\,i\in A_j}q_j$;
+under i.i.d.\ sampling $r_i=1-(1-\pi_i)^b$, so a group whose prevalence is
+below the resolution of the batch is absent from most batches whatever $p$
+says. This is federated learning under partial participation: $A^t$ is the set
+of participating clients, $q$ the availability distribution, $p$ the
+importance distribution \cite{rahimi2025fedavot,rahimi2025agnostic}. We treat
+$q$ as known; otherwise it is estimated offline by simulating the sampler, as
+in our experiments.
+
+\noindent\textbf{What group-blind SGD minimizes.}
+The group-blind update averages the per-example subgradients of $B^t$, which
+assigns group $i\in A^t$ the weight $\widehat{\pi}^t_i$, its share of the
+batch, and assigns absent groups zero. Averaging first over the batch given
+$A^t$ and then over $A^t\sim q$ is the hierarchical experiment of
+\cite[Eq.~4]{rahimi2025agnostic}, and it names the function SGD is in fact
+minimizing.
+
+\begin{proposition}[Surrogate objective]
+\label{prop:surrogate}
+Under Assumption~\ref{ass:std}, group-blind minibatch SGD is a stochastic
+subgradient method on $F_{\tilde p}$ with
+\begin{equation}
+\tilde p_i\;=\;\sum_{j:\,i\in A_j} q_j\,\E\big[\widehat{\pi}^t_i\,\big|\,A^t=A_j\big],
+\label{eq:ptilde}
+\end{equation}
+a probability vector. For i.i.d.\ sampling $\tilde p=\pi$; for uniform
+weighting within the batch $\tilde p_i=\sum_{j:\,i\in A_j}q_j/|A_j|$, the
+surrogate of agnostic \textsf{FedAvg} \cite[Eq.~2]{rahimi2025fedavot}.
+Consequently, for every $\theta\in\mathcal{C}$,
+\begin{equation}
+\big|F_p(\theta)-F_{\tilde p}(\theta)\big|\;\le\;M\|p-\tilde p\|_1 ,
+\label{eq:surrogate-gap}
+\end{equation}
+and any method that minimizes $F_{\tilde p}$ exactly incurs the excess
+$F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le 2M\|p-\tilde p\|_1$ on
+\eqref{eq:target}, which does not vanish with $T$.
+\end{proposition}
+\begin{proof}
+Conditionally on $A^t=A_j$ the within-group averages are unbiased for
+$\partial f_i$, so
+$\E[\text{batch subgradient}\mid A^t=A_j]=\sum_{i\in A_j}\E[\widehat\pi^t_i\mid A_j]\,\partial f_i(\theta)$;
+averaging over $q$ gives $\sum_i\tilde p_i\,\partial f_i=\partial F_{\tilde p}$,
+and $\sum_i\tilde p_i=\sum_j q_j\sum_{i\in A_j}\E[\widehat\pi^t_i\mid A_j]=1$.
+Both bounds follow from $0\le f_i\le M$ and the two-point inequality
+$F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le
+[F_p-F_{\tilde p}](\theta^\star_{\tilde p})+[F_{\tilde p}-F_p](\theta^\star)$.
+\end{proof}
+
+Proposition~\ref{prop:surrogate} says that the choice of $p$ in
+\eqref{eq:target} is decorative unless the aggregation step is changed: the
+iterates converge, at the usual rate, to the minimizer of a function whose
+weights are induced by the sampler rather than chosen, and the bias
+$p-\tilde p$ survives every stepsize schedule. Rebalancing the sampler is
+only a partial fix: $\tilde p_i\le r_i$ always, so a group with $p_i>r_i$
+cannot be sampled into enough batches however the sampler is tilted, while
+upscaling the examples that do appear reintroduces an amplitude distortion
+that destabilizes the iterates \cite{rahimi2025fedavot}. The question is the
+one posed for federated aggregation in \cite{rahimi2025fedavot}, read on
+batches:
+\begin{center}
+\emph{Can the per-batch group weights be chosen so that SGD driven by the
+composition law $q$ converges for the objective defined by $p$?}
+\end{center}
+The next section answers it, and characterizes exactly when the answer is yes.

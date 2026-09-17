@@ -1,0 +1,184 @@
+% =====================================================================
+%  Section 5: Experiments  (his verified Sec. 5 plus, from the previous
+%  Overleaf: the common protocol, fuller instance descriptions, and the
+%  closed-form validation of Theorem thm:infeasible.  Labels kept.)
+% =====================================================================
+\section{Experiments}
+\label{sec:exp}
+
+\noindent\textbf{Instances.}
+\emph{Adult} income classification \cite{uci_adult}: logistic regression
+($d{=}109$ with intercept, cross-entropy, $\eta{=}0.1$) on $100$
+race-homogeneous groups of $30$ samples, the number of groups per race
+proportional to its prevalence (White/Black/Asian-Pac./Amer-Ind./Other
+$=85/10/3/1/1$); the importance target is the fairness target itself, $1/5$
+per race divided equally among its groups, so a group from the smallest
+race carries $p_i=0.2$. \emph{IMDb-Wiki} age regression
+\cite{rothe2018imdbwiki}: linear regression of age on $128$-d ResNet face
+embeddings ($\eta{=}10^{-2}$) over the first $100$ identities with $30$
+images, with the cubic importance target $p_i\propto(101-i)^3$.
+Observation rates are swept through a one-parameter family: on Adult
+$r\propto p^{\beta}$, $\beta\in\{0,\tfrac14,\tfrac12,\tfrac34,1\}$, from
+uniform observation (prevalence regime, $\nu{=}.60$: the five groups of the
+three smallest races hold $60\%$ of the target against $r_i\approx K/m$)
+to importance-aligned ($\nu{=}0$); on IMDb-Wiki $r_i\propto i^{\beta}$,
+$\beta\in\{0,\tfrac12,1,\tfrac32,2,3\}$, from uniform observation
+($\nu{=}.31$, nine groups) to the mirror image of $p$ ($\nu{=}.88$, $41$
+groups), plus the aligned $r_i\propto 101-i$ ($\nu{=}0$). Eleven instances,
+$\nu$ from $0$ to $.88$.
+
+\noindent\textbf{Protocol.}
+Each step observes $K{=}3$ groups drawn without replacement with
+probabilities $\propto r$, which induces $q$ over the $\binom{100}{3}$
+compositions; $q$ is estimated from $10^6$ draws of the sampler and the plan
+from \eqref{eq:ipfp} on the membership mask, once per instance. Each
+observed group takes $H{=}5$ local steps on its own data before the weighted
+average, the standard practical deviation from the one-step analysis,
+applied to every rule alike since all rules consume the same local updates
+from the same draw $A^t$. Rules: \avot{}; \emph{group-blind averaging}, the
+uniform average over the observed groups (Proposition~\ref{prop:surrogate}
+with $\tilde p_i=r_i/K$); the \emph{fixed multiplier} $m/K$, the rescaling
+$(m/K)\,p_i$ that presumes uniform observation; and \emph{full}, every group
+every step weighted by $p$, the reference $\Phi(p)$. Stepsize
+$\eta_t=\eta/(1+t/1000)$ unless stated, $4000$ steps, $5$ seeds; we report
+$F_p$ averaged over the last $500$ steps, mean $\pm$ std over seeds. On both
+instances $\argmin F_w$ is available to machine precision (closed form for
+least squares, Newton for the logistic loss), so the floors
+$\Phi(p),\Phi(\hat p),\Phi(\tilde p)$ of Theorem~\ref{thm:infeasible} are
+exact rather than estimated, and in every instance with $\nu=0$ the
+iteration \eqref{eq:ipfp} converges to $10^{-8}$, certifying the remaining
+inequalities of \eqref{eq:hall}.
+
+% ----------------------------------------------------------- Table 1
+\begin{table}[t]
+\centering
+\caption{Headline cells, tail-500 over $5$ seeds, decaying stepsize. \emph{full}
+sees every group every step. The fixed multiplier $m/K$ diverges whenever
+observation rates are non-uniform.}
+\label{tab:overall}
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{lcccc}
+\toprule
+Instance & \avot{} & unif.\ avg & $m/K$ & full \\
+\midrule
+Adult, prevalence ($\nu{=}.60$) & $\best{0.2269}$ & $0.2479$ & $0.670$ & $0.2073$ \\
+Adult, aligned ($\nu{=}0$)      & $0.2075$ & $0.2077$ & div. & $0.2073$ \\
+IMDb, skewed ($\nu{=}.31$)      & $\best{86.06}$ & $91.63$ & $8504$ & $82.95$ \\
+IMDb, aligned ($\nu{=}0$)       & $\best{84.28}$ & $86.37$ & div. & $82.95$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ----------------------------------------------------------- Fig 2
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{figs/severity_imdb.pdf}
+\caption{IMDb-Wiki severity sweep. Solid, measured tail-500 ($\pm1$ std);
+dashed, the exact floor $\Phi(\cdot)$ each rule converges to. Left, constant
+stepsize: the optimization residual swamps the alignment gain and transport
+loses everywhere, even where the floors are seven units apart. Right, decaying
+stepsize: the residual collapses and the measured curves track their floors, so
+transport wins until the floors close at high $\nu$. The sign is set by which of
+the two terms of \eqref{eq:infeasible} dominates, not by the regime label.}
+\label{fig:severity}
+\end{figure}
+
+\noindent\textbf{E1: the headline cells.}
+Table~\ref{tab:overall} reports the four instances a practitioner would
+recognize. Transport wins on three: Adult under prevalence-proportional
+availability, $0.2269$ against $0.2479$ ($t{=}45$), and both IMDb cells,
+$86.06$ against $91.63$ ($t{=}21$) and $84.28$ against $86.37$ ($t{=}13$). On
+Adult with importance-aligned availability the two coincide at the oracle
+value, which is what Proposition~\ref{prop:surrogate} predicts when
+$\tilde p=p$: there is nothing to correct and transport does not manufacture a
+difference. The fixed multiplier diverges on both aligned instances and is far
+off on the other two, so naive rescaling is no alternative to solving \eqref{eq:mot}.
+
+% ----------------------------------------------------------- Table 2
+\begin{table}[t]
+\centering
+\caption{IMDb-Wiki severity sweep, decaying stepsize. $\Delta_{\mathrm{floor}}$
+is the alignment gain of Theorem~\ref{thm:infeasible}, \emph{gain} the measured
+advantage of transport, $t$ its Welch statistic (population std). The excess
+residual transport pays averages $1.9$, and the sign flips exactly where
+$\Delta_{\mathrm{floor}}$ crosses it. The five Adult skews all sit above their
+crossover and are omitted.}
+\label{tab:severity}
+\setlength{\tabcolsep}{3.0pt}
+\begin{tabular}{ccccc}
+\toprule
+$\beta$ & $\nu$ & $\Delta_{\mathrm{floor}}$ & gain & $t$ \\
+\midrule
+$0$   & $.31$ & $6.99$ & $\best{+5.57}$ & $20.7$ \\
+$0.5$ & $.59$ & $5.71$ & $\best{+3.46}$ & $11.3$ \\
+$1.0$ & $.70$ & $3.67$ & $\best{+2.05}$ & $5.4$ \\
+$1.5$ & $.77$ & $2.56$ & $+0.58$ & $1.1$ \\
+$2.0$ & $.82$ & $1.62$ & $-0.03$ & $-0.1$ \\
+$3.0$ & $.88$ & $0.02$ & $-2.28$ & $-7.9$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{E2: the crossover, and where the sign comes from.}
+Table~\ref{tab:severity} and Fig.~\ref{fig:severity} are the paper's main
+evidence. On Adult, whose five skews are omitted from the table, the measured gain tracks
+$\Delta_{\mathrm{floor}}$ within $4\%$ at three of five
+($.0134$ against $.0129$, $.0050$ against $.0049$, $.0002$ against $.0003$)
+and exceeds it at the two most infeasible ($.0210$ against $.0110$, $.0181$
+against $.0144$), group-blind averaging sitting further above its floor. On IMDb-Wiki the gain is
+uniformly below the floor by an excess optimization residual that is close to
+constant in $\beta$, mean $1.9$ in MSE units, and the measured sign flips
+precisely where $\Delta_{\mathrm{floor}}$ crosses that value, between
+$\beta{=}1.5$ ($2.56$, gain $+0.58$) and $\beta{=}2.0$ ($1.62$, gain $-0.03$).
+This is Theorem~\ref{thm:infeasible} read at finite $T$: the sign of the
+comparison is a quantity one computes in advance.
+
+\noindent\textbf{E3: the $\ell_1$ bound is too loose to be the criterion.}
+The distances $\|p-\hat p\|_1$ and $\|p-\tilde p\|_1$ are also computed on every
+instance, and $\|p-\hat p\|_1<\|p-\tilde p\|_1$ holds in all eleven, including
+the three where transport loses or ties. The $\ell_1$ form of
+Theorem~\ref{thm:infeasible} therefore never predicts a loss and cannot serve as
+the criterion; the exact floors can.
+
+\noindent\textbf{E4: the residual is a stepsize artifact.}
+The left panel of Fig.~\ref{fig:severity} runs the identical instances at
+constant stepsize. There transport loses on all six IMDb skews, by as much as
+$7.9$, even at $\nu{=}.31$ where the floors are $6.99$ apart. The transport
+weights $Y[\cdot,j]$ concentrate mass on rarely observed groups, so although
+Lemma~\ref{lem:variance} bounds the second moment identically for both rules,
+the variance about the mean is larger, and at constant stepsize the iterates sit
+on a noise floor proportional to it. Under $\eta_t=\eta/(1+t/1000)$ that floor
+decays, the measured curves fall onto their dashed floors, and every sign
+reversal attributable to the stepsize disappears. The residual is a property of
+the schedule, not of the estimator.
+
+\noindent\textbf{E6: the decomposition in closed form.}
+The mirrored IMDb-Wiki instance ($\nu{=}.88$) is where
+Theorem~\ref{thm:infeasible} can be read off exactly. The Sinkhorn limit
+truncates the target at the observation-rate ceiling,
+$\hat p_i\approx\min(p_i,r_i)$ up to renormalization (maximum deviation
+$.023$), with $\|p-\hat p\|_1=1.58$ of a possible $2$. The frontier is least
+squares, so $\Phi(p)=82.9$, matching the measured full plateau $82.95$, and
+$\Phi(\hat p)=105.9$: the alignment floor is $23.0$ and the realized bias
+equals its exact expression $|(p-\hat p)^\top L(\theta^\dagger)|=30.7$, where
+$L$ collects the per-group risks, while the $\ell_1$ form $2M\|p-\hat p\|_1$
+is conservative since $M\ge\max_i L_i(\theta^\dagger)\approx 454$.
+Group-blind averaging has the same floor to two decimals,
+$\Phi(\tilde p)=105.9$: both surrogates starve the same groups, so
+$\Delta_{\mathrm{floor}}$ vanishes and the entire measured gap between the
+two rules at this endpoint of Table~\ref{tab:severity} is residual, which is
+why it is the one instance where transport still loses under decay.
+
+\noindent\textbf{E5: risk aversion, and where it does not help.}
+Sweeping $(\alpha,\gamma)$ on a $10\times10$ grid, the overall objective is
+minimized on the $\gamma=1$ edge on every instance, which is
+$\kappa(1,\gamma)=1$ made visible and confirms that risk aversion costs the
+average. The one place the CVaR layer earns its keep is the worst race on Adult
+under prevalence availability, where \avotcvar{} at $(0.2,0.7)$ reaches
+$0.3624$ against $0.3679$ for \avot{} and $0.3994$ for group-blind averaging.
+Per race, transport improves four of five (Black $.179$ vs $.200$, Asian-Pac
+$.368$ vs $.399$, Am-Ind $.175$ vs $.189$, Other $.073$ vs $.119$) and regresses
+only the majority group ($.339$ vs $.332$), which is what reweighting toward a
+category-uniform target is supposed to do.
+
+% =====================================================================
