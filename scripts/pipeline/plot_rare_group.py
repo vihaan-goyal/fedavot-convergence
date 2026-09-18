@@ -98,6 +98,10 @@ for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Othe
                 x = [100 * r["nu"] for r in pts]
             y = [r["rare_mean"] for r in pts]; s = [r["rare_std"] for r in pts]
             ax.errorbar(x, y, yerr=s, color=COL[mdl], marker="o", ms=3, lw=1.2, capsize=2, label=LBL_LONG[mdl])
+            if ds != "adult" and mdl == "fedavot":   # Adult carries beta on the ticks; IMDb labels the points
+                for r, xi, yi in zip(pts, x, y):
+                    ax.annotate(rf"$\beta$={r['beta']:g}", (xi, yi), textcoords="offset points",
+                                xytext=(0, 6), ha="center", fontsize=6, color="0.3")
         ax.set_title(PANEL[tag], fontsize=8)
         if ds == "adult":
             ax.invert_xaxis()
