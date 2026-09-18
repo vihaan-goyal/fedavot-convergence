@@ -14,7 +14,7 @@ LBL = {"fedavot": "FedAVOT", "fedavg": "group-blind avg.", "full": "full"}
 PANEL = {"const": r"constant stepsize $\eta$", "decay1000": r"decaying stepsize $\eta_t=\eta/(1+t/1000)$"}
 
 rows = [r for r in csv.DictReader(open(TABLE)) if r["dataset"] == "imdbwiki" and r["regime"] == "infeasible"]
-fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.0), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.0), sharey=True)
 for ax, tag in zip(axes, ["const", "decay1000"]):
     pts = sorted([r for r in rows if r["tag"] == tag], key=lambda r: float(r["infeasible_mass"]))
     x = [100 * float(r["infeasible_mass"]) for r in pts]
@@ -30,8 +30,9 @@ for ax, tag in zip(axes, ["const", "decay1000"]):
     ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=7.5)
     ax.tick_params(labelsize=7)
     ax.grid(alpha=0.3)
-axes[0].set_ylabel(r"overall loss $F_p$ (MSE)", fontsize=7.5)
-axes[1].legend(fontsize=5.8, frameon=False, loc="upper left", ncol=1)
+axes[0].set_ylabel(r"overall loss $F_p$ (MSE)", fontsize=9)
+axes[0].tick_params(axis="y", labelsize=8.5)
+axes[1].legend(fontsize=6.5, frameon=False, loc="upper left", ncol=1)
 fig.suptitle("IMDb-Wiki: overall loss vs. infeasible mass, measured against the exact floors", fontsize=8.5, y=1.0)
 fig.tight_layout(pad=0.4)
 os.makedirs(OUT, exist_ok=True)
