@@ -53,6 +53,21 @@ Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 h
 | 0.0 | 0.60 | decay1000 | 0.1752 | 0.1888 | 0.1227 | +0.0136 |
 | 0.25 | 0.60 | decay1000 | 0.1562 | 0.1784 | 0.1227 | +0.0222 |
 
+## adult sweep, group most_biased (single group with the largest p_i/r_i in each cell; noisy, tail-500 of the per-user log)
+
+| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
+|---|---|---|---|---|---|---|
+| 0.75 | 0.00 | const | 0.1198 | 0.1466 | 0.1183 | +0.0267 |
+| 1.0 | 0.00 | const | 0.1194 | 0.1273 | 0.1183 | +0.0079 |
+| 0.5 | 0.40 | const | 0.0327 | 0.0522 | 0.0278 | +0.0195 |
+| 0.0 | 0.60 | const | 0.0646 | 0.0857 | 0.0278 | +0.0210 |
+| 0.25 | 0.60 | const | 0.1535 | 0.1765 | 0.1183 | +0.0229 |
+| 0.75 | 0.00 | decay1000 | 0.1231 | 0.1481 | 0.1227 | +0.0250 |
+| 1.0 | 0.00 | decay1000 | 0.1229 | 0.1302 | 0.1227 | +0.0073 |
+| 0.5 | 0.40 | decay1000 | 0.0352 | 0.0576 | 0.0309 | +0.0224 |
+| 0.0 | 0.60 | decay1000 | 0.0732 | 0.1194 | 0.0309 | +0.0462 |
+| 0.25 | 0.60 | decay1000 | 0.1561 | 0.1783 | 0.1227 | +0.0222 |
+
 ## imdbwiki sweep, group tier1
 
 | beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
@@ -69,3 +84,20 @@ Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 h
 | 1.5 | 0.77 | decay1000 | 100.33 | 98.39 | 72.23 | -1.94 |
 | 2.0 | 0.82 | decay1000 | 101.73 | 99.82 | 72.23 | -1.91 |
 | 3.0 | 0.88 | decay1000 | 105.48 | 101.26 | 72.23 | -4.22 |
+
+## imdbwiki sweep, group most_biased (single group with the largest p_i/r_i in each cell; noisy, tail-500 of the per-user log)
+
+| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
+|---|---|---|---|---|---|---|
+| 0.0 | 0.31 | const | 281.63 | 347.83 | 224.55 | +66.20 |
+| 0.5 | 0.59 | const | 398.66 | 391.74 | 224.55 | -6.92 |
+| 1.0 | 0.70 | const | 418.55 | 395.01 | 224.55 | -23.53 |
+| 1.5 | 0.77 | const | 454.85 | 399.34 | 224.55 | -55.51 |
+| 2.0 | 0.82 | const | 460.28 | 396.58 | 224.55 | -63.70 |
+| 3.0 | 0.88 | const | 470.28 | 391.79 | 224.55 | -78.49 |
+| 0.0 | 0.31 | decay1000 | 253.32 | 331.47 | 218.55 | +78.15 |
+| 0.5 | 0.59 | decay1000 | 373.43 | 379.69 | 218.55 | +6.26 |
+| 1.0 | 0.70 | decay1000 | 411.89 | 384.44 | 218.55 | -27.45 |
+| 1.5 | 0.77 | decay1000 | 439.40 | 385.89 | 218.55 | -53.51 |
+| 2.0 | 0.82 | decay1000 | 451.60 | 384.32 | 218.55 | -67.28 |
+| 3.0 | 0.88 | decay1000 | 456.90 | 379.59 | 218.55 | -77.30 |

@@ -5,8 +5,11 @@
 # Reads only the per-run tail stats already in results/2026-09-14_severity_sweep/<cell>/summary.csv
 # (no retraining) and the infeasible mass per cell from the severity sweep table.
 # Usage: .venv/Scripts/python.exe scripts/pipeline/plot_rare_group.py
-import os, csv, glob, re, statistics as st
+import os, csv, glob, re, gzip, statistics as st
+import numpy as np
 import matplotlib; matplotlib.use("Agg")
+K = 3
+TAIL_USER_ROWS = 50   # per-user losses are logged every 10th round: last 500 rounds = 50 rows
 import matplotlib.pyplot as plt
 
 ROOT = "results/2026-09-14_severity_sweep"
@@ -46,10 +49,31 @@ for cell in sorted(glob.glob(os.path.join(ROOT, "*_*"))):
                              nu=nu.get((ds, regime, beta, tag)), group=grp, model=mdl, n_seeds=len(v),
                              rare_mean=st.mean(v), rare_std=st.pstdev(v),
                              overall_mean=st.mean(ov), overall_std=st.pstdev(ov)))
+    # "most biased" single group: the largest importance-to-observation ratio p_i / r_i in this
+    # cell (ties averaged); per-user tail loss read from the run CSVs (logged every 10th round)
+    z = np.load(os.path.join(cell, f"transport_{ds}_{regime}_K{K}.npz"), allow_pickle=True)
+    ratio = z["p"] / np.maximum(z["pi"], 1e-300)
+    top = [int(i) for i in np.where(np.isclose(ratio, ratio.max(), rtol=1e-6))[0]]
+    for mdl in MODELS:
+        vals = []
+        for f in sorted(glob.glob(os.path.join(cell, f"{ds}_{regime}_{mdl}_seed*.csv.gz"))):
+            recs = list(csv.DictReader(gzip.open(f, "rt")))
+            per_u = []
+            for u in top:
+                v = [float(r[f"user_{u}"]) for r in recs if r[f"user_{u}"] != ""]
+                per_u.append(st.mean(v[-TAIL_USER_ROWS:]))
+            vals.append(st.mean(per_u))
+        if vals:
+            rows.append(dict(cell=name, dataset=ds, regime=regime, beta=beta, tag=tag,
+                             nu=nu.get((ds, regime, beta, tag)), group="most_biased", model=mdl,
+                             n_seeds=len(vals), rare_mean=st.mean(vals), rare_std=st.pstdev(vals),
+                             overall_mean=float("nan"), overall_std=float("nan"),
+                             most_biased_users=" ".join(map(str, top)), p_over_r=float(ratio.max())))
 
 os.makedirs(OUT, exist_ok=True)
 with open(os.path.join(OUT, "rare_group_table.csv"), "w", newline="") as f:
-    wr = csv.DictWriter(f, fieldnames=list(rows[0])); wr.writeheader(); wr.writerows(rows)
+    fields = list(rows[0]) + ["most_biased_users", "p_over_r"]
+    wr = csv.DictWriter(f, fieldnames=fields, restval=""); wr.writeheader(); wr.writerows(rows)
 
 def pick(ds, grp, tag, mdl):
     return sorted([r for r in rows if r["dataset"] == ds and r["group"] == grp and r["tag"] == tag
@@ -115,8 +139,9 @@ for grp_ds, grps in RARE.items():
             n = nu.get((ds, regime, beta, "decay1000"))
             lines.append(f"| {label} | {n:.2f} | " + " | ".join(fmt(ds, *cells[m], m) for m in MODELS) + " |")
         lines.append("")
-for ds, grp in [("adult", "Other"), ("adult", "Amer-Indian-Eskimo"), ("imdbwiki", "tier1")]:
-    lines += [f"## {ds} sweep, group {grp}", "", "| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |", "|---|---|---|---|---|---|---|"]
+for ds, grp in [("adult", "Other"), ("adult", "Amer-Indian-Eskimo"), ("adult", "most_biased"), ("imdbwiki", "tier1"), ("imdbwiki", "most_biased")]:
+    note = " (single group with the largest p_i/r_i in each cell; noisy, tail-500 of the per-user log)" if grp == "most_biased" else ""
+    lines += [f"## {ds} sweep, group {grp}{note}", "", "| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |", "|---|---|---|---|---|---|---|"]
     for tag in ["const", "decay1000"]:
         for r in pick(ds, grp, tag, "fedavot"):
             u = [x for x in pick(ds, grp, tag, "fedavg") if x["beta"] == r["beta"]][0]
