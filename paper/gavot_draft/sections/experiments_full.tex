@@ -111,8 +111,30 @@ identities show the crossover of Table~\ref{tab:severity} one step earlier:
 under decay transport wins at $\nu\le.70$ ($77.0$ against $86.4$ at
 $\nu{=}.31$, full $72.2$; $73.6$ against $79.9$ when aligned) and loses at
 the three most infeasible skews, while at constant stepsize it wins only at
-$\nu{=}.31$. The overall objective and the rare-group loss therefore tell
+$\nu{=}.31$. The single most starved group, the one with the largest
+$p_i/r_i$ in each instance, sharpens the picture: on Adult it is race Other
+itself ($p_i/r_i{=}6.7$); on IMDb-Wiki it is the top identity, where under
+decay transport gives $253$ against $331$ at $\nu{=}.31$ and $373$ against
+$380$ at $\nu{=}.59$ (full $219$), then loses from $\nu{=}.70$ on, the same
+crossover one step earlier still (a $30$-image group, so $\pm5$ to $10$
+across seeds). The overall objective and the rare-group loss therefore tell
 the same story, with the rare group the more sensitive of the two.
+
+\noindent\textbf{Why transport stops helping.}
+The failure is not a bug of the weights; it is the two terms of
+\eqref{eq:infeasible} changing sign. A starved group has $p_i>r_i$, so the
+plan can deliver at most $r_i$ of its mass: past the coverage law of
+Cor.~\ref{cor:batchsize} the reachable target $\hat p$ truncates at the
+observation rate, and as $\nu$ grows $\hat p$ and the group-blind $\tilde p$
+starve the same groups, so the two floors converge (Table~\ref{tab:severity},
+$\Delta_{\mathrm{floor}}$ from $6.99$ to $0.02$). What transport still does
+is concentrate weight on the starved group whenever it does appear, $p_i/r_i$
+times its batch share, which is exactly the variance Lemma~\ref{lem:variance}
+does not see: the second moment is bounded, the variance about the mean is
+not, and it is largest on the rare group. Once the floors coincide that
+variance is all that separates the two rules, so transport loses by the
+residual, by $2$ to $8$ at constant stepsize and by $2.3$ at $\nu{=}.88$ even
+under decay. Transport helps exactly while there is mass left to move.
 
 \noindent\textbf{E1: the headline cells.}
 Table~\ref{tab:overall} reports the four instances a practitioner would
@@ -212,5 +234,24 @@ Per race, transport improves four of five (Black $.179$ vs $.200$, Asian-Pac
 $.368$ vs $.399$, Am-Ind $.175$ vs $.189$, Other $.073$ vs $.119$) and regresses
 only the majority group ($.339$ vs $.332$), which is what reweighting toward a
 category-uniform target is supposed to do.
+
+\noindent\textbf{Why risk aversion does not reach the rare group.}
+On the least represented group the CVaR layer never helps: over the whole
+$(\alpha,\gamma)$ grid the best rare-group loss is at $\gamma{=}1$, i.e.\ with
+the layer switched off, on all four headline instances, and at
+$(\alpha,\gamma)=(0.1,0.1)$ it nearly triples the loss on race Other
+($.207$ against $.073$) and raises the top-identity loss on IMDb-Wiki from
+$77.0$ to $103$. The reason is where the tilt lands. CVaR upweights the
+groups whose realized loss exceeds the running threshold, but it can only
+tilt among the groups in the batch, and the rare group is absent from most
+batches: the extra weight goes to whichever observed group is doing badly
+that step, not to the group the target is about. Composed with transport,
+the hinge multiplies weights that are already $p_i/r_i$ large, so the
+product amplifies the variance of \eqref{eq:infeasible} rather than the
+alignment, which is why the loss grows as $\alpha$ shrinks. Risk aversion
+changes the functional; it does not change who is observed, and observation
+is what the rare group lacks. Transport moves mass toward it whenever it
+appears; CVaR cannot, and the one gain it produces, on the worst race above,
+comes from tilting among the groups that are present.
 
 % =====================================================================
