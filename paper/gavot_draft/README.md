@@ -21,7 +21,12 @@ what he wants. His files are never edited in place: the zip he sent is kept verb
     appendix_standalone.tex   wrapper that compiles the appendix alone (page 1 = stub labels)
 
     main_rewrite.tex          his paper with sections/ 2 and 3 dropped in       (6 pages)
-    main_full.tex             his paper with sections/ 2, 3 and 5 dropped in    (6 pages)
+    main_full.tex             his paper with sections/ 2, 3 and 5 dropped in    (7 pages, the EXTENDED version)
+    main_fit.tex              same with sections/*_short.tex + the appendix     (4.3 pages + refs + 1 appendix page)
+                              nothing is dropped: review/CUT_LEDGER.md maps every cut item to the
+                              appendix or to main_full; tools/check_cut.py verifies no new numbers and
+                              no lost labels; review/HERLOCK_TRIM_SUGGESTIONS.md lists the ~0.35 page
+                              in his own sections that would close the remaining gap
     *_standalone.tex          one section each, no bibliography, cross-refs from main_full
     build.sh                  compiles all seven and moves the PDFs into pdf/
     pdf/                      the compiled PDFs (committed so nobody needs LaTeX to read them)

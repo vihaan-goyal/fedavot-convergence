@@ -3,7 +3,7 @@
 # Run from paper/gavot_draft. Needs pdflatex (MiKTeX) on PATH.
 set -e
 cd "$(dirname "$0")"
-for j in main main_rewrite main_full appendix_standalone problem_formulation_standalone proposed_solution_standalone experiments_full_standalone; do
+for j in main main_rewrite main_full main_fit appendix_standalone problem_formulation_standalone proposed_solution_standalone experiments_full_standalone; do
   pdflatex -interaction=nonstopmode -halt-on-error "$j.tex" >/dev/null
   pdflatex -interaction=nonstopmode -halt-on-error "$j.tex" >/dev/null
   grep -E "Output written" "$j.log"

@@ -14,7 +14,7 @@ LBL = {"fedavot": "FedAVOT", "fedavg": "group-blind avg.", "full": "full"}
 PANEL = {"const": r"constant stepsize $\eta$", "decay1000": r"decaying stepsize $\eta_t=\eta/(1+t/1000)$"}
 
 rows = [r for r in csv.DictReader(open(TABLE)) if r["dataset"] == "imdbwiki" and r["regime"] == "infeasible"]
-fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.0), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.5), sharey=True)
 for ax, tag in zip(axes, ["const", "decay1000"]):
     pts = sorted([r for r in rows if r["tag"] == tag], key=lambda r: float(r["infeasible_mass"]))
     x = [100 * float(r["infeasible_mass"]) for r in pts]

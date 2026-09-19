@@ -6,7 +6,40 @@
 \section{Appendix}
 
 \noindent\textbf{A. Proofs.}
-\emph{Theorem~\ref{thm:feas} (sketch).} Route supply $p_i$ from a source through group $i$, along the edges of $E$
+\emph{Proposition~\ref{prop:surrogate}.} Conditionally on $A^t=A_j$ the
+within-group averages are unbiased for $\partial f_i$, so
+$\E[\text{batch subgradient}\mid A^t=A_j]=\sum_{i\in A_j}\E[\widehat\pi^t_i\mid A_j]\,\partial f_i(\theta)$;
+averaging over $q$ gives $\sum_i\tilde p_i\,\partial f_i=\partial F_{\tilde p}$,
+and $\sum_i\tilde p_i=\sum_j q_j\sum_{i\in A_j}\E[\widehat\pi^t_i\mid A_j]=1$.
+Both bounds follow from $0\le f_i\le M$ and the two-point inequality
+$F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le
+[F_p-F_{\tilde p}](\theta^\star_{\tilde p})+[F_{\tilde p}-F_p](\theta^\star)$.
+
+\noindent\emph{Sinkhorn scaling.} Starting from any $T^{(0)}>0$ on $E$ with
+$\mathbf{1}^\top T^{(0)}=q$, alternate
+\begin{equation}
+T\leftarrow\mathrm{diag}\big(p\oslash T\mathbf{1}\big)\,T,\qquad
+T\leftarrow T\,\mathrm{diag}\big(q\oslash T^\top\mathbf{1}\big)
+\label{eq:ipfp}
+\end{equation}
+until $\|T\mathbf{1}-p\|_1\le\varepsilon$. Under \eqref{eq:hall} the iteration
+converges to a solution of \eqref{eq:mot} \cite{sinkhorn1967,csiszar1975},
+being block-coordinate ascent on the dual of the entropic problem
+$\min\{\sum_E T\log T:\ T\mathbf{1}=p,\ \mathbf{1}^\top T=q\}$.
+
+\noindent\emph{Lemma~\ref{lem:unbiased}.} Conditionally on $A^t=A_j$,
+$\E[g_i(\theta)]\in\partial f_i(\theta)$ for $i\in A_j$. Averaging over
+$A^t\sim q$,
+$\E[\hat g]=\sum_j q_j\sum_{i\in A_j}Y[i,j]\,\partial f_i(\theta)
+=\sum_i\big(\sum_j T[i,j]\big)\partial f_i(\theta)=\sum_i p_i\,\partial f_i(\theta)$,
+the row-marginal constraint being used in the last step.
+
+\noindent\emph{Lemma~\ref{lem:variance}.} $Y[\cdot,j]$ is a probability vector
+on $A_j$, so $\|\sum_i Y[i,j]g_i\|^2\le\sum_i Y[i,j]\|g_i\|^2$ by convexity of
+$\|\cdot\|^2$; take expectations and use $\sum_j T[i,j]=p_i$:
+$\E\|\hat g\|^2\le\sum_i p_i\,\E\|g_i\|^2\le G^2$.
+
+\noindent\emph{Theorem~\ref{thm:feas} (sketch).} Route supply $p_i$ from a source through group $i$, along the edges of $E$
 with infinite capacity, into composition $j$ with demand $q_j$, and to a sink.
 A coupling exists iff the maximum flow saturates every source edge, which by
 max-flow/min-cut \cite{fordfulkerson1956} is the right inequality of
@@ -56,6 +89,27 @@ conservative here, since any uniform bound satisfies $M\ge\max_i L_i(\theta^\dag
 The group-blind surrogate $\tilde p_i=r_i/K$ has the same floor to two decimals
 ($\Phi(\tilde p)=105.9$): both surrogates starve the same groups, which is why
 $\Delta_{\mathrm{floor}}$ vanishes at this endpoint of Table~\ref{tab:severity}.
+
+\medskip
+\noindent\textbf{E. Instances and protocol, in full.}
+Adult: logistic regression with $d{=}109$ features including an intercept,
+cross-entropy loss; $100$ groups of $30$ samples, each homogeneous in race,
+with $85/10/3/1/1$ groups for White/Black/Asian-Pac./Amer-Ind./Other; the
+target gives each race $1/5$, split equally among its groups, so on the
+prevalence instance the five groups of the three smallest races hold $60\%$
+of the target against $r_i\approx K/m=.03$. IMDb-Wiki: the first $100$
+identities with $30$ images, $128$-d ResNet embeddings, linear regression of
+age; at $\beta{=}0$ nine groups are infeasible (mass $.31$), at $\beta{=}3$
+forty-one ($.88$). Each step draws $K{=}3$ groups without replacement with
+probabilities $\propto r$, inducing $q$ over the $\binom{100}{3}$
+compositions; $q$ is estimated from $10^6$ draws and the plan fitted once
+per instance by \eqref{eq:ipfp}, which on every instance with $\nu=0$
+reaches a row error below $3\cdot10^{-8}$, certifying the remaining
+inequalities of \eqref{eq:hall}. All rules consume the same $H{=}5$ local
+updates from the same draw $A^t$; the fixed multiplier is $(m/K)\,p_i$,
+the rescaling that presumes uniform observation, and full is the reference
+$\Phi(p)$. $\argmin F_w$ is closed-form for least squares and Newton to
+machine precision for the logistic loss.
 
 \medskip
 \noindent\textbf{C. Adult severity sweep.} The five Adult skews omitted from
