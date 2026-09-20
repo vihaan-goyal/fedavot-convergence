@@ -101,6 +101,10 @@ def parse_args(argv=None):
     ap.add_argument("--lr-decay", type=float, default=None,
                     help="learning-rate decay horizon T0: lr_t = lr / (1 + t / T0). "
                          "Default None = constant lr (the anchors). Requires non-default --outdir.")
+    ap.add_argument("--lr-schedule", default="hyper", choices=["hyper", "sqrt", "step", "cosine"],
+                    help="shape of the decay (all rules share it): hyper = lr/(1+t/T0) [default]; "
+                         "sqrt = lr/sqrt(1+t/T0); step = lr*0.5**floor(t/T0); cosine = lr*(1+cos(pi t/R))/2 "
+                         "(T0 ignored). T0 from --lr-decay. Non-default requires non-default --outdir.")
     ap.add_argument("--lr", type=float, default=None,
                     help="learning rate (default per dataset: imdbwiki 0.01, adult 0.1)")
     ap.add_argument("--eta-t", type=float, default=None,
@@ -508,7 +512,16 @@ def run_unit(dataset, regime, seed, table, has_full, data, tp, groups, args, lr,
             j = draws[t]
             users = tp["subs0"][j]
             wj = tp["Wcols"][j]
-            lr_t = lr if args.lr_decay is None else lr / (1.0 + t / args.lr_decay)
+            if args.lr_schedule == "cosine":
+                lr_t = lr * 0.5 * (1.0 + np.cos(np.pi * t / R))
+            elif args.lr_decay is None:
+                lr_t = lr
+            elif args.lr_schedule == "sqrt":
+                lr_t = lr / np.sqrt(1.0 + t / args.lr_decay)
+            elif args.lr_schedule == "step":
+                lr_t = lr * 0.5 ** (t // args.lr_decay)
+            else:
+                lr_t = lr / (1.0 + t / args.lr_decay)
             if C:
                 Wl, Tvl = grid_local_step(X_all[users], y_all[users], W_grid, t_grid,
                                           A, G, H, lr_t, eta_t, task)
@@ -824,7 +837,7 @@ def main(argv=None):
                           f"({per_unit_files} configs{' vectorized' if args.sweep else ''})")
         return
 
-    if (args.r_power is not None or args.lr_decay is not None) and             os.path.abspath(args.outdir) == os.path.abspath("results/2026-08-10_main_sweep"):
+    if (args.r_power is not None or args.lr_decay is not None or args.lr_schedule != "hyper") and            os.path.abspath(args.outdir) == os.path.abspath("results/2026-08-10_main_sweep"):
         raise SystemExit("--r-power / --lr-decay change the experiment but not the filenames: "
                          "pass a dedicated --outdir (results/<date>_<desc>).")
     t_all = time.time()
