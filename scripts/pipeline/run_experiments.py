@@ -38,10 +38,15 @@ import numpy as np
 import pandas as pd
 
 GRID_MODELS = ("fedavot_cvar", "fedcvar")     # swept over the (alpha, gamma) grid
-FREE_MODELS = ("fedavot", "fedavg", "fedavg_mk")           # single config each (no alpha/gamma)
+FREE_MODELS = ("fedavot", "fedavg", "fedavg_mk", "ipw", "downsample")   # single config each (no alpha/gamma)
 ALL_MODELS = GRID_MODELS + FREE_MODELS + ("full",)
 UNIF_AGG = {"fedcvar", "fedavg"}              # rows aggregated uniformly (1/K)
 MK_AGG = {"fedavg_mk"}                        # the paper's fixed multiplier: (N/K) * p_i (not convex)
+# Imbalance baselines (Herlock, 2026-09-20). Both are convex (self-normalized over the K observed
+# users), so they cannot diverge the way fedavg_mk does:
+IPW_AGG = {"ipw"}                             # upsampling as reweighting: w_i ~ p_i / pi_i, renormalized
+DOWN_AGG = {"downsample"}                     # downsampling: w_i ~ min(p_i / pi_i, 1), renormalized
+                                              #   (over-observed groups are down-weighted, starved ones untouched)
 
 DATASET_LR = {"imdbwiki": 0.01, "adult": 0.1}
 DATASET_ETA_T = {"imdbwiki": 0.05, "adult": 0.005}   # adult = LR/20 heuristic (untested
@@ -472,6 +477,9 @@ def run_unit(dataset, regime, seed, table, has_full, data, tp, groups, args, lr,
     G = np.array([row["gamma"] if row["gamma"] is not None else 1.0 for row in table])
     unif = np.array([row["model"] in UNIF_AGG for row in table], dtype=bool)
     mk = np.array([row["model"] in MK_AGG for row in table], dtype=bool)
+    ipw = np.array([row["model"] in IPW_AGG for row in table], dtype=bool)
+    down = np.array([row["model"] in DOWN_AGG for row in table], dtype=bool)
+    ratio_all = p / np.maximum(tp["pi"], 1e-300)          # p_i / pi_i, the under-observation ratio
 
     draws = np.searchsorted(tp["q_cum"], np.random.RandomState(seed).rand(R))
     user_every = max(1, args.user_log_every)
@@ -507,6 +515,12 @@ def run_unit(dataset, regime, seed, table, has_full, data, tp, groups, args, lr,
                 Agg = np.where(unif[:, None], 1.0 / Kk, wj[None, :])      # (C, K)
                 if mk.any():
                     Agg = np.where(mk[:, None], (N / Kk) * p[users][None, :], Agg)
+                if ipw.any():
+                    rw = ratio_all[users]; rw = rw / rw.sum()
+                    Agg = np.where(ipw[:, None], rw[None, :], Agg)
+                if down.any():
+                    dw = np.minimum(ratio_all[users], 1.0); dw = dw / dw.sum()
+                    Agg = np.where(down[:, None], dw[None, :], Agg)
                 W_new = np.einsum('ck,ckd->cd', Agg, Wl)
                 t_new = (Agg * Tvl).sum(axis=1)
                 W_grid = np.where(alive[:C, None], W_new, W_grid)
