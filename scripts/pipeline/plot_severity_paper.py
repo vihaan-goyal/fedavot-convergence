@@ -34,7 +34,8 @@ for ax, tag in zip(axes, ["const", "decay1000"]):
     ax.grid(alpha=0.3)
 axes[0].set_ylabel(r"overall loss $F_p$ (MSE)", fontsize=9)
 
-axes[0].legend(fontsize=7.5, frameon=False, loc="upper left", ncol=1)
+_h, _l = axes[1].get_legend_handles_labels(); _sel = [i for i, t in enumerate(_l) if "measured" in t]
+axes[1].legend([_h[i] for i in _sel], [_l[i].replace(", measured", "") for i in _sel], fontsize=7.5, frameon=False, loc="upper left", handlelength=2.2)
 fig.tight_layout(pad=0.4)
 os.makedirs(OUT, exist_ok=True)
 fig.savefig(os.path.join(OUT, "severity_imdb.pdf"), bbox_inches="tight")

@@ -148,7 +148,7 @@ for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]
         ax.set_title("IMDb-Wiki: top-importance identities (MSE)", fontsize=8.5); ax.set_ylabel("MSE", fontsize=8); ax.tick_params(labelsize=7.5)
         ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=8)
     ax.tick_params(labelsize=7.5); ax.grid(alpha=0.3)
-axes[1].legend(fontsize=7.5, frameon=False, loc="lower right")
+axes[0].legend(fontsize=7.5, frameon=False, loc="upper left", handlelength=2.2)
 fig.tight_layout(pad=0.4)
 fig.savefig(os.path.join(OUT, "rare_group_fit.pdf"), bbox_inches="tight")
 fig.savefig(os.path.join(OUT, "rare_group_fit.png"), dpi=200, bbox_inches="tight")
