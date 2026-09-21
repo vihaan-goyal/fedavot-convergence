@@ -24,10 +24,10 @@ cannot be weighted, and unlike classical transport
 \centering
 \begin{tikzpicture}[
    node distance=1.2mm,
-   grp/.style={draw,rounded corners=1pt,minimum width=9mm,minimum height=3.4mm,font=\scriptsize,fill=Periwinkle!20},
-   atm/.style={draw,rounded corners=1pt,minimum width=13mm,minimum height=3.4mm,font=\scriptsize,fill=YellowOrange!20},
+   grp/.style={draw,rounded corners=1pt,minimum width=9mm,minimum height=3.6mm,font=\footnotesize,fill=Periwinkle!20},
+   atm/.style={draw,rounded corners=1pt,minimum width=15mm,minimum height=3.6mm,font=\footnotesize,fill=YellowOrange!20},
    e/.style={-{Latex[length=1.2mm]},gray,line width=.35pt},
-   lbl/.style={font=\scriptsize\itshape}
+   lbl/.style={font=\footnotesize\itshape}
 ]
 \node[grp] (g1) {$g_1$};
 \node[grp,below=of g1] (g2) {$g_2$};
@@ -56,14 +56,14 @@ cannot be weighted, and unlike classical transport
 \caption{The mask $E$: compositions carry the mass $q$ they occur with, groups
 must receive the mass $p$ the objective assigns. Group $4$ is reachable only
 through $A_4$, so alignment needs $p_4\le q_4$, the Hall condition of
-Thm.~\ref{thm:feas} on $I=\{4\}$; a smaller batch deletes $A_4$ and makes
+Theorem~\ref{thm:feas} on $I=\{4\}$; a smaller batch deletes $A_4$ and makes
 $p_4$ unreachable.}
 \label{fig:mask}
 \end{figure}
 
 \noindent\textbf{When alignment is possible.}
 Existence is a supply--demand question on the bipartite graph $E$, settled
-by flow duality (proofs omitted for space).
+by flow duality \cite{hall1935,fordfulkerson1956} (proofs omitted for space).
 
 \begin{theorem}[Feasibility, {\cite[Thm.~1]{rahimi2025fedavot}}]
 \label{thm:feas}
@@ -121,7 +121,8 @@ the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}
 \noindent\textbf{Analysis.}
 Let $\hat g(\theta)=\sum_{i\in A^t}Y[i,j(t)]\,g_i(\theta)$ be the
 transport-weighted batch subgradient of Algorithm~\ref{alg:gavot}. Everything
-rests on \cite[Lem.~1]{rahimi2025fedavot} moved from models to gradients:
+rests on \cite[Lem.~1]{rahimi2025fedavot} moved from models to gradients and
+on the classical projected-subgradient bound \cite{nemirovski2009}:
 transport removes bias, it is not a variance reduction device.
 
 \begin{lemma}[Unbiasedness]
@@ -149,7 +150,7 @@ The constant is that of full-participation SGD, independent of batch coverage.
 
 \noindent\textbf{Outside the feasible region.}
 When \eqref{eq:hall} fails, Sinkhorn accumulates at the coupling whose row
-marginal $\hat p\triangleq T\mathbf{1}$ is KL-closest to $p$ over the
+marginal $\hat p\triangleq T\mathbf{1}$ is Kullback--Leibler (KL) closest to $p$ over the
 reachable polytope $\{T\mathbf{1}: T\ge 0,\ \mathbf{1}^\top T=q,\
 \mathrm{supp}(T)\subseteq E\}$ \cite{csiszar1975,gietl2013ipfp,peyre2019}.
 The column marginal is met exactly, so both lemmas hold with $\hat p$ for

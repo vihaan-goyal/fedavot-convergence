@@ -14,6 +14,7 @@
 \usepackage{spconf,amsmath,amssymb,amsthm,graphicx,booktabs,multirow}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\algrenewcommand{\alglinenumber}[1]{\small #1:}
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{url}
 \usepackage{tikz}
@@ -47,7 +48,7 @@
 \title{GROUP-FAIR STOCHASTIC GRADIENT DESCENT \\ VIA MASKED OPTIMAL TRANSPORT}
 
 \name{Herlock (SeyedAbolfazl) Rahimi \quad Amtej Sodhi \quad Vihaan Goyal \quad Dionysis Kalogerias%
-\thanks{This work is supported by NSF under Grant 2242215.}}
+\thanks{\small This work is supported by NSF under Grant 2242215.}}
 \address{Department of Electrical and Computer Engineering, Yale University, New Haven, CT, USA\\
 \texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}\\
 \texttt{\{vihaan.goyal1512, amtejsodhi\}@gmail.com}}
@@ -58,7 +59,8 @@
 \pagestyle{empty}\thispagestyle{empty}
 
 \begin{abstract}
-Minibatch SGD is group-blind: which groups appear in a batch is decided by
+Minibatch stochastic gradient descent (SGD) is group-blind: which groups
+appear in a batch is decided by
 their prevalence in the data, not by how much they are meant to count in the
 objective, so SGD optimizes a prevalence-weighted surrogate. A minibatch is a
 partial-participation event over groups, so we carry the masked optimal
@@ -70,7 +72,7 @@ condition; past it, Sinkhorn returns an information projection whose
 residual we compute in closed form, splitting the excess risk into an
 alignment gain fixed by the instance and an optimization residual paid by
 the estimator. A sweep over eleven availability skews on Adult and IMDb-Wiki
-shows the two crossing where the decomposition predicts. A mean--CVaR layer
+shows the two crossing where the decomposition predicts. A mean--conditional-value-at-risk (CVaR) layer
 on top reaches the worst group at rate $O(\kappa(\alpha,\gamma)/\sqrt{T})$.
 \end{abstract}
 
@@ -118,16 +120,18 @@ multiplier, destabilizes the iterates
 \noindent\textbf{Other algorithms.}
 Reduction methods for group fairness return randomized mixtures or carry an
 approximation constant tied to a fixed class
-\cite{agarwal2018reductions,cotter2019twoplayer,chamon2020pacc};
+\cite{agarwal2018reductions,cotter2019twoplayer,chamon2020pacc,chamon2023nonconvex};
 distributionally robust and worst-group objectives
-\cite{sagawa2020dro,hashimoto2018repeated,levy2020large} change the functional
+\cite{sagawa2020dro,hashimoto2018repeated,levy2020large,namkoong2017variance,curi2020adaptive} change the functional
 rather than the sampler and are complementary; importance sampling for SGD
 \cite{rizk2021importance,katharopoulos2018not} corrects variance, not the
 identity of the minimized objective. The same mismatch is the central object
 of federated learning, where the \emph{availability distribution} $q$ over
 participating clients rarely matches the \emph{importance distribution} $p$,
-so \textsf{FedAvg} optimizes a surrogate whose weights are induced rather
-than chosen \cite{rahimi2025agnostic,wang2020objective,cho2022biased};
+so \textsf{FedAvg} \cite{mcmahan2017fedavg} and its variants
+\cite{li2020fedprox,karimireddy2020scaffold} optimize a surrogate whose
+weights are induced rather than chosen
+\cite{rahimi2025agnostic,wang2020objective,cho2022biased};
 \textsf{FedAVOT} \cite{rahimi2025fedavot} removes it by a masked optimal
 transport (MOT) problem on the client-round pairs that occurred. A minibatch
 is a participation event, its groups the active set with law $q$ and target
@@ -141,7 +145,7 @@ agnostic \textsf{FedAvg} with one local step, so \cite{rahimi2025agnostic} names
 the function it minimizes, and transport weights make the batch subgradient
 exactly unbiased for $\nabla F_p$ (Lemma~\ref{lem:unbiased}).
 \item \emph{A coverage law, a severity measure, and the crossover}
-(Cor.~\ref{cor:batchsize}, Thm.~\ref{thm:infeasible}, Sec.~\ref{sec:exp}).
+(Corollary~\ref{cor:batchsize}, Theorem~\ref{thm:infeasible}, Sec.~\ref{sec:exp}).
 Feasibility is Hall-type and reduces on singletons to $p_i\le r_i$, so the
 \emph{infeasible mass} $\nu\triangleq\sum_{i:p_i>r_i}p_i$ orders instances
 before training; past it the excess splits into an exact, instance-fixed
@@ -165,7 +169,7 @@ $\kappa(\alpha,\gamma)=\gamma+(1-\gamma)/\alpha$.
 Exact alignment delivers the $p$-weighted risk, an average, which can hide a
 group. Where the requirement is on the worst group instead, we compose a
 mean--CVaR functional over groups on top of the transport weights
-\cite{rahimi2025agnostic,rockafellar2000cvar}:
+\cite{rahimi2025agnostic,rockafellar2000cvar,theodoropoulos2024restricted}:
 \begin{equation}
 F_p^{\alpha,\gamma}(\theta)\;\triangleq\;\gamma F_p(\theta)+(1-\gamma)\,
 \CVaR^p_\alpha\big(f(\theta)\big),\quad \alpha,\gamma\in(0,1],
@@ -246,6 +250,11 @@ S.~Sagawa, P.~W. Koh, T.~Hashimoto, and P.~Liang, ``Distributionally robust
 neural networks for group shifts,'' in \emph{Proc. Int. Conf. Learning
 Representations (ICLR)}, 2020.
 
+\bibitem{yang2021dir}
+Y.~Yang, K.~Zha, Y.-C. Chen, H.~Wang, and D.~Katabi, ``Delving into deep
+imbalanced regression,'' in \emph{Proc. Int. Conf. Machine Learning (ICML)},
+2021, pp. 11842--11851.
+
 \bibitem{mohri2019agnostic}
 M.~Mohri, G.~Sivek, and A.~T. Suresh, ``Agnostic federated learning,'' in
 \emph{Proc. Int. Conf. Machine Learning (ICML)}, 2019, pp. 4615--4625.
@@ -259,27 +268,6 @@ federated learning,'' in \emph{Proc. Int. Conf. Learning Representations
 H.~Rahimi and D.~Kalogerias, ``FedAVOT: Exact distribution alignment in
 federated learning via masked optimal transport,'' in \emph{Proc. IEEE Int.
 Conf. Acoustics, Speech and Signal Processing (ICASSP)}, 2026.
-
-\bibitem{rahimi2025agnostic}
-H.~Rahimi and D.~Kalogerias, ``Convergence of agnostic federated averaging,''
-in \emph{Proc. IEEE Int. Workshop Computational Advances in Multi-Sensor
-Adaptive Processing (CAMSAP)}, 2025.
-
-\bibitem{wang2020objective}
-J.~Wang, Q.~Liu, H.~Liang, G.~Joshi, and H.~V. Poor, ``Tackling the objective
-inconsistency problem in heterogeneous federated optimization,'' in \emph{Adv.
-Neural Inf. Process. Syst. (NeurIPS)}, vol.~33, 2020, pp. 7611--7623.
-
-\bibitem{cho2022biased}
-Y.~J. Cho, J.~Wang, and G.~Joshi, ``Towards understanding biased client
-selection in federated learning,'' in \emph{Proc. Int. Conf. Artificial
-Intelligence and Statistics (AISTATS)}, 2022, pp. 10351--10375.
-
-\bibitem{mcmahan2017fedavg}
-H.~B. McMahan, E.~Moore, D.~Ramage, S.~Hampson, and B.~A. y~Arcas,
-``Communication-efficient learning of deep networks from decentralized data,''
-in \emph{Proc. Int. Conf. Artificial Intelligence and Statistics (AISTATS)},
-2017, pp. 1273--1282.
 
 \bibitem{agarwal2018reductions}
 A.~Agarwal, A.~Beygelzimer, M.~Dud\'{i}k, J.~Langford, and H.~Wallach, ``A
@@ -301,10 +289,20 @@ L.~F.~O. Chamon, S.~Paternain, M.~Calvo-Fullana, and A.~Ribeiro, ``Constrained
 learning with non-convex losses,'' \emph{IEEE Trans. Inf. Theory}, vol.~69,
 no.~3, pp. 1739--1760, 2023.
 
-\bibitem{rahimi2026exactpenalty}
-H.~Rahimi, S.~Pougkakiotis, and D.~Kalogerias, ``An exact penalty method for
-constrained statistical learning over universal RKHSs,'' 2026, submitted.
-%%FILLIN: replace with the arXiv number once posted.
+\bibitem{levy2020large}
+D.~Levy, Y.~Carmon, J.~C. Duchi, and A.~Sidford, ``Large-scale methods for
+distributionally robust optimization,'' in \emph{Adv. Neural Inf. Process.
+Syst. (NeurIPS)}, vol.~33, 2020, pp. 8847--8860.
+
+\bibitem{namkoong2017variance}
+H.~Namkoong and J.~C. Duchi, ``Variance-based regularization with convex
+objectives,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~30,
+2017, pp. 2971--2980.
+
+\bibitem{curi2020adaptive}
+S.~Curi, K.~Y. Levy, S.~Jegelka, and A.~Krause, ``Adaptive sampling for
+stochastic risk-averse learning,'' in \emph{Adv. Neural Inf. Process. Syst.
+(NeurIPS)}, vol.~33, 2020, pp. 1036--1047.
 
 \bibitem{rizk2021importance}
 M.~Rizk, S.~Vlaski, and A.~H. Sayed, ``Optimal importance sampling for
@@ -316,61 +314,11 @@ A.~Katharopoulos and F.~Fleuret, ``Not all samples are created equal: Deep
 learning with importance sampling,'' in \emph{Proc. Int. Conf. Machine
 Learning (ICML)}, 2018, pp. 2525--2534.
 
-\bibitem{sinkhorn1967}
-R.~Sinkhorn, ``Diagonal equivalence to matrices with prescribed row and column
-sums,'' \emph{Amer. Math. Monthly}, vol.~74, no.~4, pp. 402--405, 1967.
-
-\bibitem{cuturi2013}
-M.~Cuturi, ``Sinkhorn distances: Lightspeed computation of optimal transport,''
-in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~26, 2013, pp.
-2292--2300.
-
-\bibitem{peyre2019}
-G.~Peyr\'{e} and M.~Cuturi, \emph{Computational Optimal Transport}. Now
-Publishers, 2019.
-
-\bibitem{gietl2013ipfp}
-C.~Gietl and F.~P. Reffel, ``Accumulation points of the iterative proportional
-fitting procedure,'' \emph{Statistics}, vol.~47, no.~6, pp. 1321--1335, 2013.
-
-\bibitem{csiszar1975}
-I.~Csisz\'{a}r, ``$I$-divergence geometry of probability distributions and
-minimization problems,'' \emph{Ann. Probab.}, vol.~3, no.~1, pp. 146--158, 1975.
-
-\bibitem{hall1935}
-P.~Hall, ``On representatives of subsets,'' \emph{J. London Math. Soc.},
-vol.~10, no.~1, pp. 26--30, 1935.
-
-\bibitem{fordfulkerson1956}
-L.~R. Ford and D.~R. Fulkerson, ``Maximal flow through a network,'' \emph{Canad.
-J. Math.}, vol.~8, pp. 399--404, 1956.
-
-\bibitem{villani2009}
-C.~Villani, \emph{Optimal Transport: Old and New}. Springer, 2009.
-
-\bibitem{rockafellar2000cvar}
-R.~T. Rockafellar and S.~Uryasev, ``Optimization of conditional value-at-risk,''
-\emph{J. Risk}, vol.~2, no.~3, pp. 21--41, 2000.
-
-\bibitem{curi2020adaptive}
-S.~Curi, K.~Y. Levy, S.~Jegelka, and A.~Krause, ``Adaptive sampling for
-stochastic risk-averse learning,'' in \emph{Adv. Neural Inf. Process. Syst.
-(NeurIPS)}, vol.~33, 2020, pp. 1036--1047.
-
-\bibitem{levy2020large}
-D.~Levy, Y.~Carmon, J.~C. Duchi, and A.~Sidford, ``Large-scale methods for
-distributionally robust optimization,'' in \emph{Adv. Neural Inf. Process.
-Syst. (NeurIPS)}, vol.~33, 2020, pp. 8847--8860.
-
-\bibitem{namkoong2017variance}
-H.~Namkoong and J.~C. Duchi, ``Variance-based regularization with convex
-objectives,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~30,
-2017, pp. 2971--2980.
-
-\bibitem{nemirovski2009}
-A.~Nemirovski, A.~Juditsky, G.~Lan, and A.~Shapiro, ``Robust stochastic
-approximation approach to stochastic programming,'' \emph{SIAM J. Optim.},
-vol.~19, no.~4, pp. 1574--1609, 2009.
+\bibitem{mcmahan2017fedavg}
+H.~B. McMahan, E.~Moore, D.~Ramage, S.~Hampson, and B.~Ag\"{u}era y Arcas,
+``Communication-efficient learning of deep networks from decentralized data,''
+in \emph{Proc. Int. Conf. Artificial Intelligence and Statistics (AISTATS)},
+2017, pp. 1273--1282.
 
 \bibitem{li2020fedprox}
 T.~Li, A.~K. Sahu, M.~Zaheer, M.~Sanjabi, A.~Talwalkar, and V.~Smith,
@@ -382,23 +330,80 @@ S.~P. Karimireddy, S.~Kale, M.~Mohri, S.~J. Reddi, S.~U. Stich, and A.~T.
 Suresh, ``SCAFFOLD: Stochastic controlled averaging for federated learning,''
 in \emph{Proc. Int. Conf. Machine Learning (ICML)}, 2020, pp. 5132--5143.
 
-\bibitem{uci_adult}
-B.~Becker and R.~Kohavi, ``Adult,'' UCI Machine Learning Repository, 1996.
+\bibitem{rahimi2025agnostic}
+H.~Rahimi and D.~Kalogerias, ``Convergence of agnostic federated averaging,''
+in \emph{Proc. IEEE Int. Workshop Computational Advances in Multi-Sensor
+Adaptive Processing (CAMSAP)}, 2025.
 
-\bibitem{yang2021dir}
-Y.~Yang, K.~Zha, Y.-C. Chen, H.~Wang, and D.~Katabi, ``Delving into deep
-imbalanced regression,'' in \emph{Proc. Int. Conf. Machine Learning (ICML)},
-2021.
+\bibitem{wang2020objective}
+J.~Wang, Q.~Liu, H.~Liang, G.~Joshi, and H.~V. Poor, ``Tackling the objective
+inconsistency problem in heterogeneous federated optimization,'' in \emph{Adv.
+Neural Inf. Process. Syst. (NeurIPS)}, vol.~33, 2020, pp. 7611--7623.
 
-\bibitem{rothe2018imdbwiki}
-R.~Rothe, R.~Timofte, and L.~Van~Gool, ``Deep expectation of real and apparent
-age from a single image without facial landmarks,'' \emph{Int. J. Comput.
-Vis.}, vol.~126, no.~2--4, pp. 144--157, 2018.
+\bibitem{cho2022biased}
+Y.~J. Cho, J.~Wang, and G.~Joshi, ``Towards understanding biased client
+selection in federated learning,'' in \emph{Proc. Int. Conf. Artificial
+Intelligence and Statistics (AISTATS)}, 2022, pp. 10351--10375.
+
+\bibitem{villani2009}
+C.~Villani, \emph{Optimal Transport: Old and New}. Springer, 2009.
+
+\bibitem{peyre2019}
+G.~Peyr\'{e} and M.~Cuturi, \emph{Computational Optimal Transport}. Now
+Publishers, 2019.
+
+\bibitem{hall1935}
+P.~Hall, ``On representatives of subsets,'' \emph{J. London Math. Soc.},
+vol.~10, no.~1, pp. 26--30, 1935.
+
+\bibitem{fordfulkerson1956}
+L.~R. Ford and D.~R. Fulkerson, ``Maximal flow through a network,'' \emph{Canad.
+J. Math.}, vol.~8, pp. 399--404, 1956.
+
+\bibitem{sinkhorn1967}
+R.~Sinkhorn, ``Diagonal equivalence to matrices with prescribed row and column
+sums,'' \emph{Amer. Math. Monthly}, vol.~74, no.~4, pp. 402--405, 1967.
+
+\bibitem{cuturi2013}
+M.~Cuturi, ``Sinkhorn distances: Lightspeed computation of optimal transport,''
+in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~26, 2013, pp.
+2292--2300.
+
+\bibitem{nemirovski2009}
+A.~Nemirovski, A.~Juditsky, G.~Lan, and A.~Shapiro, ``Robust stochastic
+approximation approach to stochastic programming,'' \emph{SIAM J. Optim.},
+vol.~19, no.~4, pp. 1574--1609, 2009.
+
+\bibitem{csiszar1975}
+I.~Csisz\'{a}r, ``$I$-divergence geometry of probability distributions and
+minimization problems,'' \emph{Ann. Probab.}, vol.~3, no.~1, pp. 146--158, 1975.
+
+\bibitem{gietl2013ipfp}
+C.~Gietl and F.~P. Reffel, ``Accumulation points of the iterative proportional
+fitting procedure,'' \emph{Statistics}, vol.~47, no.~6, pp. 1321--1335, 2013.
+
+\bibitem{rockafellar2000cvar}
+R.~T. Rockafellar and S.~Uryasev, ``Optimization of conditional value-at-risk,''
+\emph{J. Risk}, vol.~2, no.~3, pp. 21--41, 2000.
 
 \bibitem{theodoropoulos2024restricted}
 P.~Theodoropoulos, K.~E. Nikolakakis, and D.~Kalogerias, ``Federated learning
 under restricted user availability,'' in \emph{Proc. IEEE Int. Conf. Acoustics,
 Speech and Signal Processing (ICASSP)}, 2024.
+
+\bibitem{rahimi2026exactpenalty}
+H.~Rahimi, S.~Pougkakiotis, and D.~Kalogerias, ``An exact penalty method for
+constrained statistical learning over universal RKHSs,'' submitted for publication, 2026.
+%%FILLIN: replace with the arXiv number once posted.
+
+\bibitem{uci_adult}
+B.~Becker and R.~Kohavi, ``Adult,'' UCI Machine Learning Repository, 1996.
+[Online]. Available: https://doi.org/10.24432/C5XW20
+
+\bibitem{rothe2018imdbwiki}
+R.~Rothe, R.~Timofte, and L.~Van~Gool, ``Deep expectation of real and apparent
+age from a single image without facial landmarks,'' \emph{Int. J. Comput.
+Vis.}, vol.~126, no.~2--4, pp. 144--157, 2018.
 
 \end{thebibliography}
 

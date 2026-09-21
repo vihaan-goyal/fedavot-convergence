@@ -9,13 +9,13 @@
 ($\eta{=}0.1$) on $100$ race-homogeneous groups of $30$ samples, groups per
 race $\propto$ prevalence ($85/10/3/1/1$), target uniform over the five
 races ($p_i=0.2$ for a smallest-race group). \emph{IMDb-Wiki} age
-regression \cite{rothe2018imdbwiki}: linear regression on $128$-d face
-embeddings ($\eta{=}10^{-2}$) over $100$ identities, cubic target
+regression \cite{rothe2018imdbwiki}: linear regression (mean-squared
+error, MSE) on $128$-d face embeddings ($\eta{=}10^{-2}$) over $100$ identities, cubic target
 $p_i\propto(101-i)^3$. Observation rates are swept: Adult $r\propto
 p^{\beta}$, $\beta\in\{0,\tfrac14,\tfrac12,\tfrac34,1\}$, from prevalence
-($\nu{=}.60$) to aligned ($\nu{=}0$); IMDb-Wiki $r_i\propto i^{\beta}$,
-$\beta\in\{0,\tfrac12,1,\tfrac32,2,3\}$, from uniform ($\nu{=}.31$) to the
-mirror image of $p$ ($\nu{=}.88$), plus aligned $r_i\propto 101-i$
+($\nu{=}0.60$) to aligned ($\nu{=}0$); IMDb-Wiki $r_i\propto i^{\beta}$,
+$\beta\in\{0,\tfrac12,1,\tfrac32,2,3\}$, from uniform ($\nu{=}0.31$) to the
+mirror image of $p$ ($\nu{=}0.88$), plus aligned $r_i\propto 101-i$
 ($\nu{=}0$): eleven instances. Each step observes $K{=}3$ groups drawn
 $\propto r$, each taking $H{=}5$ local steps before the weighted average: \avot{}; \emph{group-blind averaging}, uniform over
 the observed groups ($\tilde p_i=r_i/K$); the \emph{fixed multiplier}
@@ -38,9 +38,9 @@ instances and diverges on the aligned ones.}
 \toprule
 Instance & \avot{} & unif.\ avg & upsamp. & LDS & full \\
 \midrule
-Adult, $\nu{=}.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.2073$ \\
+Adult, $\nu{=}0.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.2073$ \\
 Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & $0.2073$ \\
-IMDb, $\nu{=}.31$  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $82.95$ \\
+IMDb, $\nu{=}0.31$  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $82.95$ \\
 IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & $82.95$ \\
 \bottomrule
 \end{tabular}
@@ -86,14 +86,14 @@ on IMDb-Wiki).
 
 \noindent\textbf{E2: the least represented group.}
 Fig.~\ref{fig:rare} reads the same runs on the group the target exists for.
-On Adult, transport lowers the loss on race Other at every skew: $.073$
-against $.119$ on the prevalence instance (full $.031$), $.031$ against
-$.035$ aligned, matching full. On IMDb-Wiki the top-importance identities show the crossover of
-Table~\ref{tab:severity} one step earlier: transport wins at $\nu\le.70$
-($77.0$ against $86.4$ at $\nu{=}.31$, full $72.2$; $73.6$ against $79.9$
+On Adult, transport lowers the loss on race Other at every skew: $0.073$
+against $0.119$ on the prevalence instance (full $0.031$), $0.031$ against
+$0.035$ aligned, matching full. On IMDb-Wiki the top-importance identities show the crossover of
+Table~\ref{tab:severity} one step earlier: transport wins at $\nu\le0.70$
+($77.0$ against $86.4$ at $\nu{=}0.31$, full $72.2$; $73.6$ against $79.9$
 aligned) and loses at the three most infeasible skews. The single most
 starved group (largest $p_i/r_i$) is Other itself on Adult and the top
-identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}.31$ (full $219$).
+identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}0.31$ (full $219$).
 
 % ----------------------------------------------------------- Table 2
 \begin{table}[t]
@@ -108,12 +108,12 @@ the sign flips where $\Delta_{\mathrm{floor}}$ crosses it.}
 \toprule
 $\beta$ & $\nu$ & $\Delta_{\mathrm{floor}}$ & gain & $t$ \\
 \midrule
-$0$   & $.31$ & $6.99$ & $\best{+5.57}$ & $20.7$ \\
-$0.5$ & $.59$ & $5.71$ & $\best{+3.46}$ & $11.3$ \\
-$1.0$ & $.70$ & $3.67$ & $\best{+2.05}$ & $5.4$ \\
-$1.5$ & $.77$ & $2.56$ & $+0.58$ & $1.1$ \\
-$2.0$ & $.82$ & $1.62$ & $-0.03$ & $-0.1$ \\
-$3.0$ & $.88$ & $0.02$ & $-2.28$ & $-7.9$ \\
+$0$   & $0.31$ & $6.99$ & $\best{+5.57}$ & $20.7$ \\
+$0.5$ & $0.59$ & $5.71$ & $\best{+3.46}$ & $11.3$ \\
+$1.0$ & $0.70$ & $3.67$ & $\best{+2.05}$ & $5.4$ \\
+$1.5$ & $0.77$ & $2.56$ & $+0.58$ & $1.1$ \\
+$2.0$ & $0.82$ & $1.62$ & $-0.03$ & $-0.1$ \\
+$3.0$ & $0.88$ & $0.02$ & $-2.28$ & $-7.9$ \\
 \bottomrule
 \end{tabular}
 \vspace{-8pt}
@@ -121,8 +121,8 @@ $3.0$ & $.88$ & $0.02$ & $-2.28$ & $-7.9$ \\
 
 \noindent\textbf{E3: the crossover, and where the sign comes from.}
 On Adult (Table~\ref{tab:severity}, Fig.~\ref{fig:severity}) the measured gain tracks $\Delta_{\mathrm{floor}}$ within $4\%$ at
-three of five skews and exceeds it at the two most infeasible ($.0210$
-against $.0110$, $.0181$ against $.0144$). On IMDb-Wiki the gain sits below
+three of five skews and exceeds it at the two most infeasible ($0.0210$
+against $0.0110$, $0.0181$ against $0.0144$). On IMDb-Wiki the gain sits below
 the floor by a residual close to constant in $\beta$, mean $1.9$, and the
 sign flips exactly where $\Delta_{\mathrm{floor}}$ crosses that value,
 between $\beta{=}1.5$ ($2.56$, gain $+0.58$) and $\beta{=}2.0$ ($1.62$,
@@ -136,12 +136,12 @@ six IMDb skews, by up to $7.9$. A
 starved group has $p_i>r_i$, so $\hat p$ truncates at the observation rate;
 as $\nu$ grows $\hat p$ and $\tilde p$ starve the same groups and the floors
 converge ($\Delta_{\mathrm{floor}}$ from $6.99$ to $0.02$, both $105.9$ at
-$\nu{=}.88$). Transport still concentrates weight on a starved
+$\nu{=}0.88$). Transport still concentrates weight on a starved
 group whenever it appears, so its variance about the mean is larger
 (Lemma~\ref{lem:variance} bounds only the second moment), and at constant
 stepsize the iterates sit on a noise floor proportional to it. Under
 $\eta_t=\eta/(1+t/1000)$ that floor decays, the curves fall onto their
-dashed floors, and what remains is the residual, $2.3$ at $\nu{=}.88$, the
+dashed floors, and what remains is the residual, $2.3$ at $\nu{=}0.88$, the
 one significant loss.
 
 \noindent\textbf{E5: risk aversion, and where it does not help.}

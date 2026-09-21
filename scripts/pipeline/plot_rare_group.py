@@ -134,21 +134,21 @@ for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]
         else:
             x = [100 * r["nu"] for r in pts]
         y = [r["rare_mean"] for r in pts]; s = [r["rare_std"] for r in pts]
-        ax.errorbar(x, y, yerr=s, color=COL[mdl], marker=MK[mdl], ms=3, lw=1.2, capsize=2, label=LBL_LONG[mdl])
+        ax.errorbar(x, y, yerr=s, color=COL[mdl], marker=MK[mdl], ms=3, lw=1.2, capsize=2, label=LBL[mdl])
         if ds != "adult" and mdl == "fedavot":
             for r, xi, yi in zip(pts, x, y):
                 ax.annotate(rf"$\beta$={r['beta']:g}", (xi, yi), textcoords="offset points",
-                            xytext=(0, 6), ha="center", fontsize=6, color="0.3")
+                            xytext=(0, 6), ha="center", fontsize=7, color="0.3")
     if ds == "adult":
         ax.invert_xaxis(); ax.set_xticks([r["beta"] for r in pts])
-        ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=6.5)
-        ax.set_title("Adult: race Other (cross-entropy)", fontsize=8)
-        ax.set_xlabel(r"observation rate $r\propto p^{\beta}$", fontsize=7.5)
+        ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=7.5)
+        ax.set_title("Adult: race Other (cross-entropy)", fontsize=8.5); ax.set_ylabel("cross-entropy", fontsize=8); ax.tick_params(labelsize=7.5)
+        ax.set_xlabel(r"observation rate $r\propto p^{\beta}$", fontsize=8)
     else:
-        ax.set_title("IMDb-Wiki: top-importance identities (MSE)", fontsize=8)
-        ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=7.5)
-    ax.tick_params(labelsize=7); ax.grid(alpha=0.3)
-axes[1].legend(fontsize=6.5, frameon=False, loc="upper left")
+        ax.set_title("IMDb-Wiki: top-importance identities (MSE)", fontsize=8.5); ax.set_ylabel("MSE", fontsize=8); ax.tick_params(labelsize=7.5)
+        ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=8)
+    ax.tick_params(labelsize=7.5); ax.grid(alpha=0.3)
+axes[1].legend(fontsize=7.5, frameon=False, loc="lower right")
 fig.tight_layout(pad=0.4)
 fig.savefig(os.path.join(OUT, "rare_group_fit.pdf"), bbox_inches="tight")
 fig.savefig(os.path.join(OUT, "rare_group_fit.png"), dpi=200, bbox_inches="tight")
