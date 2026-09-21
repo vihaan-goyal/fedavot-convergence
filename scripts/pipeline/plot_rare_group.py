@@ -138,7 +138,7 @@ for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]
         if ds != "adult" and mdl == "fedavot":
             for r, xi, yi in zip(pts, x, y):
                 ax.annotate(rf"$\beta$={r['beta']:g}", (xi, yi), textcoords="offset points",
-                            xytext=((0, -11) if r["beta"] == 2 else (0, 6)), ha=("right" if r["beta"] == 3 else "center"), fontsize=8, color="0.3")
+                            xytext=((0, -11) if r["beta"] == 2 else (-5, -3) if r["beta"] == 3 else (0, 6)), ha=("right" if r["beta"] == 3 else "center"), fontsize=8, color="0.3")
     if ds == "adult":
         ax.invert_xaxis(); ax.set_xticks([r["beta"] for r in pts])
         ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=8)
