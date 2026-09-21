@@ -46,7 +46,7 @@
 % ---------------------------------------------------------------- title
 \title{Group-Fair Stochastic Gradient Descent \\ via Masked Optimal Transport}
 
-\name{Herlock (SeyedAbolfazl) Rahimi \qquad Dionysis Kalogerias%
+\name{Herlock (SeyedAbolfazl) Rahimi \qquad Amtej Sodhi \qquad Vihaan Goyal \qquad Dionysis Kalogerias%
 \thanks{This work is supported by NSF under Grant 2242215.}}
 \address{Department of Electrical and Computer Engineering, Yale University, New Haven, CT, USA\\
 \texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}}
@@ -85,39 +85,58 @@ distribution shift, conditional value at risk.
 \section{Introduction}
 % =====================================================================
 
-A classifier is rarely asked to minimize one risk. It is asked to minimize one
-while behaving acceptably on subpopulations the training distribution
-under-represents: a diagnostic model across patient groups, a recognition system
-across demographic strata \cite{buolamwini2018gender,hashimoto2018repeated,%
-sagawa2020dro}. The standard response is to change the objective, replacing the
-empirical risk by $F_p(\theta)=\sum_i p_i f_i(\theta)$ with $p$ the weighting
-one actually wants, uniform, inverse to prevalence, or externally dictated
-\cite{mohri2019agnostic,li2020fair}.
+\noindent\textbf{Imbalanced learning.}
+In imbalanced classification and imbalanced regression the training data
+over-represent some groups and starve others: one demographic, one age range, one race \cite{buolamwini2018gender,%
+hashimoto2018repeated,sagawa2020dro,yang2021dir}. Call the groups one cares
+about \emph{critical}. The objective is then not the empirical risk but
+$F_p(\theta)=\sum_i p_i f_i(\theta)$, with $f_i$ the risk on group $i$ and $p$
+the weighting one actually wants: uniform, inverse to prevalence, or externally
+dictated \cite{mohri2019agnostic,li2020fair}.
 
-This paper is about a gap between writing that objective down and optimizing it.
-Minibatch SGD does not see $p$: it sees a batch, whose group composition is
-governed by prevalence and by the sampler, so averaging the per-example
-gradients descends a different function. The estimator is not merely noisy, it
-is biased, by a fixed vector that survives $T\to\infty$ and any stepsize
-schedule. Rebalancing the sampler is the usual and only partial fix: a group
-whose prevalence is below the resolution of the batch size cannot be sampled
-into every batch however the sampler is tilted, and upscaling the few examples
-that do appear reintroduces an amplitude distortion that destabilizes the
-iterates \cite{rahimi2025fedavot}.
+\noindent\textbf{What SGD does to a critical group.}
+Minibatch SGD never sees $p$. A batch $B^t$ of $b$ i.i.d.\ examples contains
+group $i$ in proportion to its prevalence $\pi_i$, so the group-blind update
+descends the prevalence-weighted risk:
+\begin{equation}
+\E\Big[\tfrac1b\!\sum_{(x,y)\in B^t}\!\nabla\ell(m(x;\theta),y)\Big]
+=\sum_i\pi_i\nabla f_i(\theta)=\nabla F_\pi(\theta).
+\label{eq:introbias}
+\end{equation}
+The loss surface is tilted toward the represented groups by a bias, $\pi-p$,
+that survives $T\to\infty$ and every stepsize schedule (Sec.~\ref{sec:setup}
+generalizes \eqref{eq:introbias} to any sampler).
 
-\noindent\textbf{Groups as clients.}
-The same mismatch is the central object of federated learning, where the
-\emph{availability distribution} $q$ over participating clients rarely matches
-the \emph{importance distribution} $p$ defining the objective, so
-\textsf{FedAvg} optimizes a surrogate whose weights are induced rather than
-chosen \cite{rahimi2025agnostic,wang2020objective,cho2022biased};
+\noindent\textbf{The usual remedies.}
+The standard response is to up-sample the rare groups or down-sample the
+common ones and then run SGD as usual. Tilting the sampler can only move the
+observation rate $r_i$ of a group up to the batch's coverage, so it cannot
+help a group with $p_i>r_i$; re-weighting the examples that do appear, the
+reweighting form of up-sampling, is a one-shot heuristic for a marginal
+problem this paper solves exactly, and its un-normalized form, the fixed
+multiplier, destabilizes the iterates
+\cite{rahimi2025fedavot}. Label-distribution smoothing \cite{yang2021dir}
+re-weights by label rarity, not by how rarely a group is observed.
+
+\noindent\textbf{Other algorithms.}
+Reduction methods for group fairness return randomized mixtures or carry an
+approximation constant tied to a fixed class
+\cite{agarwal2018reductions,cotter2019twoplayer,chamon2020pacc};
+distributionally robust and worst-group objectives
+\cite{sagawa2020dro,hashimoto2018repeated,levy2020large} change the functional
+rather than the sampler and are complementary; importance sampling for SGD
+\cite{rizk2021importance,katharopoulos2018not} corrects variance, not the
+identity of the minimized objective. The same mismatch is the central object
+of federated learning, where the \emph{availability distribution} $q$ over
+participating clients rarely matches the \emph{importance distribution} $p$,
+so \textsf{FedAvg} optimizes a surrogate whose weights are induced rather
+than chosen \cite{rahimi2025agnostic,wang2020objective,cho2022biased};
 \textsf{FedAVOT} \cite{rahimi2025fedavot} removes it by a masked optimal
-transport (MOT) problem, a coupling of the availability law with the target $p$
-supported on the client-round pairs that occurred. A minibatch is a
-participation event: the groups in $B^t$ are the active set $S^t$, its law is
-$q$, and the weighting one wants is $p$. Group-fair SGD is federated
-aggregation with the federation collapsed onto one machine. We call the method
-\avot{} and keep the \textsf{FedAVOT} label in figures, the rule being unchanged.
+transport (MOT) problem on the client-round pairs that occurred. A minibatch
+is a participation event, its groups the active set with law $q$ and target
+weighting $p$: group-fair SGD is federated aggregation on one machine. We call the
+method \avot{} and keep the \textsf{FedAVOT} label in figures, the rule being
+unchanged.
 
 \noindent\textbf{Contributions.}
 \begin{enumerate}\itemsep0pt\parskip0pt\topsep2pt
@@ -139,17 +158,6 @@ composes with the transport weights without disturbing unbiasedness, at rate
 $O(\kappa(\alpha,\gamma)/\sqrt{T})$,
 $\kappa(\alpha,\gamma)=\gamma+(1-\gamma)/\alpha$.
 \end{enumerate}
-
-\noindent\textbf{Related work.}
-Reduction methods for group fairness return randomized mixtures or carry an
-approximation constant tied to a fixed class
-\cite{agarwal2018reductions,cotter2019twoplayer,chamon2020pacc};
-distributionally robust and worst-group objectives
-\cite{sagawa2020dro,hashimoto2018repeated,levy2020large} change the functional
-rather than the sampler and are complementary (our CVaR layer is one, on top of
-transport rather than instead of it); importance sampling for SGD
-\cite{rizk2021importance,katharopoulos2018not} corrects variance, not the
-identity of the minimized objective.
 
 \input{sections/problem_formulation_short}
 \input{sections/proposed_solution_short}
