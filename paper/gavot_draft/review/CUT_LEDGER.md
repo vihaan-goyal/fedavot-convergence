@@ -131,3 +131,14 @@ US Letter, references start page 5, all fonts embedded (pypdf check), Type 1 + T
 Still open (not in the tex): official spconf.sty from the kit replaces the local stand-in (column gap
 0.24 in vs 0.30 in here); ORCiD for all four authors; submission filename Rahimi.pdf; the kit lists
 16 Sept 2026 as the deadline.
+
+## Second ICASSP grade applied, 2026-09-21 (review/ICASSP_TEMPLATE_GRADE_2026-09-21.md)
+
+tools/history/template_grade_fixes.py + plotter patches. Abstract rewritten to ~144 words (same claims);
+"fixed multiplier m/K" -> "(N/K) p_i" (m was undefined); eq. (9) underbrace labels at 9 pt; Algorithm 1
+line 8 split into lines 8-9 (no wrap; Sec. 4 now says "lines 6, 8 and 9"); Table 1 header "blind avg.";
+\balance on the last page; e-mail lines at 9 pt; Theorem 7 statement carries the constant clause so
+the theorem ends on eq. (8) (widow gone). Figures exported at 178 mm (7.0 in) with 8-9 pt text, beta
+labels staggered (beta=2 below, beta=3 beside), IMDb panel of Fig. 3 given headroom. Not done: source
+comment deletions (Vihaan), reference [33] pages (not verifiable), reference [34] arXiv id (Herlock).
+Result: 5 pages, references only on page 5, 0 errors on Overleaf.
