@@ -57,3 +57,35 @@ Runs: `results/2026-09-20_lr_schedules/<cell>_<sched>/` (7 new schedules) plus c
 | hyper4000 | eta/(1+t/4000) | 86.23 | 87.67 | 82.98 | 0.04 | 3.28 | 2.07 | +1.45 | 5.7 | GAVOT |
 | hyper16000 | eta/(1+t/16000) | 88.00 | 88.82 | 83.03 | 0.08 | 5.06 | 3.21 | +0.82 | 2.6 | GAVOT (n.s.) |
 | const | eta | 89.08 | 89.51 | 83.07 | 0.13 | 6.14 | 3.90 | +0.42 | 1.2 | GAVOT (n.s.) |
+
+## Reading and recommendation
+
+- The two datasets want opposite things. Adult (logistic, progress-limited) is best under the
+  slowest schedules: constant, then eta/(1+t/16000); every rule incl. full is still descending at
+  4000 steps, so a fast decay freezes it early (hyper250 is worst). IMDb (least squares,
+  variance-limited) is best under the fastest decays: cosine and eta/(1+t/250) both put full
+  coverage on its exact floor to 4 decimals (82.943 vs floor 82.942); cosine has half the seed
+  variance of hyper250 for both subset rules (GAVOT sd .08 vs .15) so it is the IMDb pick.
+- GAVOT wins in every cell under every schedule except IMDb at constant stepsize (group-blind
+  by 0.87, t = -2.5, n.s.), and the win is significant under every decaying schedule except
+  the slowest hyperbolic (T0 = 16000, IMDb, t 2.1 / 2.6). The sign of the result does not depend
+  on the schedule; only its size on IMDb does (gain 0.4 at constant -> 6.6 at cosine).
+- The schedule never changes the winner on Adult: gain +.0155 (const) to +.0229 (hyper250), all
+  t > 26. Group-blind does not get "shit performance" under any of them; it is 0.0002 behind on
+  the aligned instance every time, as Prop. 2 says it should be.
+
+Options for the paper:
+
+1. **One shared schedule, cosine** (recommended if only one is allowed): standard, method-neutral,
+   best on IMDb, mid-table on Adult (full residual .0068 vs .0045 at constant; GAVOT still wins
+   by .0197, t 35). Costs a rerun of every Adult and IMDb cell (severity sweep 23 cells ~3 h,
+   baselines, rare-group figures, CVaR grid ~1 h) and changes every number in the paper.
+2. **Per-dataset schedule chosen by the full-coverage residual**: constant (or hyper16000) on
+   Adult, cosine on IMDb. Principled (chosen without looking at GAVOT) and each dataset at its
+   best, but two schedules to explain and the same rerun cost.
+3. **Keep eta/(1+t/1000) as is**: already in the paper, GAVOT wins all four cells significantly,
+   nothing to rerun. Leaves 1.0 MSE of GAVOT gain on the table on IMDb and reports Adult at a
+   stepsize that is 0.0035 above its best.
+
+Decision is Vihaan's / Herlock's (Herlock 9/20: the decay convergence results need not be in
+the paper). Nothing rerun under cosine beyond the four headline cells.
