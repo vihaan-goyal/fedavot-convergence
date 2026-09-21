@@ -114,3 +114,20 @@ minibatch-as-participation reading), then the Contributions list unchanged. His 
 intact in original/main.tex and main_full.tex. Author line: his, with 'dfionysis' corrected to 'dionysis'.
 Uploaded to the Overleaf (project 6aa9d0263883a32613530d29) 2026-09-21: main.tex (flattened main_fit),
 figs/severity_imdb.pdf, figs/rare_group_fit.pdf; compiles there with 0 errors.
+
+## ICASSP 2027 paper-kit compliance, 2026-09-21 (cmsworkshops.com/ICASSP2027/papers/paper_kit.php)
+
+Applied to main_fit.tex (tools/history/icassp_kit_compliance{,2,3}.py): appendix page removed (kit:
+page 5 may hold references only; every "appendix" pointer now says "extended version" = main_full.tex,
+which keeps the appendix); title in capitals; \pagestyle{empty} (no page numbers); Table 1 at \small
+(9 pt; the kit forbids anything below 9 pt), its m/K column moved into the caption; TikZ labels
+\tiny -> \scriptsize; both figures regenerated at column width (3.35 x 1.65 in, 7-8 pt text, markers +
+line styles so they read in black and white, Type 42 fonts instead of matplotlib's Type 3); abstract
+194 -> ~155 words (kit: about 100-150); page budget recovered by: E5 (0.1,0.1) sentence, E3 per-skew
+list, E4 second-moment clause, E2 Amer-Indian / 30-image clauses, E1 fixed-multiplier sentence (now
+in the Table 1 caption), Sec. 3 "one lookup and one multiply", Sec. 2 "upscaling destabilizes"
+(said in Sec. 1), Sec. 1 LDS sentence (said in E1), Contributions item 1 tightened. Result: 5 pages,
+US Letter, references start page 5, all fonts embedded (pypdf check), Type 1 + TrueType only.
+Still open (not in the tex): official spconf.sty from the kit replaces the local stand-in (column gap
+0.24 in vs 0.30 in here); ORCiD for all four authors; submission filename Rahimi.pdf; the kit lists
+16 Sept 2026 as the deadline.
