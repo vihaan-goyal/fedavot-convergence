@@ -4,28 +4,28 @@ Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 h
 
 ## adult: group Other, headline cells
 
-| Instance | nu | FedAVOT | group-blind avg. | m/K | full |
+| Instance | nu | GAVOT | group-blind avg. | m/K | full |
 |---|---|---|---|---|---|
 | Adult, prevalence | 0.60 | 0.0732 +- 0.0027 | 0.1194 +- 0.0046 | 0.5804 +- 0.0150 | 0.0309 +- 0.0000 |
 | Adult, aligned | 0.00 | 0.0318 +- 0.0005 | 0.0352 +- 0.0006 | div. | 0.0309 +- 0.0000 |
 
 ## adult: group Amer-Indian-Eskimo, headline cells
 
-| Instance | nu | FedAVOT | group-blind avg. | m/K | full |
+| Instance | nu | GAVOT | group-blind avg. | m/K | full |
 |---|---|---|---|---|---|
 | Adult, prevalence | 0.60 | 0.1752 +- 0.0028 | 0.1888 +- 0.0019 | 0.6762 +- 0.0384 | 0.1227 +- 0.0000 |
 | Adult, aligned | 0.00 | 0.1229 +- 0.0010 | 0.1302 +- 0.0012 | div. | 0.1227 +- 0.0000 |
 
 ## imdbwiki: group tier1, headline cells
 
-| Instance | nu | FedAVOT | group-blind avg. | m/K | full |
+| Instance | nu | GAVOT | group-blind avg. | m/K | full |
 |---|---|---|---|---|---|
 | IMDb, skewed | 0.31 | 76.99 +- 0.73 | 86.42 +- 1.00 | 8662.10 +- 17044.52 | 72.23 +- 0.00 |
 | IMDb, aligned | 0.00 | 73.63 +- 0.67 | 79.89 +- 0.66 | div. | 72.23 +- 0.00 |
 
 ## adult sweep, group Other
 
-| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
+| beta | nu | stepsize | GAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
 |---|---|---|---|---|---|---|
 | 0.75 | 0.00 | const | 0.0278 | 0.0415 | 0.0278 | +0.0137 |
 | 1.0 | 0.00 | const | 0.0287 | 0.0322 | 0.0278 | +0.0035 |
@@ -40,7 +40,7 @@ Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 h
 
 ## adult sweep, group Amer-Indian-Eskimo
 
-| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
+| beta | nu | stepsize | GAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
 |---|---|---|---|---|---|---|
 | 0.75 | 0.00 | const | 0.1199 | 0.1466 | 0.1183 | +0.0267 |
 | 1.0 | 0.00 | const | 0.1195 | 0.1274 | 0.1183 | +0.0079 |
@@ -55,7 +55,7 @@ Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 h
 
 ## adult sweep, group most_biased (single group with the largest p_i/r_i in each cell; noisy, tail-500 of the per-user log)
 
-| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
+| beta | nu | stepsize | GAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
 |---|---|---|---|---|---|---|
 | 0.75 | 0.00 | const | 0.1198 | 0.1466 | 0.1183 | +0.0267 |
 | 1.0 | 0.00 | const | 0.1194 | 0.1273 | 0.1183 | +0.0079 |
@@ -70,7 +70,7 @@ Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 h
 
 ## imdbwiki sweep, group tier1
 
-| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
+| beta | nu | stepsize | GAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
 |---|---|---|---|---|---|---|
 | 0.0 | 0.31 | const | 86.85 | 89.78 | 72.49 | +2.92 |
 | 0.5 | 0.59 | const | 99.67 | 96.06 | 72.49 | -3.61 |
@@ -87,7 +87,7 @@ Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 h
 
 ## imdbwiki sweep, group most_biased (single group with the largest p_i/r_i in each cell; noisy, tail-500 of the per-user log)
 
-| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
+| beta | nu | stepsize | GAVOT | group-blind avg. | full | gain (avg - FedAVOT) |
 |---|---|---|---|---|---|---|
 | 0.0 | 0.31 | const | 281.63 | 347.83 | 224.55 | +66.20 |
 | 0.5 | 0.59 | const | 398.66 | 391.74 | 224.55 | -6.92 |

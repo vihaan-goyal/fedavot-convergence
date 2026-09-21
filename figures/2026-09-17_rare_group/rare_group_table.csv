@@ -169,6 +169,12 @@ imdb_beta3.00_decay1000,imdbwiki,infeasible,3.0,decay1000,0.8771532202725223,tie
 imdb_beta3.00_decay1000,imdbwiki,infeasible,3.0,decay1000,0.8771532202725223,most_biased,fedavot,5,456.8964624,5.672794963235019,nan,nan,0,3.9211841976276834e+298
 imdb_beta3.00_decay1000,imdbwiki,infeasible,3.0,decay1000,0.8771532202725223,most_biased,fedavg,5,379.5924028,4.641284073333262,nan,nan,0,3.9211841976276834e+298
 imdb_beta3.00_decay1000,imdbwiki,infeasible,3.0,decay1000,0.8771532202725223,most_biased,full,5,218.549834,0.0,nan,nan,0,3.9211841976276834e+298
+imdb_feasible_const,imdbwiki,feasible,,const,0.0,tier1,fedavot,5,78.71716,1.1067403102806026,89.08436,0.5282476941738585,,
+imdb_feasible_const,imdbwiki,feasible,,const,0.0,tier1,fedavg,5,83.26662,0.9467411713874091,89.50732,0.5522891757041786,,
+imdb_feasible_const,imdbwiki,feasible,,const,0.0,tier1,full,5,72.4865,0.0,83.0686,0.0,,
+imdb_feasible_const,imdbwiki,feasible,,const,0.0,most_biased,fedavot,5,241.68702968,28.819041270927634,nan,nan,0,0.664292233792045
+imdb_feasible_const,imdbwiki,feasible,,const,0.0,most_biased,fedavg,5,300.2622536,21.097525824243846,nan,nan,0,0.664292233792045
+imdb_feasible_const,imdbwiki,feasible,,const,0.0,most_biased,full,5,224.55,0.0,nan,nan,0,0.664292233792045
 imdb_feasible_decay1000,imdbwiki,feasible,,decay1000,0.0,tier1,fedavot,5,73.6308,0.6719770085352662,84.27846,0.1476882879581149,,
 imdb_feasible_decay1000,imdbwiki,feasible,,decay1000,0.0,tier1,fedavg,5,79.89064,0.6551597044995965,86.37158,0.3358030815820472,,
 imdb_feasible_decay1000,imdbwiki,feasible,,decay1000,0.0,tier1,fedavg_mk,5,999997000000.0,0.0,1000000000000.0,0.0,,

@@ -19,7 +19,7 @@ PAPER_FIGS = "paper/gavot_draft/figs"
 RARE = {"adult": ["Other", "Amer-Indian-Eskimo"], "imdbwiki": ["tier1"]}
 MODELS = ["fedavot", "fedavg", "fedavg_mk", "full"]
 COL = {"fedavot": "tab:blue", "fedavg": "tab:orange", "fedavg_mk": "tab:green", "full": "tab:red"}
-LBL = {"fedavot": "FedAVOT", "fedavg": "group-blind avg.", "fedavg_mk": r"fixed multiplier $m/K$", "full": "full"}
+LBL = {"fedavot": "GAVOT", "fedavg": "group-blind avg.", "fedavg_mk": r"fixed multiplier $m/K$", "full": "full"}
 TAG_LBL = {"const": "constant stepsize", "decay1000": r"$\eta_t=\eta/(1+t/1000)$"}
 YLBL = {"adult": "cross-entropy, race = Other", "imdbwiki": "MSE, top-importance identities"}
 
@@ -79,7 +79,7 @@ def pick(ds, grp, tag, mdl):
     return sorted([r for r in rows if r["dataset"] == ds and r["group"] == grp and r["tag"] == tag
                    and r["model"] == mdl and r["regime"] == "infeasible"], key=lambda r: r["nu"])
 
-LBL_LONG = {"fedavot": "FedAVOT (transport weights)",
+LBL_LONG = {"fedavot": "GAVOT (transport weights)",
             "fedavg": "group-blind average (uniform over the observed groups)",
             "full": "full coverage (every group every step, weighted by $p$)"}
 TITLE = {"adult": "Adult: loss on the least represented race (Other)",
@@ -163,7 +163,7 @@ lines = ["# Least-represented-group loss, decaying stepsize, tail-500 over 5 see
          "", "Adult: race = Other (smallest category; 1 group of 30). IMDb-Wiki: tier 1 = 20 highest-importance identities (least observed when beta > 0).", ""]
 for grp_ds, grps in RARE.items():
     for grp in grps:
-        lines += [f"## {grp_ds}: group {grp}, headline cells", "", "| Instance | nu | FedAVOT | group-blind avg. | m/K | full |", "|---|---|---|---|---|---|"]
+        lines += [f"## {grp_ds}: group {grp}, headline cells", "", "| Instance | nu | GAVOT | group-blind avg. | m/K | full |", "|---|---|---|---|---|---|"]
         for ds, regime, beta, label in head:
             if ds != grp_ds: continue
             cells = {}
@@ -176,7 +176,7 @@ for grp_ds, grps in RARE.items():
         lines.append("")
 for ds, grp in [("adult", "Other"), ("adult", "Amer-Indian-Eskimo"), ("adult", "most_biased"), ("imdbwiki", "tier1"), ("imdbwiki", "most_biased")]:
     note = " (single group with the largest p_i/r_i in each cell; noisy, tail-500 of the per-user log)" if grp == "most_biased" else ""
-    lines += [f"## {ds} sweep, group {grp}{note}", "", "| beta | nu | stepsize | FedAVOT | group-blind avg. | full | gain (avg - FedAVOT) |", "|---|---|---|---|---|---|---|"]
+    lines += [f"## {ds} sweep, group {grp}{note}", "", "| beta | nu | stepsize | GAVOT | group-blind avg. | full | gain (avg - FedAVOT) |", "|---|---|---|---|---|---|---|"]
     for tag in ["const", "decay1000"]:
         for r in pick(ds, grp, tag, "fedavot"):
             u = [x for x in pick(ds, grp, tag, "fedavg") if x["beta"] == r["beta"]][0]

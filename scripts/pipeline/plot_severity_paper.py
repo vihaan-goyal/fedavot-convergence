@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 TABLE = "figures/2026-09-14_severity_sweep/severity_sweep_table.csv"
 OUT = "paper/gavot_draft/figs"
 COL = {"fedavot": "tab:blue", "fedavg": "tab:orange", "full": "tab:red"}
-LBL = {"fedavot": "FedAVOT", "fedavg": "group-blind avg.", "full": "full"}
+LBL = {"fedavot": "GAVOT", "fedavg": "group-blind avg.", "full": "full"}
 PANEL = {"const": r"constant stepsize $\eta$", "decay1000": r"decaying stepsize $\eta_t=\eta/(1+t/1000)$"}
 
 rows = [r for r in csv.DictReader(open(TABLE)) if r["dataset"] == "imdbwiki" and r["regime"] == "infeasible"]
