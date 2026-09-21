@@ -96,7 +96,21 @@ recorded in tools/history/{herlock_trims,fit_squeeze,fit_squeeze2,3,4}.py; no nu
 | E5 | per-race list replaced by a pointer to appendix D; "kappa(1,gamma)=1 made visible" and "Risk aversion changes the functional, not who is observed" dropped | appendix D (numbers), extended (sentences) |
 | Appendix E | the nine/41 infeasible count and the fixed-multiplier definition dropped (both in Sec. 5 / Table 2) | Sec. 5 |
 | Appendix D closing sentence | shortened | extended |
-| Figure widths | Fig. 2 0.92 -> 0.80 col, rare 0.99 -> 0.82 col; -6/-8 pt below floats; -4 pt before Sec. 6 | |
+| Figure widths | Fig. 2 0.92 -> 0.82 col, rare 0.99 -> 0.86 col; -6/-8 pt below floats; -4 pt before Sec. 6 | |
 | Bibliography | itemsep -2pt so the references stay on page 5 alone | |
 
 Result: main_fit.pdf = 4 pages + references on page 5 + appendix on page 6.
+
+## Section 1 rewrite, 2026-09-21 (Herlock's Overleaf outline)
+
+On the Overleaf Herlock had deleted his Introduction and left four outline lines (what imbalanced
+regression/classification is; what SGD does to critical groups, with a simple calculation; the usual
+up/down-sampling remedy; a survey of other algorithms) and added Amtej and Vihaan to the author line.
+main_fit.tex Sec. 1 now follows that outline (tools/history/intro_outline.py): 'Imbalanced learning',
+'What SGD does to a critical group' (one displayed line, eq:introbias, the i.i.d. case of Prop. 2),
+'The usual remedies' (sampler tilt bounded by coverage, reweighting = one-shot upsampling, fixed multiplier,
+LDS), 'Other algorithms' (reductions, DRO, importance sampling, FedAvg surrogate, FedAVOT/MOT, the
+minibatch-as-participation reading), then the Contributions list unchanged. His previous Sec. 1 prose is
+intact in original/main.tex and main_full.tex. Author line: his, with 'dfionysis' corrected to 'dionysis'.
+Uploaded to the Overleaf (project 6aa9d0263883a32613530d29) 2026-09-21: main.tex (flattened main_fit),
+figs/severity_imdb.pdf, figs/rare_group_fit.pdf; compiles there with 0 errors.

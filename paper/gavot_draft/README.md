@@ -82,3 +82,6 @@ what he wants. His files are never edited in place: the zip he sent is kept verb
   second section). main_fit.pdf = 4 pages + references on page 5 + appendix on page 6. tools/check_cut.py: the only
   new numbers are figure widths / TikZ spacing. review/diff_fit_2026-09-21.txt is the diff of this pass.
 - Schedule sweep: review/LR_SCHEDULES_2026-09-20.md (paper keeps eta/(1+t/1000)). Baselines: review/BASELINES_2026-09-20.md.
+- 2026-09-21 upload: Herlock had gutted Sec. 1 on the Overleaf into a four-line outline and added Amtej + Vihaan to the
+  author line; Sec. 1 of main_fit.tex was rewritten to that outline (CUT_LEDGER.md, last section) and the flattened
+  build (`overleaf/main.tex`, `overleaf/figs/`) replaced his main.tex on the Overleaf (his prior version is in its history).
