@@ -112,7 +112,8 @@ the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}
   \State $g^t_i \leftarrow$ stochastic subgradient of $f_i$ from $B^t\cap$ group $i$
   \State $w^t_i \leftarrow Y[i,j(t)]\big(\gamma+\tfrac{1-\gamma}{\alpha}\mathbf{1}\{\hat f^t_i>t^{t-1}\}\big)$
   \State $\theta^{t}\leftarrow\Proj\big(\theta^{t-1}-\eta\sum_{i\in A^t}w^t_i\,g^t_i\big)$
-  \State $t^{t}\leftarrow t^{t-1}-\eta(1-\gamma)\big(1-\tfrac{1}{\alpha}\sum_{i\in A^t}Y[i,j(t)]\mathbf{1}\{\hat f^t_i>t^{t-1}\}\big)$
+  \State $\delta^t\leftarrow 1-\tfrac{1}{\alpha}\sum_{i\in A^t}Y[i,j(t)]\mathbf{1}\{\hat f^t_i>t^{t-1}\}$
+  \State $t^{t}\leftarrow t^{t-1}-\eta(1-\gamma)\,\delta^t$
 \EndFor
 \Ensure $\bar\theta_T=\frac{1}{T}\sum_{t=1}^{T}\theta^t$
 \end{algorithmic}
@@ -140,12 +141,13 @@ dependence on $|A^t|$ or on $N$.
 \begin{theorem}[Rate]
 \label{thm:rate}
 Under Assumption~\ref{ass:std}, if \eqref{eq:mot} is feasible then
-Algorithm~\ref{alg:gavot} with $\gamma=1$ and $\eta=D/(G\sqrt{T})$ satisfies
+Algorithm~\ref{alg:gavot} with $\gamma=1$ and $\eta=D/(G\sqrt{T})$ satisfies,
+with the constant of full-participation SGD and no dependence on batch
+coverage,
 \begin{equation}
 \E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)\;\le\;\frac{DG}{\sqrt{T}} .
 \label{eq:rate}
 \end{equation}
-The constant is that of full-participation SGD, independent of batch coverage.
 \end{theorem}
 
 \noindent\textbf{Outside the feasible region.}
@@ -165,8 +167,8 @@ write $\Phi(w)\triangleq F_p(\argmin_{\mathcal{C}} F_w)$, the $p$-risk of the
 minimizer of the $w$-weighted risk. Then
 \begin{equation}
 \E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)
-\;=\;\underbrace{\Phi(\hat p)-\Phi(p)}_{\text{alignment floor}}
-\;+\;\underbrace{\varepsilon_T(\hat p)}_{\text{optimization residual}} ,
+\;=\;\underbrace{\Phi(\hat p)-\Phi(p)}_{\textnormal{\small alignment floor}}
+\;+\;\underbrace{\varepsilon_T(\hat p)}_{\textnormal{\small optimization residual}} ,
 \label{eq:infeasible}
 \end{equation}
 where $\varepsilon_T(\hat p)\triangleq\E F_p(\bar\theta_T)-F_p(\theta^\dagger)$

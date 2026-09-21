@@ -17,6 +17,7 @@
 \algrenewcommand{\alglinenumber}[1]{\small #1:}
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{url}
+\usepackage{balance}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
 
@@ -50,8 +51,8 @@
 \name{Herlock (SeyedAbolfazl) Rahimi \quad Amtej Sodhi \quad Vihaan Goyal \quad Dionysis Kalogerias%
 \thanks{\small This work is supported by NSF under Grant 2242215.}}
 \address{Department of Electrical and Computer Engineering, Yale University, New Haven, CT, USA\\
-\texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}\\
-\texttt{\{vihaan.goyal1512, amtejsodhi\}@gmail.com}}
+{\normalsize\texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}}\\
+{\normalsize\texttt{\{vihaan.goyal1512, amtejsodhi\}@gmail.com}}}
 
 \begin{document}
 \ninept
@@ -59,21 +60,20 @@
 \pagestyle{empty}\thispagestyle{empty}
 
 \begin{abstract}
-Minibatch stochastic gradient descent (SGD) is group-blind: which groups
-appear in a batch is decided by
-their prevalence in the data, not by how much they are meant to count in the
-objective, so SGD optimizes a prevalence-weighted surrogate. A minibatch is a
-partial-participation event over groups, so we carry the masked optimal
-transport construction of \textsf{FedAVOT} across: aligning the
+Minibatch stochastic gradient descent (SGD) is group-blind: a batch contains
+each group in proportion to its prevalence, not to its weight in the
+objective, so SGD optimizes a prevalence-weighted surrogate. Reading a
+minibatch as a partial-participation event over groups, we carry the masked
+optimal transport construction of \textsf{FedAVOT} across: aligning the
 batch-composition law $q$ with the target importance $p$ yields per-batch
 group weights whose stochastic subgradient is exactly unbiased, at the
-standard $O(1/\sqrt{T})$ rate. Alignment is feasible under a Hall-type
-condition; past it, Sinkhorn returns an information projection whose
-residual we compute in closed form, splitting the excess risk into an
-alignment gain fixed by the instance and an optimization residual paid by
-the estimator. A sweep over eleven availability skews on Adult and IMDb-Wiki
-shows the two crossing where the decomposition predicts. A mean--conditional-value-at-risk (CVaR) layer
-on top reaches the worst group at rate $O(\kappa(\alpha,\gamma)/\sqrt{T})$.
+$O(1/\sqrt{T})$ rate. Alignment is feasible under a Hall-type condition;
+past it, Sinkhorn returns an information projection with closed-form
+residual, splitting the excess risk into an instance-fixed alignment gain
+and an optimization residual paid by the estimator. A sweep over eleven
+availability skews on Adult and IMDb-Wiki shows the two crossing where the
+decomposition predicts. A mean--conditional-value-at-risk (CVaR) layer
+reaches the worst group at rate $O(\kappa(\alpha,\gamma)/\sqrt{T})$.
 \end{abstract}
 
 \begin{keywords}
@@ -186,7 +186,7 @@ into a joint minimization over $(\theta,t)$,
 jointly convex, with subgradients in both arguments $p$-weighted sums of
 per-group quantities, so Lemma~\ref{lem:unbiased} applies unchanged: transport
 fixes \emph{which} distribution the expectation is under, CVaR \emph{what} is
-averaged (lines 6 and 8 of Algorithm~\ref{alg:gavot}).
+averaged (lines 6, 8 and 9 of Algorithm~\ref{alg:gavot}).
 
 \begin{theorem}[Rate under mean--CVaR]
 \label{thm:cvar}
@@ -233,6 +233,7 @@ the nonconvex case remains open.
 \clearpage
 \renewcommand{\refname}{REFERENCES}
 
+\balance
 \begin{thebibliography}{99}\setlength{\itemsep}{-2pt}\small
 
 \bibitem{buolamwini2018gender}

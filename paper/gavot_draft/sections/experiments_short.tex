@@ -19,7 +19,8 @@ mirror image of $p$ ($\nu{=}0.88$), plus aligned $r_i\propto 101-i$
 ($\nu{=}0$): eleven instances. Each step observes $K{=}3$ groups drawn
 $\propto r$, each taking $H{=}5$ local steps before the weighted average: \avot{}; \emph{group-blind averaging}, uniform over
 the observed groups ($\tilde p_i=r_i/K$); the \emph{fixed multiplier}
-$m/K$; \emph{full}, every group every step weighted by $p$. Stepsize
+with weights $(N/K)\,p_i$ on the observed groups \cite{rahimi2025fedavot};
+\emph{full}, every group every step weighted by $p$. Stepsize
 $\eta_t=\eta/(1+t/1000)$, fixed before the comparison and shared by every
 rule (faster decays widen the IMDb-Wiki gap, never flip a winner), $4000$
 steps, $5$ seeds, $F_p$ over the last $500$ steps. Floors are exact.
@@ -30,13 +31,13 @@ steps, $5$ seeds, $F_p$ over the last $500$ steps. Floors are exact.
 \caption{Headline cells, tail-500 over $5$ seeds, decaying stepsize. \emph{full}:
 every group every step; \emph{upsamp.}: weights $\propto p_i/r_i$ within the
 batch; LDS \cite{yang2021dir}: label-distribution smoothing, regression only.
-The fixed multiplier $m/K$ reaches $0.670$ and $8504$ on the two infeasible
+The fixed multiplier $(N/K)\,p_i$ reaches $0.670$ and $8504$ on the two infeasible
 instances and diverges on the aligned ones.}
 \label{tab:overall}
 \small\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lccccc}
 \toprule
-Instance & \avot{} & unif.\ avg & upsamp. & LDS & full \\
+Instance & \avot{} & blind avg. & upsamp. & LDS & full \\
 \midrule
 Adult, $\nu{=}0.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.2073$ \\
 Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & $0.2073$ \\

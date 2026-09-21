@@ -17,6 +17,7 @@
 \algrenewcommand{\alglinenumber}[1]{\small #1:}
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{url}
+\usepackage{balance}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
 
@@ -50,8 +51,8 @@
 \name{Herlock (SeyedAbolfazl) Rahimi \quad Amtej Sodhi \quad Vihaan Goyal \quad Dionysis Kalogerias%
 \thanks{\small This work is supported by NSF under Grant 2242215.}}
 \address{Department of Electrical and Computer Engineering, Yale University, New Haven, CT, USA\\
-\texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}\\
-\texttt{\{vihaan.goyal1512, amtejsodhi\}@gmail.com}}
+{\normalsize\texttt{\{herlock.rahimi, dionysis.kalogerias\}@yale.edu}}\\
+{\normalsize\texttt{\{vihaan.goyal1512, amtejsodhi\}@gmail.com}}}
 
 \begin{document}
 \ninept
@@ -59,21 +60,20 @@
 \pagestyle{empty}\thispagestyle{empty}
 
 \begin{abstract}
-Minibatch stochastic gradient descent (SGD) is group-blind: which groups
-appear in a batch is decided by
-their prevalence in the data, not by how much they are meant to count in the
-objective, so SGD optimizes a prevalence-weighted surrogate. A minibatch is a
-partial-participation event over groups, so we carry the masked optimal
-transport construction of \textsf{FedAVOT} across: aligning the
+Minibatch stochastic gradient descent (SGD) is group-blind: a batch contains
+each group in proportion to its prevalence, not to its weight in the
+objective, so SGD optimizes a prevalence-weighted surrogate. Reading a
+minibatch as a partial-participation event over groups, we carry the masked
+optimal transport construction of \textsf{FedAVOT} across: aligning the
 batch-composition law $q$ with the target importance $p$ yields per-batch
 group weights whose stochastic subgradient is exactly unbiased, at the
-standard $O(1/\sqrt{T})$ rate. Alignment is feasible under a Hall-type
-condition; past it, Sinkhorn returns an information projection whose
-residual we compute in closed form, splitting the excess risk into an
-alignment gain fixed by the instance and an optimization residual paid by
-the estimator. A sweep over eleven availability skews on Adult and IMDb-Wiki
-shows the two crossing where the decomposition predicts. A mean--conditional-value-at-risk (CVaR) layer
-on top reaches the worst group at rate $O(\kappa(\alpha,\gamma)/\sqrt{T})$.
+$O(1/\sqrt{T})$ rate. Alignment is feasible under a Hall-type condition;
+past it, Sinkhorn returns an information projection with closed-form
+residual, splitting the excess risk into an instance-fixed alignment gain
+and an optimization residual paid by the estimator. A sweep over eleven
+availability skews on Adult and IMDb-Wiki shows the two crossing where the
+decomposition predicts. A mean--conditional-value-at-risk (CVaR) layer
+reaches the worst group at rate $O(\kappa(\alpha,\gamma)/\sqrt{T})$.
 \end{abstract}
 
 \begin{keywords}
@@ -351,7 +351,8 @@ the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}
   \State $g^t_i \leftarrow$ stochastic subgradient of $f_i$ from $B^t\cap$ group $i$
   \State $w^t_i \leftarrow Y[i,j(t)]\big(\gamma+\tfrac{1-\gamma}{\alpha}\mathbf{1}\{\hat f^t_i>t^{t-1}\}\big)$
   \State $\theta^{t}\leftarrow\Proj\big(\theta^{t-1}-\eta\sum_{i\in A^t}w^t_i\,g^t_i\big)$
-  \State $t^{t}\leftarrow t^{t-1}-\eta(1-\gamma)\big(1-\tfrac{1}{\alpha}\sum_{i\in A^t}Y[i,j(t)]\mathbf{1}\{\hat f^t_i>t^{t-1}\}\big)$
+  \State $\delta^t\leftarrow 1-\tfrac{1}{\alpha}\sum_{i\in A^t}Y[i,j(t)]\mathbf{1}\{\hat f^t_i>t^{t-1}\}$
+  \State $t^{t}\leftarrow t^{t-1}-\eta(1-\gamma)\,\delta^t$
 \EndFor
 \Ensure $\bar\theta_T=\frac{1}{T}\sum_{t=1}^{T}\theta^t$
 \end{algorithmic}
@@ -379,12 +380,13 @@ dependence on $|A^t|$ or on $N$.
 \begin{theorem}[Rate]
 \label{thm:rate}
 Under Assumption~\ref{ass:std}, if \eqref{eq:mot} is feasible then
-Algorithm~\ref{alg:gavot} with $\gamma=1$ and $\eta=D/(G\sqrt{T})$ satisfies
+Algorithm~\ref{alg:gavot} with $\gamma=1$ and $\eta=D/(G\sqrt{T})$ satisfies,
+with the constant of full-participation SGD and no dependence on batch
+coverage,
 \begin{equation}
 \E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)\;\le\;\frac{DG}{\sqrt{T}} .
 \label{eq:rate}
 \end{equation}
-The constant is that of full-participation SGD, independent of batch coverage.
 \end{theorem}
 
 \noindent\textbf{Outside the feasible region.}
@@ -404,8 +406,8 @@ write $\Phi(w)\triangleq F_p(\argmin_{\mathcal{C}} F_w)$, the $p$-risk of the
 minimizer of the $w$-weighted risk. Then
 \begin{equation}
 \E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)
-\;=\;\underbrace{\Phi(\hat p)-\Phi(p)}_{\text{alignment floor}}
-\;+\;\underbrace{\varepsilon_T(\hat p)}_{\text{optimization residual}} ,
+\;=\;\underbrace{\Phi(\hat p)-\Phi(p)}_{\textnormal{\small alignment floor}}
+\;+\;\underbrace{\varepsilon_T(\hat p)}_{\textnormal{\small optimization residual}} ,
 \label{eq:infeasible}
 \end{equation}
 where $\varepsilon_T(\hat p)\triangleq\E F_p(\bar\theta_T)-F_p(\theta^\dagger)$
@@ -447,7 +449,7 @@ into a joint minimization over $(\theta,t)$,
 jointly convex, with subgradients in both arguments $p$-weighted sums of
 per-group quantities, so Lemma~\ref{lem:unbiased} applies unchanged: transport
 fixes \emph{which} distribution the expectation is under, CVaR \emph{what} is
-averaged (lines 6 and 8 of Algorithm~\ref{alg:gavot}).
+averaged (lines 6, 8 and 9 of Algorithm~\ref{alg:gavot}).
 
 \begin{theorem}[Rate under mean--CVaR]
 \label{thm:cvar}
@@ -496,7 +498,8 @@ mirror image of $p$ ($\nu{=}0.88$), plus aligned $r_i\propto 101-i$
 ($\nu{=}0$): eleven instances. Each step observes $K{=}3$ groups drawn
 $\propto r$, each taking $H{=}5$ local steps before the weighted average: \avot{}; \emph{group-blind averaging}, uniform over
 the observed groups ($\tilde p_i=r_i/K$); the \emph{fixed multiplier}
-$m/K$; \emph{full}, every group every step weighted by $p$. Stepsize
+with weights $(N/K)\,p_i$ on the observed groups \cite{rahimi2025fedavot};
+\emph{full}, every group every step weighted by $p$. Stepsize
 $\eta_t=\eta/(1+t/1000)$, fixed before the comparison and shared by every
 rule (faster decays widen the IMDb-Wiki gap, never flip a winner), $4000$
 steps, $5$ seeds, $F_p$ over the last $500$ steps. Floors are exact.
@@ -507,13 +510,13 @@ steps, $5$ seeds, $F_p$ over the last $500$ steps. Floors are exact.
 \caption{Headline cells, tail-500 over $5$ seeds, decaying stepsize. \emph{full}:
 every group every step; \emph{upsamp.}: weights $\propto p_i/r_i$ within the
 batch; LDS \cite{yang2021dir}: label-distribution smoothing, regression only.
-The fixed multiplier $m/K$ reaches $0.670$ and $8504$ on the two infeasible
+The fixed multiplier $(N/K)\,p_i$ reaches $0.670$ and $8504$ on the two infeasible
 instances and diverges on the aligned ones.}
 \label{tab:overall}
 \small\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lccccc}
 \toprule
-Instance & \avot{} & unif.\ avg & upsamp. & LDS & full \\
+Instance & \avot{} & blind avg. & upsamp. & LDS & full \\
 \midrule
 Adult, $\nu{=}0.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.2073$ \\
 Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & $0.2073$ \\
@@ -650,6 +653,7 @@ the nonconvex case remains open.
 \clearpage
 \renewcommand{\refname}{REFERENCES}
 
+\balance
 \begin{thebibliography}{99}\setlength{\itemsep}{-2pt}\small
 
 \bibitem{buolamwini2018gender}
