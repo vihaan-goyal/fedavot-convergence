@@ -70,6 +70,37 @@ Where this goes: two more columns in Table 1 (or a small table in the extended v
 sentence in E1: "self-normalized upsampling recovers most of the gain and transport the rest;
 the un-normalized version is the fixed multiplier, which diverges."
 
+## Winner table (overall objective; Welch t, population std, 5 seeds; |t| >= 2.8 called significant)
+
+| Instance | nu | GAVOT | group-blind | upsample | downsample | LDS | full | winner (excl. full) | runner-up | t | significant? |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Adult infeasible | .60 | **0.2269** | 0.2479 | 0.2288 | 0.2308 | n/a | 0.2073 | GAVOT | upsample | 5.75 | yes |
+| Adult feasible | 0 | 0.2075 | 0.2077 | 0.2075 | 0.2075 | n/a | 0.2073 | GAVOT | downsample / upsample | 0.44 | no (all convex rules tie, Prop. 2) |
+| IMDb infeasible | .31 | **86.06** | 91.63 | 86.74 | 86.90 | 94.28 | 82.95 | GAVOT | upsample | 2.55 | borderline, not at our threshold |
+| IMDb feasible | 0 | 84.28 | 86.37 | 84.40 | 84.40 | 89.43 | 82.95 | GAVOT | upsample / downsample | 0.92 | no |
+
+GAVOT vs group-blind is significant in every cell (t 40 / 6.3 / 19 / 11 with the same convention,
+from VERIFICATION_2026-09-17.md); the closeness above is GAVOT vs upsampling only.
+
+## Groups where full coverage is NOT the best rule
+
+| Instance | group | target share | GAVOT | group-blind | upsample | downsample | LDS | full |
+|---|---|---|---|---|---|---|---|---|
+| Adult infeasible | White (majority, 85% of data) | 1/5 | .339 | **.332** | .337 | .337 | n/a | .379 |
+| IMDb infeasible | tier 2 | mid | 97.3 | 97.3 | 93.9 | **93.7** | 98.0 | 97.2 |
+| IMDb infeasible | tier 5 (least important) | smallest | 115.3 | 96.6 | 111.6 | 111.6 | **95.0** | 116.7 |
+| IMDb feasible | tier 2 | mid | 98.5 | **93.7** | 95.2 | 95.2 | 95.1 | 97.2 |
+| IMDb feasible | tier 5 | smallest | 117.8 | **107.7** | 114.7 | 114.7 | 108.4 | 116.7 |
+
+Why: full coverage is the exact minimizer of the p-weighted objective, so it spends model capacity
+where p is large and gives it up where p is small. The groups above are exactly the low-p ones
+(White holds 85% of the data but only 1/5 of the target; tier 5 is the bottom importance
+quintile), so the target itself asks for them to be traded away. Rules that under-correct toward
+the observed distribution (group-blind, LDS, and to a lesser degree upsampling) spread effort more
+evenly and therefore look better on precisely these groups, and worse on the objective and on
+the least represented group. GAVOT sits closest to full on every row, which is the intended
+behaviour: it optimizes the stated objective, not each group in isolation.
+
 ## Adult 16k check (decay, tail-500 of 16000 vs 4000)
 
 | beta | nu | gain at 4k | gain at 16k | Delta_floor | GAVOT 16k | full 16k |
