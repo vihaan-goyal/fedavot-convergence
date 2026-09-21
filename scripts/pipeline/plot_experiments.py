@@ -39,17 +39,20 @@ MODELS_ORDER = ("fedavot", "fedavot_cvar", "fedcvar", "fedavg", "full")
 GRID_MODELS = ("fedavot_cvar", "fedcvar")
 COL = {"fedavot": "tab:blue", "fedavot_cvar": "tab:green", "fedcvar": "tab:purple",
        "fedavg": "tab:orange", "fedavg_mk": "tab:brown", "full": "tab:red",
-       "ipw": "tab:pink", "downsample": "tab:gray"}
+       "ipw": "tab:pink", "downsample": "tab:gray", "lds": "tab:olive"}
 LBL_FL = {"fedavot": "FedAVOT", "fedavot_cvar": "FedAVOT + CVaR",
           "fedcvar": "FedCVaR (uniform agg)", "fedavg": "FedAvg (uniform over K)", "fedavg_mk": "FedAvg(K) fixed m/K",
           "ipw": "Upsampling (IPW, self-normalized)", "downsample": "Downsampling (majority down-weighted)",
+          "lds": "LDS imbalanced regression (Yang et al. 2021)",
           "full": "FedAvg (full)"}
 LBL_DEFED = {"fedavot": "FedAVOT", "fedavot_cvar": "FedAVOT + CVaR",
              "fedcvar": "CVaR, uniform average", "fedavg": "Uniform average over K", "fedavg_mk": "Fixed multiplier $m/K$",
              "ipw": "Upsampling ($p_i/\\pi_i$, normalized)", "downsample": "Downsampling ($\\min(p_i/\\pi_i,1)$)",
+             "lds": "LDS (label-density reweighting)",
              "full": "Full coverage"}
 SHORT = {"fedavot": "FedAVOT", "fedavot_cvar": "+CVaR", "fedcvar": "FedCVaR",
-         "fedavg": "FedAvg(unif)", "fedavg_mk": "FedAvg(m/K)", "ipw": "upsample", "downsample": "downsample", "full": "full"}
+         "fedavg": "FedAvg(unif)", "fedavg_mk": "FedAvg(m/K)", "ipw": "upsample", "downsample": "downsample",
+         "lds": "LDS", "full": "full"}
 DS_LABEL = {"imdbwiki": "IMDb-Wiki age regression", "adult": "Adult income classification"}
 YLABEL_FL = {"imdbwiki": "Global p-weighted MSE (log)",
              "adult": r"Objective $F(\theta)$ (group-uniform CE, log)"}

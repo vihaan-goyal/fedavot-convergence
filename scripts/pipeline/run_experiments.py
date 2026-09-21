@@ -38,7 +38,7 @@ import numpy as np
 import pandas as pd
 
 GRID_MODELS = ("fedavot_cvar", "fedcvar")     # swept over the (alpha, gamma) grid
-FREE_MODELS = ("fedavot", "fedavg", "fedavg_mk", "ipw", "downsample")   # single config each (no alpha/gamma)
+FREE_MODELS = ("fedavot", "fedavg", "fedavg_mk", "ipw", "downsample", "lds")   # single config each (no alpha/gamma)
 ALL_MODELS = GRID_MODELS + FREE_MODELS + ("full",)
 UNIF_AGG = {"fedcvar", "fedavg"}              # rows aggregated uniformly (1/K)
 MK_AGG = {"fedavg_mk"}                        # the paper's fixed multiplier: (N/K) * p_i (not convex)
@@ -47,6 +47,25 @@ MK_AGG = {"fedavg_mk"}                        # the paper's fixed multiplier: (N
 IPW_AGG = {"ipw"}                             # upsampling as reweighting: w_i ~ p_i / pi_i, renormalized
 DOWN_AGG = {"downsample"}                     # downsampling: w_i ~ min(p_i / pi_i, 1), renormalized
                                               #   (over-observed groups are down-weighted, starved ones untouched)
+LDS_AGG = {"lds"}                             # imbalanced regression (Yang et al., ICML 2021, dir.csail.mit.edu):
+                                              #   label distribution smoothing, group weight = mean over its samples of
+                                              #   1 / (Gaussian-smoothed label density), renormalized over the batch.
+                                              #   Regression only (IMDb-Wiki ages); FDS needs deep features, not applicable.
+
+
+def lds_group_weights(y_all, kernel_size=5, sigma=2.0):
+    """LDS (Yang et al. 2021) at group level: bin the labels at unit width, smooth the histogram with a
+    Gaussian kernel (their defaults ks=5, sigma=2), weight every sample by the inverse smoothed density
+    (their 'INV' weighting, normalized to mean 1), and average within each group -> (N,) weights."""
+    y = y_all.ravel()
+    lo = np.floor(y.min()); bins = (np.floor(y) - lo).astype(int)
+    counts = np.bincount(bins, minlength=int(np.floor(y.max()) - lo) + 1).astype(float)
+    half = kernel_size // 2
+    k = np.exp(-0.5 * (np.arange(-half, half + 1) / sigma) ** 2); k /= k.sum()
+    dens = np.convolve(counts, k, mode="same")
+    w = 1.0 / np.maximum(dens[bins], 1e-12)
+    w /= w.mean()
+    return w.reshape(y_all.shape).mean(axis=1)
 
 DATASET_LR = {"imdbwiki": 0.01, "adult": 0.1}
 DATASET_ETA_T = {"imdbwiki": 0.05, "adult": 0.005}   # adult = LR/20 heuristic (untested
@@ -484,6 +503,11 @@ def run_unit(dataset, regime, seed, table, has_full, data, tp, groups, args, lr,
     ipw = np.array([row["model"] in IPW_AGG for row in table], dtype=bool)
     down = np.array([row["model"] in DOWN_AGG for row in table], dtype=bool)
     ratio_all = p / np.maximum(tp["pi"], 1e-300)          # p_i / pi_i, the under-observation ratio
+    lds = np.array([row["model"] in LDS_AGG for row in table], dtype=bool)
+    if lds.any():
+        if task != "mse":
+            raise SystemExit("model 'lds' (label distribution smoothing) is defined for regression only (imdbwiki)")
+        lds_w = lds_group_weights(y_all)
 
     draws = np.searchsorted(tp["q_cum"], np.random.RandomState(seed).rand(R))
     user_every = max(1, args.user_log_every)
@@ -534,6 +558,9 @@ def run_unit(dataset, regime, seed, table, has_full, data, tp, groups, args, lr,
                 if down.any():
                     dw = np.minimum(ratio_all[users], 1.0); dw = dw / dw.sum()
                     Agg = np.where(down[:, None], dw[None, :], Agg)
+                if lds.any():
+                    lw = lds_w[users]; lw = lw / lw.sum()
+                    Agg = np.where(lds[:, None], lw[None, :], Agg)
                 W_new = np.einsum('ck,ckd->cd', Agg, Wl)
                 t_new = (Agg * Tvl).sum(axis=1)
                 W_grid = np.where(alive[:C, None], W_new, W_grid)
