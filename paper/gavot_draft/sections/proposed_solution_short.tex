@@ -65,7 +65,7 @@ $p_4$ unreachable.}
 
 \noindent\textbf{When alignment is possible.}
 Existence is a supply--demand question on the bipartite graph $E$, settled
-by flow duality (proofs in the extended version).
+by flow duality (proofs omitted for space).
 
 \begin{theorem}[Feasibility, {\cite[Thm.~1]{rahimi2025fedavot}}]
 \label{thm:feas}
@@ -97,7 +97,8 @@ $p_i\le K/N$; $\nu$ is the axis Sec.~\ref{sec:exp} sweeps.
 Given feasibility, a coupling is obtained by Sinkhorn scaling on the masked
 support \cite{sinkhorn1967,cuturi2013,peyre2019},
 $O(|E|)$ per sweep with $M$ the number of \emph{realized} compositions,
-once, offline. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
+once, offline; training then adds one lookup and one multiply per group per
+step. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
 column $Y[\cdot,j]$ is a probability vector on $A_j$, the property each
 bound uses. Algorithm~\ref{alg:gavot} is the resulting method; $\gamma=1$ is
 the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}.
@@ -160,10 +161,10 @@ singletons, so groups with $p_i>r_i$ are truncated at their observation rate.
 
 \begin{theorem}[Infeasible regime]
 \label{thm:infeasible}
-Let $\hat p$ be the row marginal of the Sinkhorn limit,
-$\theta^\dagger\in\argmin_{\mathcal{C}}F_{\hat p}$, and write
-$\Phi(w)\triangleq F_p\big(\argmin_{\mathcal{C}} F_w\big)$ for the $p$-risk of
-the minimizer of the $w$-weighted risk. Then
+Let $\hat p$ be the row marginal of the Sinkhorn limit and
+$\theta^\dagger\in\argmin_{\mathcal{C}}F_{\hat p}$. For a weight vector $w$
+write $\Phi(w)\triangleq F_p(\argmin_{\mathcal{C}} F_w)$, the $p$-risk of the
+minimizer of the $w$-weighted risk. Then
 \begin{equation}
 \E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)
 \;=\;\underbrace{\Phi(\hat p)-\Phi(p)}_{\text{alignment floor}}

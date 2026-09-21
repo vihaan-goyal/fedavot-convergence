@@ -72,9 +72,10 @@ and any method that minimizes $F_{\tilde p}$ exactly incurs the excess
 $F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le 2M\|p-\tilde p\|_1$ on
 \eqref{eq:target}, which does not vanish with $T$.
 \end{proposition}
-\noindent (Proof in the extended version.) The choice of $p$ is thus decorative
+\noindent (Proof omitted for space.) The choice of $p$ is thus decorative
 unless the aggregation step changes: the bias $p-\tilde p$ survives every
 stepsize schedule, rebalancing the sampler cannot help a group with $p_i>r_i$
-since $\tilde p_i\le r_i$ always. The question of \cite{rahimi2025fedavot},
-read on batches: \emph{can the per-batch group weights be chosen so that SGD driven
+since $\tilde p_i\le r_i$ always, and upscaling the examples that do appear
+destabilizes the iterates \cite{rahimi2025fedavot}. The question, read on
+batches: \emph{can the per-batch group weights be chosen so that SGD driven
 by $q$ converges for the objective defined by $p$?}
