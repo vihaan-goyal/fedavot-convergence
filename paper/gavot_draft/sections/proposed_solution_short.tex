@@ -95,8 +95,7 @@ $p_i\le K/N$; $\nu$ is the axis Sec.~\ref{sec:exp} sweeps.
 Given feasibility, a coupling is obtained by Sinkhorn scaling on the masked
 support \cite{sinkhorn1967,cuturi2013,peyre2019},
 $O(|E|)$ per sweep with $M$ the number of \emph{realized} compositions,
-once, offline; training then adds one lookup and one multiply per group per
-step. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
+once, offline. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
 column $Y[\cdot,j]$ is a probability vector on $A_j$, the property each
 bound uses. Algorithm~\ref{alg:gavot} is the resulting method; $\gamma=1$ is
 the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}.

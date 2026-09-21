@@ -229,9 +229,8 @@ $F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le 2M\|p-\tilde p\|_1$ on
 \noindent (Proof omitted for space.) The choice of $p$ is thus decorative
 unless the aggregation step changes: the bias $p-\tilde p$ survives every
 stepsize schedule, rebalancing the sampler cannot help a group with $p_i>r_i$
-since $\tilde p_i\le r_i$ always, and upscaling the examples that do appear
-destabilizes the iterates \cite{rahimi2025fedavot}. The question, read on
-batches: \emph{can the per-batch group weights be chosen so that SGD driven
+since $\tilde p_i\le r_i$ always. The question of \cite{rahimi2025fedavot},
+read on batches: \emph{can the per-batch group weights be chosen so that SGD driven
 by $q$ converges for the objective defined by $p$?}
 
 % =====================================================================
@@ -331,8 +330,7 @@ $p_i\le K/N$; $\nu$ is the axis Sec.~\ref{sec:exp} sweeps.
 Given feasibility, a coupling is obtained by Sinkhorn scaling on the masked
 support \cite{sinkhorn1967,cuturi2013,peyre2019},
 $O(|E|)$ per sweep with $M$ the number of \emph{realized} compositions,
-once, offline; training then adds one lookup and one multiply per group per
-step. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
+once, offline. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
 column $Y[\cdot,j]$ is a probability vector on $A_j$, the property each
 bound uses. Algorithm~\ref{alg:gavot} is the resulting method; $\gamma=1$ is
 the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}.
@@ -522,28 +520,28 @@ IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & $82.95$ \\
 \end{table}
 
 % ----------------------------------------------------------- Fig 2
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{figs/severity_imdb.pdf}
+\includegraphics[width=\textwidth]{figs/severity_imdb.pdf}
 \caption{IMDb-Wiki severity sweep: measured tail-500 (solid, $\pm1$ std)
 against the exact floor $\Phi(\cdot)$ of each rule (dashed). Left, constant
 stepsize: the residual swamps the alignment gain and transport loses
 everywhere. Right, decaying: the curves track their floors and transport wins
 until the floors close at high $\nu$.}
-\vspace{-6pt}
+\vspace{-10pt}
 \label{fig:severity}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{figs/rare_group_fit.pdf}
+\includegraphics[width=\textwidth]{figs/rare_group_fit.pdf}
 \caption{Loss on the least represented group, decaying stepsize: Adult,
 cross-entropy on race Other ($p_i=0.2$) against the observation exponent;
 IMDb-Wiki, MSE on the $20$ top-importance identities, the least observed
 once $\beta>0$. Same runs as Table~\ref{tab:overall}.}
-\vspace{-6pt}
+\vspace{-10pt}
 \label{fig:rare}
-\end{figure}
+\end{figure*}
 
 \noindent\textbf{E1: the headline cells.}
 Table~\ref{tab:overall} reports the four headline instances. Transport wins
@@ -551,10 +549,8 @@ on three: Adult under prevalence availability,
 $0.2269$ against $0.2479$ ($t{=}45$), and both IMDb cells, $86.06$ against
 $91.63$ ($t{=}21$) and $84.28$ against $86.37$ ($t{=}13$); on Adult aligned
 the two coincide at the oracle value, as Proposition~\ref{prop:surrogate}
-predicts when $\tilde p=p$. The fixed multiplier diverges on both aligned
-instances and is far off on the other two. Self-normalized upsampling, the
-reweighting form of oversampling rare groups, recovers most of the gain and
-transport the rest ($t{=}5.8$, $2.6$ against it); downsampling never beats
+predicts when $\tilde p=p$. Self-normalized upsampling
+recovers most of the gain and transport the rest ($t{=}5.8$, $2.6$ against it); downsampling never beats
 it, and LDS, which reweights by label rarity rather than group observation,
 trails even group-blind averaging. On the least represented group the
 margin over upsampling widens ($77.0$ against $80.0$, $73.6$ against $75.6$
@@ -564,14 +560,12 @@ on IMDb-Wiki).
 Fig.~\ref{fig:rare} reads the same runs on the group the target exists for.
 On Adult, transport lowers the loss on race Other at every skew: $.073$
 against $.119$ on the prevalence instance (full $.031$), $.031$ against
-$.035$ aligned, matching full; Amer-Indian behaves the same way. On
-IMDb-Wiki the top-importance identities show the crossover of
+$.035$ aligned, matching full. On IMDb-Wiki the top-importance identities show the crossover of
 Table~\ref{tab:severity} one step earlier: transport wins at $\nu\le.70$
 ($77.0$ against $86.4$ at $\nu{=}.31$, full $72.2$; $73.6$ against $79.9$
 aligned) and loses at the three most infeasible skews. The single most
 starved group (largest $p_i/r_i$) is Other itself on Adult and the top
-identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}.31$ (full $219$; a
-$30$-image group, $\pm5$ to $10$ across seeds).
+identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}.31$ (full $219$).
 
 % ----------------------------------------------------------- Table 2
 \begin{table}[t]
@@ -599,8 +593,7 @@ $3.0$ & $.88$ & $0.02$ & $-2.28$ & $-7.9$ \\
 
 \noindent\textbf{E3: the crossover, and where the sign comes from.}
 On Adult (Table~\ref{tab:severity}, Fig.~\ref{fig:severity}) the measured gain tracks $\Delta_{\mathrm{floor}}$ within $4\%$ at
-three of five skews ($.0134$ against $.0129$, $.0050$ against $.0049$,
-$.0002$ against $.0003$) and exceeds it at the two most infeasible ($.0210$
+three of five skews and exceeds it at the two most infeasible ($.0210$
 against $.0110$, $.0181$ against $.0144$). On IMDb-Wiki the gain sits below
 the floor by a residual close to constant in $\beta$, mean $1.9$, and the
 sign flips exactly where $\Delta_{\mathrm{floor}}$ crosses that value,
@@ -611,7 +604,7 @@ where transport loses or ties included.
 
 \noindent\textbf{E4: why the sign flips.}
 At constant stepsize (Fig.~\ref{fig:severity}, left) transport loses on all
-six IMDb skews, by up to $7.9$, with floors up to $6.99$ apart. A
+six IMDb skews, by up to $7.9$. A
 starved group has $p_i>r_i$, so $\hat p$ truncates at the observation rate;
 as $\nu$ grows $\hat p$ and $\tilde p$ starve the same groups and the floors
 converge ($\Delta_{\mathrm{floor}}$ from $6.99$ to $0.02$, both $105.9$ at
@@ -621,7 +614,7 @@ group whenever it appears, so its variance about the mean is larger
 stepsize the iterates sit on a noise floor proportional to it. Under
 $\eta_t=\eta/(1+t/1000)$ that floor decays, the curves fall onto their
 dashed floors, and what remains is the residual, $2.3$ at $\nu{=}.88$, the
-one significant loss. Transport helps exactly while there is mass left to move.
+one significant loss.
 
 \noindent\textbf{E5: risk aversion, and where it does not help.}
 On a $10\times10$ $(\alpha,\gamma)$ grid the overall objective is minimized
@@ -629,12 +622,9 @@ on the $\gamma=1$ edge of every instance: risk aversion costs the average. It ea
 Adult under prevalence availability: \avotcvar{} at $(0.2,0.7)$ reaches
 $0.3624$ against $0.3679$ for \avot{} and $0.3994$ for group-blind averaging. On the least represented group the layer
 never helps: the grid's best rare-group loss is at $\gamma{=}1$ on all four
-headline instances, and $(0.1,0.1)$ nearly triples the loss on Other
-($.207$ against $.073$) and lifts the IMDb-Wiki top identities from $77.0$
-to $103$. CVaR tilts among the groups present in the batch, and the rare
+headline instances. CVaR tilts among the groups present in the batch, and the rare
 group is absent from most; on top of transport it multiplies weights already
-$p_i/r_i$ large and amplifies variance, not alignment. Risk aversion changes
-the functional, not who is observed.
+$p_i/r_i$ large and amplifies variance, not alignment.
 
 % =====================================================================
 
@@ -646,9 +636,7 @@ the functional, not who is observed.
 Group-fair training fails at one fixable place: the aggregation step, blind
 to the weighting the objective declares. Reading a minibatch as a
 partial-participation event makes the fix the masked transport problem of
-federated learning, with its feasibility characterization, an $O(1/\sqrt{T})$
-guarantee free of batch coverage, and a coverage law whose infeasible mass
-$\nu$ orders instances by severity. Transport is worth applying while the
+federated learning. Transport is worth applying while the
 alignment gain exceeds the optimization residual, both computable before
 training, and the residual is a stepsize artifact a decaying schedule removes;
 the nonconvex case remains open.
