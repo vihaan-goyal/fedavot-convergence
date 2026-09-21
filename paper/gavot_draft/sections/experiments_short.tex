@@ -21,14 +21,13 @@ p^{\beta}$, $\beta\in\{0,\tfrac14,\tfrac12,\tfrac34,1\}$, from prevalence
 $\beta\in\{0,\tfrac12,1,\tfrac32,2,3\}$, from uniform ($\nu{=}.31$) to the
 mirror image of $p$ ($\nu{=}.88$), plus aligned $r_i\propto 101-i$
 ($\nu{=}0$): eleven instances. Each step observes $K{=}3$ groups drawn
-$\propto r$, each taking $H{=}5$ local steps before the weighted average,
-for every rule alike: \avot{}; \emph{group-blind averaging}, uniform over
+$\propto r$, each taking $H{=}5$ local steps before the weighted average: \avot{}; \emph{group-blind averaging}, uniform over
 the observed groups ($\tilde p_i=r_i/K$); the \emph{fixed multiplier}
 $m/K$; \emph{full}, every group every step weighted by $p$. Stepsize
 $\eta_t=\eta/(1+t/1000)$, fixed before the comparison and shared by every
 rule (faster decays widen the IMDb-Wiki gap, never flip a winner), $4000$
 steps, $5$ seeds, $F_p$ over the last $500$ steps. Floors are exact; full
-protocol and closed-form check in the appendix, unabridged discussion in the
+protocol, proofs, closed-form check and unabridged discussion are in the
 extended version.
 
 % ----------------------------------------------------------- Table 1
@@ -36,18 +35,19 @@ extended version.
 \centering
 \caption{Headline cells, tail-500 over $5$ seeds, decaying stepsize. \emph{full}:
 every group every step; \emph{upsamp.}: weights $\propto p_i/r_i$ within the
-batch; LDS \cite{yang2021dir}: label-distribution smoothing, regression only;
-$m/K$ diverges under non-uniform observation.}
+batch; LDS \cite{yang2021dir}: label-distribution smoothing, regression only.
+The fixed multiplier $m/K$ reaches $0.670$ and $8504$ on the two infeasible
+instances and diverges on the aligned ones.}
 \label{tab:overall}
-\footnotesize\setlength{\tabcolsep}{2.2pt}
-\begin{tabular}{lcccccc}
+\small\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccccc}
 \toprule
-Instance & \avot{} & unif.\ avg & upsamp. & LDS & $m/K$ & full \\
+Instance & \avot{} & unif.\ avg & upsamp. & LDS & full \\
 \midrule
-Adult, $\nu{=}.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.670$ & $0.2073$ \\
-Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & div. & $0.2073$ \\
-IMDb, $\nu{=}.31$  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $8504$ & $82.95$ \\
-IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & div. & $82.95$ \\
+Adult, $\nu{=}.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.2073$ \\
+Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & $0.2073$ \\
+IMDb, $\nu{=}.31$  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $82.95$ \\
+IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & $82.95$ \\
 \bottomrule
 \end{tabular}
 \vspace{-8pt}
@@ -56,7 +56,7 @@ IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & div. & $82.9
 % ----------------------------------------------------------- Fig 2
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.82\columnwidth]{figs/severity_imdb.pdf}
+\includegraphics[width=\columnwidth]{figs/severity_imdb.pdf}
 \caption{IMDb-Wiki severity sweep: measured tail-500 (solid, $\pm1$ std)
 against the exact floor $\Phi(\cdot)$ of each rule (dashed). Left, constant
 stepsize: the residual swamps the alignment gain and transport loses
@@ -68,7 +68,7 @@ until the floors close at high $\nu$.}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.86\columnwidth]{figs/rare_group_fit.pdf}
+\includegraphics[width=\columnwidth]{figs/rare_group_fit.pdf}
 \caption{Loss on the least represented group, decaying stepsize: Adult,
 cross-entropy on race Other ($p_i=0.2$) against the observation exponent;
 IMDb-Wiki, MSE on the $20$ top-importance identities, the least observed
@@ -83,8 +83,7 @@ on three: Adult under prevalence availability,
 $0.2269$ against $0.2479$ ($t{=}45$), and both IMDb cells, $86.06$ against
 $91.63$ ($t{=}21$) and $84.28$ against $86.37$ ($t{=}13$); on Adult aligned
 the two coincide at the oracle value, as Proposition~\ref{prop:surrogate}
-predicts when $\tilde p=p$. The fixed multiplier diverges on both aligned
-instances and is far off on the other two. Self-normalized upsampling, the
+predicts when $\tilde p=p$. Self-normalized upsampling, the
 reweighting form of oversampling rare groups, recovers most of the gain and
 transport the rest ($t{=}5.8$, $2.6$ against it); downsampling never beats
 it, and LDS, which reweights by label rarity rather than group observation,
@@ -96,14 +95,12 @@ on IMDb-Wiki).
 Fig.~\ref{fig:rare} reads the same runs on the group the target exists for.
 On Adult, transport lowers the loss on race Other at every skew: $.073$
 against $.119$ on the prevalence instance (full $.031$), $.031$ against
-$.035$ aligned, matching full; Amer-Indian behaves the same way. On
-IMDb-Wiki the top-importance identities show the crossover of
+$.035$ aligned, matching full. On IMDb-Wiki the top-importance identities show the crossover of
 Table~\ref{tab:severity} one step earlier: transport wins at $\nu\le.70$
 ($77.0$ against $86.4$ at $\nu{=}.31$, full $72.2$; $73.6$ against $79.9$
 aligned) and loses at the three most infeasible skews. The single most
 starved group (largest $p_i/r_i$) is Other itself on Adult and the top
-identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}.31$ (full $219$; a
-$30$-image group, $\pm5$ to $10$ across seeds).
+identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}.31$ (full $219$).
 
 % ----------------------------------------------------------- Table 2
 \begin{table}[t]
@@ -111,7 +108,7 @@ $30$-image group, $\pm5$ to $10$ across seeds).
 \caption{IMDb-Wiki severity sweep, decaying stepsize: $\Delta_{\mathrm{floor}}$
 the alignment gain of Theorem~\ref{thm:infeasible}, \emph{gain} the measured
 advantage of transport, $t$ its Welch statistic. The residual averages $1.9$;
-the sign flips where $\Delta_{\mathrm{floor}}$ crosses it. Adult: appendix.}
+the sign flips where $\Delta_{\mathrm{floor}}$ crosses it. Adult skews: extended version.}
 \label{tab:severity}
 \setlength{\tabcolsep}{3.0pt}
 \begin{tabular}{ccccc}
@@ -131,8 +128,7 @@ $3.0$ & $.88$ & $0.02$ & $-2.28$ & $-7.9$ \\
 
 \noindent\textbf{E3: the crossover, and where the sign comes from.}
 On Adult (Table~\ref{tab:severity}, Fig.~\ref{fig:severity}) the measured gain tracks $\Delta_{\mathrm{floor}}$ within $4\%$ at
-three of five skews ($.0134$ against $.0129$, $.0050$ against $.0049$,
-$.0002$ against $.0003$) and exceeds it at the two most infeasible ($.0210$
+three of five skews and exceeds it at the two most infeasible ($.0210$
 against $.0110$, $.0181$ against $.0144$). On IMDb-Wiki the gain sits below
 the floor by a residual close to constant in $\beta$, mean $1.9$, and the
 sign flips exactly where $\Delta_{\mathrm{floor}}$ crosses that value,
@@ -147,11 +143,10 @@ six IMDb skews, by up to $7.9$, with floors up to $6.99$ apart. A
 starved group has $p_i>r_i$, so $\hat p$ truncates at the observation rate;
 as $\nu$ grows $\hat p$ and $\tilde p$ starve the same groups and the floors
 converge ($\Delta_{\mathrm{floor}}$ from $6.99$ to $0.02$, both $105.9$ at
-$\nu{=}.88$, appendix). Transport still concentrates weight on a starved
-group whenever it appears, $p_i/r_i$ times its batch share:
-Lemma~\ref{lem:variance} bounds the second moment identically for both
-rules, but the variance about the mean is larger, and at constant stepsize
-the iterates sit on a noise floor proportional to it. Under
+$\nu{=}.88$, extended version). Transport still concentrates weight on a starved
+group whenever it appears, so its variance about the mean is larger
+(Lemma~\ref{lem:variance} bounds only the second moment), and at constant
+stepsize the iterates sit on a noise floor proportional to it. Under
 $\eta_t=\eta/(1+t/1000)$ that floor decays, the curves fall onto their
 dashed floors, and what remains is the residual, $2.3$ at $\nu{=}.88$, the
 one significant loss.
@@ -161,11 +156,9 @@ On a $10\times10$ $(\alpha,\gamma)$ grid the overall objective is minimized
 on the $\gamma=1$ edge of every instance: risk aversion costs the average. It earns its keep once, on the worst race of
 Adult under prevalence availability: \avotcvar{} at $(0.2,0.7)$ reaches
 $0.3624$ against $0.3679$ for \avot{} and $0.3994$ for group-blind averaging
-(per-race table in the appendix). On the least represented group the layer
+(per-race table in the extended version). On the least represented group the layer
 never helps: the grid's best rare-group loss is at $\gamma{=}1$ on all four
-headline instances, and $(0.1,0.1)$ nearly triples the loss on Other
-($.207$ against $.073$) and lifts the IMDb-Wiki top identities from $77.0$
-to $103$. CVaR tilts among the groups present in the batch, and the rare
+headline instances. CVaR tilts among the groups present in the batch, and the rare
 group is absent from most; on top of transport it multiplies weights already
 $p_i/r_i$ large and amplifies variance, not alignment.
 

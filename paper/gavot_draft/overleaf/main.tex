@@ -44,7 +44,7 @@
 \newcommand{\best}[1]{\textbf{#1}}
 
 % ---------------------------------------------------------------- title
-\title{Group-Fair Stochastic Gradient Descent \\ via Masked Optimal Transport}
+\title{GROUP-FAIR STOCHASTIC GRADIENT DESCENT \\ VIA MASKED OPTIMAL TRANSPORT}
 
 \name{Herlock (SeyedAbolfazl) Rahimi \qquad Amtej Sodhi \qquad Vihaan Goyal \qquad Dionysis Kalogerias%
 \thanks{This work is supported by NSF under Grant 2242215.}}
@@ -54,26 +54,23 @@
 \begin{document}
 \ninept
 \maketitle
+\pagestyle{empty}\thispagestyle{empty}
 
 \begin{abstract}
 Minibatch SGD is group-blind: which groups appear in a batch is decided by
 their prevalence in the data, not by how much they are meant to count in the
-objective, and when the two disagree the iterates converge to a
-prevalence-weighted surrogate rather than to the target risk. A minibatch is a
+objective, so SGD optimizes a prevalence-weighted surrogate. A minibatch is a
 partial-participation event over groups, so we carry the masked optimal
-transport construction of \textsf{FedAVOT} across. Aligning the
-batch-composition law $q$ with the target importance $p$ yields per-batch group
-weights whose stochastic subgradient is exactly unbiased for the target risk,
-with the standard $O(1/\sqrt{T})$ rate and a constant independent of batch
-coverage. Alignment is feasible under a Hall-type condition that reduces to
-importance not exceeding observation rate; past it, Sinkhorn returns an
-information projection whose residual we compute in closed form, splitting the
-excess risk into an alignment gain fixed by the instance and an optimization
-residual paid by the estimator. A severity sweep over eleven availability skews
-on Adult and IMDb-Wiki shows the two crossing where the decomposition predicts;
-the residual is a stepsize artifact a decaying schedule removes. A mean--CVaR
-layer composed on top reaches the worst group at rate
-$O(\kappa(\alpha,\gamma)/\sqrt{T})$.
+transport construction of \textsf{FedAVOT} across: aligning the
+batch-composition law $q$ with the target importance $p$ yields per-batch
+group weights whose stochastic subgradient is exactly unbiased, at the
+standard $O(1/\sqrt{T})$ rate. Alignment is feasible under a Hall-type
+condition; past it, Sinkhorn returns an information projection whose
+residual we compute in closed form, splitting the excess risk into an
+alignment gain fixed by the instance and an optimization residual paid by
+the estimator. A sweep over eleven availability skews on Adult and IMDb-Wiki
+shows the two crossing where the decomposition predicts. A mean--CVaR layer
+on top reaches the worst group at rate $O(\kappa(\alpha,\gamma)/\sqrt{T})$.
 \end{abstract}
 
 \begin{keywords}
@@ -115,8 +112,7 @@ help a group with $p_i>r_i$; re-weighting the examples that do appear, the
 reweighting form of up-sampling, is a one-shot heuristic for a marginal
 problem this paper solves exactly, and its un-normalized form, the fixed
 multiplier, destabilizes the iterates
-\cite{rahimi2025fedavot}. Label-distribution smoothing \cite{yang2021dir}
-re-weights by label rarity, not by how rarely a group is observed.
+\cite{rahimi2025fedavot}.
 
 \noindent\textbf{Other algorithms.}
 Reduction methods for group fairness return randomized mixtures or carry an
@@ -139,11 +135,10 @@ method \avot{}; the aggregation rule is that of \textsf{FedAVOT}.
 
 \noindent\textbf{Contributions.}
 \begin{enumerate}\itemsep0pt\parskip0pt\topsep2pt
-\item \emph{The reduction} (Sec.~\ref{sec:setup}). Group-blind minibatch SGD reduces, under
-uniform-within-batch averaging, to agnostic \textsf{FedAvg} with one local step, so the surrogate identity of
-\cite{rahimi2025agnostic} names the function SGD actually minimizes, and
-transport weights make the batch subgradient exactly unbiased for $\nabla F_p$
-(Lemma~\ref{lem:unbiased}).
+\item \emph{The reduction} (Sec.~\ref{sec:setup}). Group-blind minibatch SGD is
+agnostic \textsf{FedAvg} with one local step, so \cite{rahimi2025agnostic} names
+the function it minimizes, and transport weights make the batch subgradient
+exactly unbiased for $\nabla F_p$ (Lemma~\ref{lem:unbiased}).
 \item \emph{A coverage law, a severity measure, and the crossover}
 (Cor.~\ref{cor:batchsize}, Thm.~\ref{thm:infeasible}, Sec.~\ref{sec:exp}).
 Feasibility is Hall-type and reduces on singletons to $p_i\le r_i$, so the
@@ -233,12 +228,11 @@ and any method that minimizes $F_{\tilde p}$ exactly incurs the excess
 $F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le 2M\|p-\tilde p\|_1$ on
 \eqref{eq:target}, which does not vanish with $T$.
 \end{proposition}
-\noindent (Proof in the appendix.) The choice of $p$ is thus decorative
+\noindent (Proof in the extended version.) The choice of $p$ is thus decorative
 unless the aggregation step changes: the bias $p-\tilde p$ survives every
 stepsize schedule, rebalancing the sampler cannot help a group with $p_i>r_i$
-since $\tilde p_i\le r_i$ always, and upscaling the examples that do appear
-destabilizes the iterates \cite{rahimi2025fedavot}. The question, read on
-batches: \emph{can the per-batch group weights be chosen so that SGD driven
+since $\tilde p_i\le r_i$ always. The question of \cite{rahimi2025fedavot},
+read on batches: \emph{can the per-batch group weights be chosen so that SGD driven
 by $q$ converges for the objective defined by $p$?}
 
 % ---- inlined from sections/proposed_solution_short.tex ----
@@ -254,10 +248,9 @@ by $q$ converges for the objective defined by $p$?}
 \noindent\textbf{Weights as a coupling.}
 Let $Y[i,j]\ge 0$ be the weight of group $i$ when the active set is $A_j$,
 $Y[i,j]=0$ for $i\notin A_j$, and $T[i,j]\triangleq q_jY[i,j]$ the joint
-mass carried from composition $j$ to group $i$. Requiring the weights to be
-a probability vector on each realized composition and to reproduce $p$ in
-expectation is the \emph{masked optimal transport} (MOT) feasibility problem
-of \cite{rahimi2025fedavot},
+mass carried from composition $j$ to group $i$. Weights that form a probability vector on each realized composition and
+reproduce $p$ in expectation are the \emph{masked optimal transport} (MOT)
+feasibility problem of \cite{rahimi2025fedavot},
 \begin{equation}
 T\mathbf{1}_M=p,\qquad \mathbf{1}_N^\top T=q,\qquad T\ge 0,
 \qquad \mathrm{supp}(T)\subseteq E,
@@ -270,16 +263,16 @@ cannot be weighted, and unlike classical transport
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[
-   node distance=1.5mm,
-   grp/.style={draw,rounded corners=1pt,minimum width=9mm,minimum height=3.4mm,font=\tiny,fill=Periwinkle!20},
-   atm/.style={draw,rounded corners=1pt,minimum width=13mm,minimum height=3.4mm,font=\tiny,fill=YellowOrange!20},
+   node distance=1.2mm,
+   grp/.style={draw,rounded corners=1pt,minimum width=9mm,minimum height=3.4mm,font=\scriptsize,fill=Periwinkle!20},
+   atm/.style={draw,rounded corners=1pt,minimum width=13mm,minimum height=3.4mm,font=\scriptsize,fill=YellowOrange!20},
    e/.style={-{Latex[length=1.2mm]},gray,line width=.35pt},
-   lbl/.style={font=\tiny\itshape}
+   lbl/.style={font=\scriptsize\itshape}
 ]
 \node[grp] (g1) {$g_1$};
 \node[grp,below=of g1] (g2) {$g_2$};
 \node[grp,below=of g2] (g3) {$g_3$};
-\node[grp,below=of g3] (g4) {$g_4$ \tiny(rare)};
+\node[grp,below=of g3] (g4) {$g_4$ (rare)};
 
 \node[atm,right=12mm of g1] (a1) {$A_1=\{1,2\}$};
 \node[atm,below=of a1] (a2) {$A_2=\{1,3\}$};
@@ -310,7 +303,7 @@ $p_4$ unreachable.}
 
 \noindent\textbf{When alignment is possible.}
 Existence is a supply--demand question on the bipartite graph $E$, settled
-by flow duality (proofs in the appendix).
+by flow duality (proofs in the extended version).
 
 \begin{theorem}[Feasibility, {\cite[Thm.~1]{rahimi2025fedavot}}]
 \label{thm:feas}
@@ -340,10 +333,9 @@ $p_i\le K/N$; $\nu$ is the axis Sec.~\ref{sec:exp} sweeps.
 
 \noindent\textbf{Computing the plan.}
 Given feasibility, a coupling is obtained by Sinkhorn scaling on the masked
-support \cite{sinkhorn1967,cuturi2013,peyre2019} (appendix, \eqref{eq:ipfp}),
+support \cite{sinkhorn1967,cuturi2013,peyre2019},
 $O(|E|)$ per sweep with $M$ the number of \emph{realized} compositions,
-once, offline; training then adds one lookup and one multiply per group per
-step. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
+once, offline. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
 column $Y[\cdot,j]$ is a probability vector on $A_j$, the property each
 bound uses. Algorithm~\ref{alg:gavot} is the resulting method; $\gamma=1$ is
 the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}.
@@ -507,14 +499,13 @@ p^{\beta}$, $\beta\in\{0,\tfrac14,\tfrac12,\tfrac34,1\}$, from prevalence
 $\beta\in\{0,\tfrac12,1,\tfrac32,2,3\}$, from uniform ($\nu{=}.31$) to the
 mirror image of $p$ ($\nu{=}.88$), plus aligned $r_i\propto 101-i$
 ($\nu{=}0$): eleven instances. Each step observes $K{=}3$ groups drawn
-$\propto r$, each taking $H{=}5$ local steps before the weighted average,
-for every rule alike: \avot{}; \emph{group-blind averaging}, uniform over
+$\propto r$, each taking $H{=}5$ local steps before the weighted average: \avot{}; \emph{group-blind averaging}, uniform over
 the observed groups ($\tilde p_i=r_i/K$); the \emph{fixed multiplier}
 $m/K$; \emph{full}, every group every step weighted by $p$. Stepsize
 $\eta_t=\eta/(1+t/1000)$, fixed before the comparison and shared by every
 rule (faster decays widen the IMDb-Wiki gap, never flip a winner), $4000$
 steps, $5$ seeds, $F_p$ over the last $500$ steps. Floors are exact; full
-protocol and closed-form check in the appendix, unabridged discussion in the
+protocol, proofs, closed-form check and unabridged discussion are in the
 extended version.
 
 % ----------------------------------------------------------- Table 1
@@ -522,18 +513,19 @@ extended version.
 \centering
 \caption{Headline cells, tail-500 over $5$ seeds, decaying stepsize. \emph{full}:
 every group every step; \emph{upsamp.}: weights $\propto p_i/r_i$ within the
-batch; LDS \cite{yang2021dir}: label-distribution smoothing, regression only;
-$m/K$ diverges under non-uniform observation.}
+batch; LDS \cite{yang2021dir}: label-distribution smoothing, regression only.
+The fixed multiplier $m/K$ reaches $0.670$ and $8504$ on the two infeasible
+instances and diverges on the aligned ones.}
 \label{tab:overall}
-\footnotesize\setlength{\tabcolsep}{2.2pt}
-\begin{tabular}{lcccccc}
+\small\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccccc}
 \toprule
-Instance & \avot{} & unif.\ avg & upsamp. & LDS & $m/K$ & full \\
+Instance & \avot{} & unif.\ avg & upsamp. & LDS & full \\
 \midrule
-Adult, $\nu{=}.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.670$ & $0.2073$ \\
-Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & div. & $0.2073$ \\
-IMDb, $\nu{=}.31$  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $8504$ & $82.95$ \\
-IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & div. & $82.95$ \\
+Adult, $\nu{=}.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.2073$ \\
+Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & $0.2073$ \\
+IMDb, $\nu{=}.31$  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $82.95$ \\
+IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & $82.95$ \\
 \bottomrule
 \end{tabular}
 \vspace{-8pt}
@@ -542,7 +534,7 @@ IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & div. & $82.9
 % ----------------------------------------------------------- Fig 2
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.82\columnwidth]{figs/severity_imdb.pdf}
+\includegraphics[width=\columnwidth]{figs/severity_imdb.pdf}
 \caption{IMDb-Wiki severity sweep: measured tail-500 (solid, $\pm1$ std)
 against the exact floor $\Phi(\cdot)$ of each rule (dashed). Left, constant
 stepsize: the residual swamps the alignment gain and transport loses
@@ -554,7 +546,7 @@ until the floors close at high $\nu$.}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.86\columnwidth]{figs/rare_group_fit.pdf}
+\includegraphics[width=\columnwidth]{figs/rare_group_fit.pdf}
 \caption{Loss on the least represented group, decaying stepsize: Adult,
 cross-entropy on race Other ($p_i=0.2$) against the observation exponent;
 IMDb-Wiki, MSE on the $20$ top-importance identities, the least observed
@@ -569,8 +561,7 @@ on three: Adult under prevalence availability,
 $0.2269$ against $0.2479$ ($t{=}45$), and both IMDb cells, $86.06$ against
 $91.63$ ($t{=}21$) and $84.28$ against $86.37$ ($t{=}13$); on Adult aligned
 the two coincide at the oracle value, as Proposition~\ref{prop:surrogate}
-predicts when $\tilde p=p$. The fixed multiplier diverges on both aligned
-instances and is far off on the other two. Self-normalized upsampling, the
+predicts when $\tilde p=p$. Self-normalized upsampling, the
 reweighting form of oversampling rare groups, recovers most of the gain and
 transport the rest ($t{=}5.8$, $2.6$ against it); downsampling never beats
 it, and LDS, which reweights by label rarity rather than group observation,
@@ -582,14 +573,12 @@ on IMDb-Wiki).
 Fig.~\ref{fig:rare} reads the same runs on the group the target exists for.
 On Adult, transport lowers the loss on race Other at every skew: $.073$
 against $.119$ on the prevalence instance (full $.031$), $.031$ against
-$.035$ aligned, matching full; Amer-Indian behaves the same way. On
-IMDb-Wiki the top-importance identities show the crossover of
+$.035$ aligned, matching full. On IMDb-Wiki the top-importance identities show the crossover of
 Table~\ref{tab:severity} one step earlier: transport wins at $\nu\le.70$
 ($77.0$ against $86.4$ at $\nu{=}.31$, full $72.2$; $73.6$ against $79.9$
 aligned) and loses at the three most infeasible skews. The single most
 starved group (largest $p_i/r_i$) is Other itself on Adult and the top
-identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}.31$ (full $219$; a
-$30$-image group, $\pm5$ to $10$ across seeds).
+identity on IMDb-Wiki, $253$ against $331$ at $\nu{=}.31$ (full $219$).
 
 % ----------------------------------------------------------- Table 2
 \begin{table}[t]
@@ -597,7 +586,7 @@ $30$-image group, $\pm5$ to $10$ across seeds).
 \caption{IMDb-Wiki severity sweep, decaying stepsize: $\Delta_{\mathrm{floor}}$
 the alignment gain of Theorem~\ref{thm:infeasible}, \emph{gain} the measured
 advantage of transport, $t$ its Welch statistic. The residual averages $1.9$;
-the sign flips where $\Delta_{\mathrm{floor}}$ crosses it. Adult: appendix.}
+the sign flips where $\Delta_{\mathrm{floor}}$ crosses it. Adult skews: extended version.}
 \label{tab:severity}
 \setlength{\tabcolsep}{3.0pt}
 \begin{tabular}{ccccc}
@@ -617,8 +606,7 @@ $3.0$ & $.88$ & $0.02$ & $-2.28$ & $-7.9$ \\
 
 \noindent\textbf{E3: the crossover, and where the sign comes from.}
 On Adult (Table~\ref{tab:severity}, Fig.~\ref{fig:severity}) the measured gain tracks $\Delta_{\mathrm{floor}}$ within $4\%$ at
-three of five skews ($.0134$ against $.0129$, $.0050$ against $.0049$,
-$.0002$ against $.0003$) and exceeds it at the two most infeasible ($.0210$
+three of five skews and exceeds it at the two most infeasible ($.0210$
 against $.0110$, $.0181$ against $.0144$). On IMDb-Wiki the gain sits below
 the floor by a residual close to constant in $\beta$, mean $1.9$, and the
 sign flips exactly where $\Delta_{\mathrm{floor}}$ crosses that value,
@@ -633,11 +621,10 @@ six IMDb skews, by up to $7.9$, with floors up to $6.99$ apart. A
 starved group has $p_i>r_i$, so $\hat p$ truncates at the observation rate;
 as $\nu$ grows $\hat p$ and $\tilde p$ starve the same groups and the floors
 converge ($\Delta_{\mathrm{floor}}$ from $6.99$ to $0.02$, both $105.9$ at
-$\nu{=}.88$, appendix). Transport still concentrates weight on a starved
-group whenever it appears, $p_i/r_i$ times its batch share:
-Lemma~\ref{lem:variance} bounds the second moment identically for both
-rules, but the variance about the mean is larger, and at constant stepsize
-the iterates sit on a noise floor proportional to it. Under
+$\nu{=}.88$, extended version). Transport still concentrates weight on a starved
+group whenever it appears, so its variance about the mean is larger
+(Lemma~\ref{lem:variance} bounds only the second moment), and at constant
+stepsize the iterates sit on a noise floor proportional to it. Under
 $\eta_t=\eta/(1+t/1000)$ that floor decays, the curves fall onto their
 dashed floors, and what remains is the residual, $2.3$ at $\nu{=}.88$, the
 one significant loss.
@@ -647,11 +634,9 @@ On a $10\times10$ $(\alpha,\gamma)$ grid the overall objective is minimized
 on the $\gamma=1$ edge of every instance: risk aversion costs the average. It earns its keep once, on the worst race of
 Adult under prevalence availability: \avotcvar{} at $(0.2,0.7)$ reaches
 $0.3624$ against $0.3679$ for \avot{} and $0.3994$ for group-blind averaging
-(per-race table in the appendix). On the least represented group the layer
+(per-race table in the extended version). On the least represented group the layer
 never helps: the grid's best rare-group loss is at $\gamma{=}1$ on all four
-headline instances, and $(0.1,0.1)$ nearly triples the loss on Other
-($.207$ against $.073$) and lifts the IMDb-Wiki top identities from $77.0$
-to $103$. CVaR tilts among the groups present in the batch, and the rare
+headline instances. CVaR tilts among the groups present in the batch, and the rare
 group is absent from most; on top of transport it multiplies weights already
 $p_i/r_i$ large and amplifies variance, not alignment.
 
@@ -849,154 +834,5 @@ Speech and Signal Processing (ICASSP)}, 2024.
 
 \end{thebibliography}
 
-\clearpage
-% ---- inlined from appendix.tex ----
-% =====================================================================
-%  Appendix (one page). Standalone block: nothing in main.tex references it.
-%  Paste after the bibliography if the venue permits an appendix page.
-% =====================================================================
-\appendix
-\section{Appendix}
-
-\noindent\textbf{A. Proofs.}
-\emph{Proposition~\ref{prop:surrogate}.} Conditionally on $A^t=A_j$ the
-within-group averages are unbiased for $\partial f_i$, so
-$\E[\text{batch subgradient}\mid A^t=A_j]=\sum_{i\in A_j}\E[\widehat\pi^t_i\mid A_j]\,\partial f_i(\theta)$;
-averaging over $q$ gives $\sum_i\tilde p_i\,\partial f_i=\partial F_{\tilde p}$,
-and $\sum_i\tilde p_i=\sum_j q_j\sum_{i\in A_j}\E[\widehat\pi^t_i\mid A_j]=1$.
-Both bounds follow from $0\le f_i\le M$ and the two-point inequality
-$F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le
-[F_p-F_{\tilde p}](\theta^\star_{\tilde p})+[F_{\tilde p}-F_p](\theta^\star)$.
-
-\noindent\emph{Sinkhorn scaling.} Starting from any $T^{(0)}>0$ on $E$ with
-$\mathbf{1}^\top T^{(0)}=q$, alternate
-\begin{equation}
-T\leftarrow\mathrm{diag}\big(p\oslash T\mathbf{1}\big)\,T,\qquad
-T\leftarrow T\,\mathrm{diag}\big(q\oslash T^\top\mathbf{1}\big)
-\label{eq:ipfp}
-\end{equation}
-until $\|T\mathbf{1}-p\|_1\le\varepsilon$. Under \eqref{eq:hall} the iteration
-converges to a solution of \eqref{eq:mot} \cite{sinkhorn1967,csiszar1975},
-being block-coordinate ascent on the dual of the entropic problem
-$\min\{\sum_E T\log T:\ T\mathbf{1}=p,\ \mathbf{1}^\top T=q\}$.
-
-\noindent\emph{Lemma~\ref{lem:unbiased}.} Conditionally on $A^t=A_j$,
-$\E[g_i(\theta)]\in\partial f_i(\theta)$ for $i\in A_j$. Averaging over
-$A^t\sim q$,
-$\E[\hat g]=\sum_j q_j\sum_{i\in A_j}Y[i,j]\,\partial f_i(\theta)
-=\sum_i\big(\sum_j T[i,j]\big)\partial f_i(\theta)=\sum_i p_i\,\partial f_i(\theta)$,
-the row-marginal constraint being used in the last step.
-
-\noindent\emph{Lemma~\ref{lem:variance}.} $Y[\cdot,j]$ is a probability vector
-on $A_j$, so $\|\sum_i Y[i,j]g_i\|^2\le\sum_i Y[i,j]\|g_i\|^2$ by convexity of
-$\|\cdot\|^2$; take expectations and use $\sum_j T[i,j]=p_i$:
-$\E\|\hat g\|^2\le\sum_i p_i\,\E\|g_i\|^2\le G^2$.
-
-\noindent\emph{Theorem~\ref{thm:feas} (sketch).} Route supply $p_i$ from a source through group $i$, along the edges of $E$
-with infinite capacity, into composition $j$ with demand $q_j$, and to a sink.
-A coupling exists iff the maximum flow saturates every source edge, which by
-max-flow/min-cut \cite{fordfulkerson1956} is the right inequality of
-\eqref{eq:hall}; the left one is the same statement for the reversed network.
-On singletons \eqref{eq:hall} is Hall's condition \cite{hall1935}.
-
-\noindent\emph{Corollary~\ref{cor:batchsize}.} For $I=\{i\}$, $\mathcal{N}(I)$ is the set of compositions containing $i$, of
-total mass $r_i$, and $\mathcal{S}(I)=\{j:A_j=\{i\}\}$. Substitute
-$r_i=1-(1-\pi_i)^b$ and $r_i=K/N$.
-
-\noindent\emph{Theorem~\ref{thm:rate}.} By non-expansiveness of $\Proj$,
-$\|\theta^{t}-\theta^\star\|^2\le\|\theta^{t-1}-\theta^\star\|^2
--2\eta\langle\hat g^t,\theta^{t-1}-\theta^\star\rangle+\eta^2\|\hat g^t\|^2$.
-Conditioning on $\theta^{t-1}$, Lemma~\ref{lem:unbiased} and convexity bound
-the inner product below by $F_p(\theta^{t-1})-F_p(\theta^\star)$, and
-Lemma~\ref{lem:variance} bounds the last term by $\eta^2G^2$. Summing,
-telescoping, and applying Jensen to $\bar\theta_T$ gives
-$\E F_p(\bar\theta_T)-F_p(\theta^\star)\le D^2/(2\eta T)+\eta G^2/2$, and the
-stated $\eta$ balances the two terms \cite{nemirovski2009}.
-In full: $\E\|\theta^{t}-\theta^\star\|^2\le\E\|\theta^{t-1}-\theta^\star\|^2-2\eta\,\E[F_p(\theta^{t-1})-F_p(\theta^\star)]+\eta^2G^2$;
-summing over $t\le T$, telescoping, dropping the terminal distance and applying Jensen to $\bar\theta_T$ gives
-$\E F_p(\bar\theta_T)-F_p(\theta^\star)\le D^2/(2\eta T)+\eta G^2/2$, which is $DG/\sqrt{T}$ at $\eta=D/(G\sqrt{T})$;
-the same bound holds for $\eta_t=\eta_0/\sqrt{t}$ up to constants.
-
-\noindent\emph{Theorem~\ref{thm:infeasible}.} Add and subtract $F_p(\theta^\dagger)=\Phi(\hat p)$; the floor is exact by
-definition and $\Phi(p)=F_p(\theta^\star)$. Theorem~\ref{thm:rate} applied to
-$F_{\hat p}$ gives the residual bound on the surrogate; the residual on $F_p$
-differs from it by $(F_p-F_{\hat p})(\bar\theta_T)-(F_p-F_{\hat p})(\theta^\dagger)$,
-which vanishes as $\bar\theta_T\to\theta^\dagger$ (for instance under strong
-convexity, which both of our instances satisfy). The $\ell_1$ bound is the
-two-point argument of Proposition~\ref{prop:surrogate} with $w$ for $\tilde p$.
-
-\medskip
-\noindent\textbf{B. The infeasible regime in closed form (IMDb-Wiki, $\beta=3$).}
-On the mirrored instance, where $41$ of $100$ groups violate $p_i\le r_i$ and hold
-$88\%$ of the importance mass, the Sinkhorn limit truncates the target at the
-observation-rate ceiling, $\hat p_i\approx\min(p_i,r_i)$ up to renormalization
-(maximum deviation $0.023$), giving $\|p-\hat p\|_1=1.58$ of a maximum possible $2$.
-Because the task is linear regression, the minimizers $\theta^\star$ of $F_p$ and
-$\theta^\dagger$ of $F_{\hat p}$ are available in closed form:
-$\Phi(p)=F_p(\theta^\star)=82.9$ (matching the measured full-coverage plateau, $82.95$)
-and $\Phi(\hat p)=F_p(\theta^\dagger)=105.9$. The alignment floor is therefore
-$23.0$, and the realized bias equals its exact expression
-$|(p-\hat p)^\top L(\theta^\dagger)|=30.7$, where $L(\theta)$ collects the per-group
-risks. The $\ell_1$ form $2M\|p-\hat p\|_1$ of Theorem~\ref{thm:infeasible} holds but is
-conservative here, since any uniform bound satisfies $M\ge\max_i L_i(\theta^\dagger)\approx 454$.
-The group-blind surrogate $\tilde p_i=r_i/K$ has the same floor to two decimals
-($\Phi(\tilde p)=105.9$): both surrogates starve the same groups, which is why
-$\Delta_{\mathrm{floor}}$ vanishes at this endpoint of Table~\ref{tab:severity}.
-
-\medskip
-\noindent\textbf{E. Instances and protocol, in full.}
-Adult: logistic regression with $d{=}109$ features including an intercept,
-cross-entropy loss; $100$ groups of $30$ samples, each homogeneous in race,
-with $85/10/3/1/1$ groups for White/Black/Asian-Pac./Amer-Ind./Other; the
-target gives each race $1/5$, split equally among its groups, so on the
-prevalence instance the five groups of the three smallest races hold $60\%$
-of the target against $r_i\approx K/m=.03$. IMDb-Wiki: the first $100$
-identities with $30$ images, $128$-d ResNet embeddings, linear regression of
-age. Each step draws $K{=}3$ groups without replacement with
-probabilities $\propto r$, inducing $q$ over the $\binom{100}{3}$
-compositions; $q$ is estimated from $10^6$ draws and the plan fitted once
-per instance by \eqref{eq:ipfp}, which on every instance with $\nu=0$
-reaches a row error below $3\cdot10^{-8}$, certifying the remaining
-inequalities of \eqref{eq:hall}. All rules consume the same $H{=}5$ local
-updates from the same draw $A^t$. $\argmin F_w$ is closed-form for least squares and Newton to
-machine precision for the logistic loss. Baselines: upsampling weights
-$\propto p_i/r_i$, downsampling $\propto\min(p_i/r_i,1)$, LDS \cite{yang2021dir}
-the inverse Gaussian-smoothed age histogram (kernel $5$, $\sigma{=}2$) averaged
-per group; each renormalized within the batch.
-
-\medskip
-\noindent\textbf{C. Adult severity sweep.} The five Adult skews omitted from
-Table~\ref{tab:severity}, same conventions.
-\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
-\begin{tabular}{ccccc}
-\toprule
-$\beta$ & $\nu$ & $\Delta_{\mathrm{floor}}$ & gain & $t$ \\
-\midrule
-$0$    & $.60$ & $.0110$ & $\best{+.0210}$ & $44.7$ \\
-$0.25$ & $.60$ & $.0144$ & $\best{+.0181}$ & $69.4$ \\
-$0.5$  & $.40$ & $.0129$ & $\best{+.0134}$ & $35.2$ \\
-$0.75$ & $0$   & $.0049$ & $\best{+.0050}$ & $35.8$ \\
-$1$    & $0$   & $.0003$ & $+.0002$ & $7.1$ \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\medskip
-\noindent\textbf{D. Adult per-race cross-entropy, prevalence regime.}
-Tail-500 over $5$ seeds, decaying stepsize.
-\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccccc}
-\toprule
- & White & Black & Asian-Pac. & Amer-Ind. & Other \\
-\midrule
-\avot{}            & $.339$ & $\best{.179}$ & $\best{.368}$ & $\best{.175}$ & $\best{.073}$ \\
-group-blind avg.   & $\best{.332}$ & $.200$ & $.399$ & $.189$ & $.119$ \\
-full               & $.379$ & $.177$ & $.328$ & $.123$ & $.031$ \\
-\bottomrule
-\end{tabular}
-\end{center}
-Four of five categories improve and only the majority regresses, the expected
-effect of a category-uniform target; the residual on the two smallest is the
-unreachable mass of Cor.~\ref{cor:batchsize}.
-
+% appendix removed: ICASSP allows references only on page 5; see main_full.tex
 \end{document}

@@ -44,7 +44,7 @@
 \newcommand{\best}[1]{\textbf{#1}}
 
 % ---------------------------------------------------------------- title
-\title{Group-Fair Stochastic Gradient Descent \\ via Masked Optimal Transport}
+\title{GROUP-FAIR STOCHASTIC GRADIENT DESCENT \\ VIA MASKED OPTIMAL TRANSPORT}
 
 \name{Herlock (SeyedAbolfazl) Rahimi \qquad Amtej Sodhi \qquad Vihaan Goyal \qquad Dionysis Kalogerias%
 \thanks{This work is supported by NSF under Grant 2242215.}}
@@ -54,26 +54,23 @@
 \begin{document}
 \ninept
 \maketitle
+\pagestyle{empty}\thispagestyle{empty}
 
 \begin{abstract}
 Minibatch SGD is group-blind: which groups appear in a batch is decided by
 their prevalence in the data, not by how much they are meant to count in the
-objective, and when the two disagree the iterates converge to a
-prevalence-weighted surrogate rather than to the target risk. A minibatch is a
+objective, so SGD optimizes a prevalence-weighted surrogate. A minibatch is a
 partial-participation event over groups, so we carry the masked optimal
-transport construction of \textsf{FedAVOT} across. Aligning the
-batch-composition law $q$ with the target importance $p$ yields per-batch group
-weights whose stochastic subgradient is exactly unbiased for the target risk,
-with the standard $O(1/\sqrt{T})$ rate and a constant independent of batch
-coverage. Alignment is feasible under a Hall-type condition that reduces to
-importance not exceeding observation rate; past it, Sinkhorn returns an
-information projection whose residual we compute in closed form, splitting the
-excess risk into an alignment gain fixed by the instance and an optimization
-residual paid by the estimator. A severity sweep over eleven availability skews
-on Adult and IMDb-Wiki shows the two crossing where the decomposition predicts;
-the residual is a stepsize artifact a decaying schedule removes. A mean--CVaR
-layer composed on top reaches the worst group at rate
-$O(\kappa(\alpha,\gamma)/\sqrt{T})$.
+transport construction of \textsf{FedAVOT} across: aligning the
+batch-composition law $q$ with the target importance $p$ yields per-batch
+group weights whose stochastic subgradient is exactly unbiased, at the
+standard $O(1/\sqrt{T})$ rate. Alignment is feasible under a Hall-type
+condition; past it, Sinkhorn returns an information projection whose
+residual we compute in closed form, splitting the excess risk into an
+alignment gain fixed by the instance and an optimization residual paid by
+the estimator. A sweep over eleven availability skews on Adult and IMDb-Wiki
+shows the two crossing where the decomposition predicts. A mean--CVaR layer
+on top reaches the worst group at rate $O(\kappa(\alpha,\gamma)/\sqrt{T})$.
 \end{abstract}
 
 \begin{keywords}
@@ -115,8 +112,7 @@ help a group with $p_i>r_i$; re-weighting the examples that do appear, the
 reweighting form of up-sampling, is a one-shot heuristic for a marginal
 problem this paper solves exactly, and its un-normalized form, the fixed
 multiplier, destabilizes the iterates
-\cite{rahimi2025fedavot}. Label-distribution smoothing \cite{yang2021dir}
-re-weights by label rarity, not by how rarely a group is observed.
+\cite{rahimi2025fedavot}.
 
 \noindent\textbf{Other algorithms.}
 Reduction methods for group fairness return randomized mixtures or carry an
@@ -139,11 +135,10 @@ method \avot{}; the aggregation rule is that of \textsf{FedAVOT}.
 
 \noindent\textbf{Contributions.}
 \begin{enumerate}\itemsep0pt\parskip0pt\topsep2pt
-\item \emph{The reduction} (Sec.~\ref{sec:setup}). Group-blind minibatch SGD reduces, under
-uniform-within-batch averaging, to agnostic \textsf{FedAvg} with one local step, so the surrogate identity of
-\cite{rahimi2025agnostic} names the function SGD actually minimizes, and
-transport weights make the batch subgradient exactly unbiased for $\nabla F_p$
-(Lemma~\ref{lem:unbiased}).
+\item \emph{The reduction} (Sec.~\ref{sec:setup}). Group-blind minibatch SGD is
+agnostic \textsf{FedAvg} with one local step, so \cite{rahimi2025agnostic} names
+the function it minimizes, and transport weights make the batch subgradient
+exactly unbiased for $\nabla F_p$ (Lemma~\ref{lem:unbiased}).
 \item \emph{A coverage law, a severity measure, and the crossover}
 (Cor.~\ref{cor:batchsize}, Thm.~\ref{thm:infeasible}, Sec.~\ref{sec:exp}).
 Feasibility is Hall-type and reduces on singletons to $p_i\le r_i$, so the
@@ -408,6 +403,5 @@ Speech and Signal Processing (ICASSP)}, 2024.
 
 \end{thebibliography}
 
-\clearpage
-\input{appendix}
+% appendix removed: ICASSP allows references only on page 5; see main_full.tex
 \end{document}

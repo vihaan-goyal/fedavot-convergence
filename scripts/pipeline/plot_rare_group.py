@@ -19,6 +19,8 @@ PAPER_FIGS = "paper/gavot_draft/figs"
 RARE = {"adult": ["Other", "Amer-Indian-Eskimo"], "imdbwiki": ["tier1"]}
 MODELS = ["fedavot", "fedavg", "fedavg_mk", "full"]
 COL = {"fedavot": "tab:blue", "fedavg": "tab:orange", "fedavg_mk": "tab:green", "full": "tab:red"}
+MK = {"fedavot": "o", "fedavg": "s", "fedavg_mk": "x", "full": "^"}; LS = {"fedavot": "-", "fedavg": "--", "fedavg_mk": "-.", "full": ":"}
+plt.rcParams["pdf.fonttype"] = 42  # Type 1/TrueType, not Type 3 (ICASSP kit)
 LBL = {"fedavot": "GAVOT", "fedavg": "group-blind avg.", "fedavg_mk": r"fixed multiplier $m/K$", "full": "full"}
 TAG_LBL = {"const": "constant stepsize", "decay1000": r"$\eta_t=\eta/(1+t/1000)$"}
 YLBL = {"adult": "cross-entropy, race = Other", "imdbwiki": "MSE, top-importance identities"}
@@ -97,11 +99,11 @@ for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Othe
             else:
                 x = [100 * r["nu"] for r in pts]
             y = [r["rare_mean"] for r in pts]; s = [r["rare_std"] for r in pts]
-            ax.errorbar(x, y, yerr=s, color=COL[mdl], marker="o", ms=3, lw=1.2, capsize=2, label=LBL_LONG[mdl])
+            ax.errorbar(x, y, yerr=s, color=COL[mdl], marker=MK[mdl], ls=LS[mdl], ms=3, lw=1.2, capsize=2, label=LBL[mdl])
             if ds != "adult" and mdl == "fedavot":   # Adult carries beta on the ticks; IMDb labels the points
                 for r, xi, yi in zip(pts, x, y):
                     ax.annotate(rf"$\beta$={r['beta']:g}", (xi, yi), textcoords="offset points",
-                                xytext=(0, 6), ha="center", fontsize=6, color="0.3")
+                                xytext=(0, 6), ha="center", fontsize=6.5, color="0.3")
         ax.set_title(PANEL[tag], fontsize=8)
         if ds == "adult":
             ax.invert_xaxis()
@@ -123,7 +125,7 @@ for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Othe
     plt.close(fig)
 
 # --- fit version for the 4-page paper: one row, decaying-stepsize panels only (same data)
-fig, axes = plt.subplots(1, 2, figsize=(7.2, 1.85))
+fig, axes = plt.subplots(1, 2, figsize=(3.35, 1.65))
 for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]:
     for mdl in ["fedavot", "fedavg", "full"]:
         pts = pick(ds, grp, "decay1000", mdl)
@@ -132,21 +134,21 @@ for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]
         else:
             x = [100 * r["nu"] for r in pts]
         y = [r["rare_mean"] for r in pts]; s = [r["rare_std"] for r in pts]
-        ax.errorbar(x, y, yerr=s, color=COL[mdl], marker="o", ms=3, lw=1.2, capsize=2, label=LBL_LONG[mdl])
+        ax.errorbar(x, y, yerr=s, color=COL[mdl], marker=MK[mdl], ls=LS[mdl], ms=3, lw=1.2, capsize=2, label=LBL[mdl])
         if ds != "adult" and mdl == "fedavot":
             for r, xi, yi in zip(pts, x, y):
                 ax.annotate(rf"$\beta$={r['beta']:g}", (xi, yi), textcoords="offset points",
-                            xytext=(0, 6), ha="center", fontsize=6, color="0.3")
+                            xytext=(0, 6), ha="center", fontsize=6.5, color="0.3")
     if ds == "adult":
         ax.invert_xaxis(); ax.set_xticks([r["beta"] for r in pts])
-        ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=6.5)
-        ax.set_title("Adult: race Other (cross-entropy)", fontsize=8)
-        ax.set_xlabel(r"observation rate $r\propto p^{\beta}$", fontsize=7.5)
+        ax.set_xticklabels([f"{r['beta']:g}" for r in pts], fontsize=7)
+        ax.set_title("Adult: race Other (CE)", fontsize=7)
+        ax.set_xlabel(r"$\beta$ ($r\propto p^{\beta}$)", fontsize=7); ax.tick_params(labelsize=7)
     else:
-        ax.set_title("IMDb-Wiki: top-importance identities (MSE)", fontsize=8)
-        ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=7.5)
+        ax.set_title("IMDb-Wiki: top identities (MSE)", fontsize=7)
+        ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=7); ax.tick_params(labelsize=7)
     ax.tick_params(labelsize=7); ax.grid(alpha=0.3)
-axes[1].legend(fontsize=6.5, frameon=False, loc="upper left")
+axes[0].legend(fontsize=6.5, frameon=False, loc="upper left", handlelength=2.2)
 fig.tight_layout(pad=0.4)
 fig.savefig(os.path.join(OUT, "rare_group_fit.pdf"), bbox_inches="tight")
 fig.savefig(os.path.join(OUT, "rare_group_fit.png"), dpi=200, bbox_inches="tight")
