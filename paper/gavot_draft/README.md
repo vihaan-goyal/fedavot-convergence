@@ -73,3 +73,12 @@ what he wants. His files are never edited in place: the zip he sent is kept verb
   Accuracy would need a rerun (runner logs loss only).
 - Open for Herlock: appendix page allowed?, exact-penalty arXiv number (his FILLIN), t-stat
   convention (population std kept), whether E5/CVaR stays.
+
+## Status (2026-09-21)
+
+- Herlock asked (9/21) for all changes to go on the Overleaf. Baselines (upsample, downsample, LDS) and the
+  stepsize-schedule note are in both Sec. 5 versions and the appendix; the trims of review/HERLOCK_TRIM_SUGGESTIONS.md
+  are now APPLIED in main_fit.tex (his sections, no claim changed), plus a second cut of ours (review/CUT_LEDGER.md,
+  second section). main_fit.pdf = 4 pages + references on page 5 + appendix on page 6. tools/check_cut.py: the only
+  new numbers are figure widths / TikZ spacing. review/diff_fit_2026-09-21.txt is the diff of this pass.
+- Schedule sweep: review/LR_SCHEDULES_2026-09-20.md (paper keeps eta/(1+t/1000)). Baselines: review/BASELINES_2026-09-20.md.

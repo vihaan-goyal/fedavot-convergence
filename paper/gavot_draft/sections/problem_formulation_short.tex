@@ -14,9 +14,9 @@ Group $i$ carries a distribution $\mathcal{D}_i$ on
 $\mathcal{X}\times\mathcal{Y}$ and the risk
 $f_i(\theta)\triangleq\E_{(X,Y)\sim\mathcal{D}_i}[\ell(m(X;\theta),Y)]$,
 $\theta\in\mathcal{C}\subseteq\R^{d'}$, with $m(\cdot\,;\theta)$ the
-predictor and $\ell$ the loss. Empirical risk minimization weights the
-groups by prevalence, $F_\pi=\sum_i\pi_i f_i$, so a majority group dominates
-the trained model. The remedy is to fix an \emph{importance distribution}
+predictor and $\ell$ the loss. Empirical risk minimization weights
+groups by prevalence, $F_\pi=\sum_i\pi_i f_i$; the remedy is to fix an
+\emph{importance distribution}
 $p\in\simplex{N}$ and minimize
 \begin{equation}
 F_p(\theta)\;\triangleq\;\sum_{i=1}^{N}p_i f_i(\theta),
@@ -31,31 +31,26 @@ inverse-prevalence one, or $p$ a fairness constraint
 \label{ass:std}
 $\mathcal{C}$ is convex and compact with diameter $D$; each $f_i$ is convex
 on $\mathcal{C}$ and $0\le f_i\le M$; every stochastic subgradient
-$g_i(\theta)$ of $f_i$ satisfies $\E\|g_i(\theta)\|^2\le G^2$ on $\mathcal{C}$.
+$g_i(\theta)$ of $f_i$ satisfies $\E\|g_i(\theta)\|^2\le G^2$ on $\mathcal{C}$
+(the assumptions of \cite{rahimi2025agnostic,rahimi2025fedavot} restated for
+groups; nothing restricts $p$ or $\pi$).
 \end{assumption}
-\noindent These are the assumptions of \cite{rahimi2025agnostic,rahimi2025fedavot}
-restated for groups; they restrict neither $p$ nor $\pi$.
 
 \noindent\textbf{Prevalence versus importance.}
 Minibatch SGD does not see $p$. At step $t$ the sampler draws a batch $B^t$
 of $b$ examples; the \emph{active set}
 $A^t\triangleq\{i: B^t\text{ contains an example from group }i\}$ has
 support $\{A_j\}_{j\in\Nn{M}}$ and \emph{composition law}
-$q_j\triangleq\PP[A^t=A_j]$, known or estimated offline by simulating the
-sampler. The observation rate of group $i$ is
+$q_j\triangleq\PP[A^t=A_j]$. The observation rate of group $i$ is
 $r_i\triangleq\PP[i\in A^t]=\sum_{j:\,i\in A_j}q_j$, under i.i.d.\ sampling
 $1-(1-\pi_i)^b$: a group whose prevalence is below the resolution of the
-batch is absent from most batches whatever $p$ says. This is federated
-learning under partial participation, with $A^t$ the participating clients,
-$q$ the availability and $p$ the importance distribution
-\cite{rahimi2025fedavot,rahimi2025agnostic}.
+batch is absent from most batches whatever $p$ says.
 
 \noindent\textbf{What group-blind SGD minimizes.}
-The group-blind update averages the per-example subgradients of $B^t$,
-giving group $i\in A^t$ the weight $\widehat{\pi}^t_i$, its share of the
-batch, and absent groups zero. Averaging over the batch given $A^t$ and then
-over $A^t\sim q$, the hierarchical experiment of
-\cite[Eq.~4]{rahimi2025agnostic}, names the function SGD in fact minimizes.
+The group-blind update gives group $i\in A^t$ the weight $\widehat{\pi}^t_i$,
+its batch share, and absent groups zero; averaging over the batch given
+$A^t$ and then over $A^t\sim q$ \cite[Eq.~4]{rahimi2025agnostic} names the
+function SGD in fact minimizes.
 
 \begin{proposition}[Surrogate objective]
 \label{prop:surrogate}
@@ -77,11 +72,10 @@ and any method that minimizes $F_{\tilde p}$ exactly incurs the excess
 $F_p(\theta^\star_{\tilde p})-F_p(\theta^\star)\le 2M\|p-\tilde p\|_1$ on
 \eqref{eq:target}, which does not vanish with $T$.
 \end{proposition}
-\noindent (Proof in the appendix.) The choice of $p$ in \eqref{eq:target}
-is thus decorative unless the aggregation step changes: the bias
-$p-\tilde p$ survives every stepsize schedule, rebalancing the sampler
-cannot help a group with $p_i>r_i$ since $\tilde p_i\le r_i$ always, and
-upscaling the examples that do appear destabilizes the iterates
-\cite{rahimi2025fedavot}. The question of \cite{rahimi2025fedavot}, read on
+\noindent (Proof in the appendix.) The choice of $p$ is thus decorative
+unless the aggregation step changes: the bias $p-\tilde p$ survives every
+stepsize schedule, rebalancing the sampler cannot help a group with $p_i>r_i$
+since $\tilde p_i\le r_i$ always, and upscaling the examples that do appear
+destabilizes the iterates \cite{rahimi2025fedavot}. The question, read on
 batches: \emph{can the per-batch group weights be chosen so that SGD driven
 by $q$ converges for the objective defined by $p$?}

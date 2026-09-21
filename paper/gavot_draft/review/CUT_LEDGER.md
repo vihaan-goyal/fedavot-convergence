@@ -58,3 +58,45 @@ and protocol in full, C Adult severity table, D per-race table. Order A, B, E, C
 
 Herlock's Secs. 1, 4, 6, abstract, bibliography: untouched. Suggested trims for him in
 `review/HERLOCK_TRIM_SUGGESTIONS.md`.
+
+## Second cut, 2026-09-21 (Herlock: put everything on the Overleaf, so main_fit must be 4 pages)
+
+Added first: the imbalance baselines (upsample, LDS columns in Table 1, downsample/LDS in E1 text,
+definitions in appendix E, yang2021dir in the bibliography) and the one-sentence schedule note in
+the protocol (nine schedules, winner never changes; full table in review/LR_SCHEDULES_2026-09-20.md
+and the extended version's protocol paragraph). That put the fit build ~0.7 page over. Cuts, all
+recorded in tools/history/{herlock_trims,fit_squeeze,fit_squeeze2,3,4}.py; no number changed:
+
+| Item | In main_fit now | Where the rest lives |
+|---|---|---|
+| Abstract (his, 22 lines) | 17 lines: "the gap is a bias" sentence and the "nonsmooth convex regime" clause folded; crossing sentence shortened | original/main.tex, main_full.tex |
+| Sec. 1 "Groups as clients" (his) | 12 lines: MOT defined in one clause | original, main_full |
+| Sec. 1 Contributions (his) | items 2 and 3 merged, as HERLOCK_TRIM_SUGGESTIONS proposed | original, main_full |
+| Sec. 1 Related work (his) | one sentence with semicolons | original, main_full |
+| Sec. 4 (his) | "heatmap edges" sentence and the "why the layers compose" sentence folded into one clause each | original, main_full |
+| Sec. 6 (his) | decomposition sentence (repeats the abstract) removed; last two sentences joined | original, main_full |
+| Sec. 2 assumption remark | inside the assumption in parentheses | extended |
+| Sec. 2 "known or estimated offline by simulating the sampler"; the FL correspondence sentence | dropped (appendix E has the estimation; Sec. 1 has the correspondence) | appendix E, Sec. 1 |
+| Sec. 2 closing paragraph | "The choice of p is thus decorative" version, 7 lines | extended |
+| Sec. 3 "any coupling respecting eq:mot serves" | dropped | extended |
+| Fig. 1 caption and node spacing | 5 lines, tighter nodes, same figure | extended |
+| Sec. 3 "Computing the plan" | 8 lines: |E| <= NM and the "rescaling rows to p and columns to q in turn" gloss dropped (appendix A has eq:ipfp) | appendix A, extended |
+| Cor. 4 last sentence ("feasible and infeasible regimes are its two ends") | dropped | extended |
+| Sec. 3 Analysis lead-in ("g_i the stochastic subgradient of f_i from B^t cap group i") | dropped (defined in Algorithm 1) | Algorithm 1 |
+| Thm. 7 closing clause ("though the realized variance is larger") | dropped | extended, and E4 says it |
+| Sec. 3 "Outside the feasible region" | 7 lines | extended |
+| Sec. 3 closing sentence "the l1 bound is too loose to discriminate" | dropped here, said in E3 | E3 |
+| Algorithm 1 Require line | symbols only | extended |
+| Protocol | 21 lines; "the standard practical deviation from the one-step analysis" and the exactness parenthetical dropped (appendix E) | appendix E |
+| Table 1 caption; Fig. 2 caption; rare caption; Table 2 caption | shortened, same content; "constant-stepsize panels in the extended version" now only in the ledger | extended |
+| E1 | "naive rescaling is no alternative" clause dropped; baseline sentence compressed (numbers 0.2288, 86.74, 84.40, 94.28, 89.43 are in Table 1) | extended |
+| E2 | "under both stepsizes", p/r = 6.7, the 373/380 pair at nu = .59, the closing "more sensitively" sentence dropped | extended (all four) |
+| E3 | opener folded; l1 sentence reworded | extended |
+| E4 | "so the plan delivers at most r_i of its mass", "largest on the rare group", and the closing "Transport helps exactly while there is mass left to move" dropped | extended |
+| E5 | per-race list replaced by a pointer to appendix D; "kappa(1,gamma)=1 made visible" and "Risk aversion changes the functional, not who is observed" dropped | appendix D (numbers), extended (sentences) |
+| Appendix E | the nine/41 infeasible count and the fixed-multiplier definition dropped (both in Sec. 5 / Table 2) | Sec. 5 |
+| Appendix D closing sentence | shortened | extended |
+| Figure widths | Fig. 2 0.92 -> 0.80 col, rare 0.99 -> 0.82 col; -6/-8 pt below floats; -4 pt before Sec. 6 | |
+| Bibliography | itemsep -2pt so the references stay on page 5 alone | |
+
+Result: main_fit.pdf = 4 pages + references on page 5 + appendix on page 6.

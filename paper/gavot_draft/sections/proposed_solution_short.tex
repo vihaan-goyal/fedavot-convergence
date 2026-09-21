@@ -19,17 +19,16 @@ T\mathbf{1}_M=p,\qquad \mathbf{1}_N^\top T=q,\qquad T\ge 0,
 \qquad \mathrm{supp}(T)\subseteq E,
 \label{eq:mot}
 \end{equation}
-with mask $E=\{(i,j): i\in A_j\}$: a group absent from the batch cannot be
-weighted. Unlike classical transport \cite{villani2009,peyre2019} there is
-no cost to minimize; any coupling respecting \eqref{eq:mot} serves.
-Fig.~\ref{fig:mask} is the picture.
+with mask $E=\{(i,j): i\in A_j\}$ (Fig.~\ref{fig:mask}): an absent group
+cannot be weighted, and unlike classical transport
+\cite{villani2009,peyre2019} there is no cost to minimize.
 
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[
-   node distance=2.4mm,
-   grp/.style={draw,rounded corners=1pt,minimum width=9mm,minimum height=3.9mm,font=\tiny,fill=Periwinkle!20},
-   atm/.style={draw,rounded corners=1pt,minimum width=13mm,minimum height=3.9mm,font=\tiny,fill=YellowOrange!20},
+   node distance=1.5mm,
+   grp/.style={draw,rounded corners=1pt,minimum width=9mm,minimum height=3.4mm,font=\tiny,fill=Periwinkle!20},
+   atm/.style={draw,rounded corners=1pt,minimum width=13mm,minimum height=3.4mm,font=\tiny,fill=YellowOrange!20},
    e/.style={-{Latex[length=1.2mm]},gray,line width=.35pt},
    lbl/.style={font=\tiny\itshape}
 ]
@@ -57,17 +56,17 @@ Fig.~\ref{fig:mask} is the picture.
 \node[lbl,right=1mm of a3] {$q_3$};
 \node[lbl,right=1mm of a4] {$q_4$};
 \end{tikzpicture}
-\caption{The mask $E$. Batch compositions carry the mass $q$ they occur with;
-groups must receive the mass $p$ the objective assigns them. Group $4$ is
-reachable only through $A_4$, so exact alignment requires $p_4\le q_4$: the
-Hall condition of Thm.~\ref{thm:feas} read on the singleton $I=\{4\}$. Shrinking
-the batch deletes $A_4$ from the support and makes $p_4$ unreachable.}
+\caption{The mask $E$: compositions carry the mass $q$ they occur with, groups
+must receive the mass $p$ the objective assigns. Group $4$ is reachable only
+through $A_4$, so alignment needs $p_4\le q_4$, the Hall condition of
+Thm.~\ref{thm:feas} on $I=\{4\}$; a smaller batch deletes $A_4$ and makes
+$p_4$ unreachable.}
 \label{fig:mask}
 \end{figure}
 
 \noindent\textbf{When alignment is possible.}
-Existence of a coupling is a supply--demand question on the bipartite graph
-$E$, settled by flow duality; proofs are in the appendix.
+Existence is a supply--demand question on the bipartite graph $E$, settled
+by flow duality (proofs in the appendix).
 
 \begin{theorem}[Feasibility, {\cite[Thm.~1]{rahimi2025fedavot}}]
 \label{thm:feas}
@@ -84,37 +83,32 @@ if and only if
 \begin{corollary}[Coverage law and severity]
 \label{cor:batchsize}
 Feasibility of \eqref{eq:mot} requires $\PP[A^t=\{i\}]\le p_i\le r_i$ for every
-$i$, with $r_i=\PP[i\in A^t]$ the observation rate of Sec.~\ref{sec:setup}.
-Writing
+$i$, with $r_i$ the observation rate. Writing
 \begin{equation}
 \nu\;\triangleq\!\!\sum_{i\,:\,p_i>r_i}\!\! p_i
 \label{eq:batchlaw}
 \end{equation}
 for the \emph{infeasible mass}, $\nu=0$ iff the upper constraints hold.
 Under i.i.d.\ sampling of $b$ examples the upper constraint reads
-$b\ge\log(1-p_i)/\log(1-\pi_i)$; under $K$-of-$N$ uniform group sampling it
-reads $p_i\le K/N$. The infeasible mass is the axis Sec.~\ref{sec:exp}
-sweeps; feasible and infeasible regimes are its two ends.
+$b\ge\log(1-p_i)/\log(1-\pi_i)$, under $K$-of-$N$ group sampling
+$p_i\le K/N$; $\nu$ is the axis Sec.~\ref{sec:exp} sweeps.
 \end{corollary}
 
 \noindent\textbf{Computing the plan.}
-Given feasibility, a coupling is obtained by iterative proportional fitting
-(Sinkhorn scaling) on the masked support
-\cite{sinkhorn1967,cuturi2013,peyre2019}, rescaling rows to $p$ and columns
-to $q$ in turn (appendix, \eqref{eq:ipfp}), at $O(|E|)$ per sweep with
-$|E|\le NM$ and $M$ the number of \emph{realized} compositions, once,
-offline; training then adds one lookup and one multiply per group per step.
-Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every column
-$Y[\cdot,j]$ is a probability vector on $A_j$, the property each bound
-uses. Algorithm~\ref{alg:gavot} is the resulting method; $\gamma=1$ is the
-risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}.
+Given feasibility, a coupling is obtained by Sinkhorn scaling on the masked
+support \cite{sinkhorn1967,cuturi2013,peyre2019} (appendix, \eqref{eq:ipfp}),
+$O(|E|)$ per sweep with $M$ the number of \emph{realized} compositions,
+once, offline; training then adds one lookup and one multiply per group per
+step. Since $\mathbf{1}_N^\top T=q$ and $Y=T\mathrm{diag}(q)^{-1}$, every
+column $Y[\cdot,j]$ is a probability vector on $A_j$, the property each
+bound uses. Algorithm~\ref{alg:gavot} is the resulting method; $\gamma=1$ is
+the risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}.
 
 \begin{algorithm}[t]
 \caption{\avot{}: group-fair SGD by masked transport}
 \label{alg:gavot}
 \begin{algorithmic}[1]
-\Require target $p$, composition law $(q,\{A_j\},E)$, step $\eta$, horizon $T$,
- CVaR parameters $(\alpha,\gamma)$ with $\gamma=1$ for the risk-neutral method
+\Require $p$; $(q,\{A_j\},E)$; $\eta$; $T$; $(\alpha,\gamma)$, $\gamma=1$ risk-neutral
 \State $(T,Y)\leftarrow$ Sinkhorn scaling for $(p,q,E)$ \Comment{offline, once}
 \State $\theta^0\in\mathcal{C}$, $\ t^0\in\R$
 \For{$t=1,\dots,T$}
@@ -130,10 +124,9 @@ risk-neutral rule analyzed here, $\gamma<1$ the layer of Sec.~\ref{sec:cvar}.
 
 \noindent\textbf{Analysis.}
 Let $\hat g(\theta)=\sum_{i\in A^t}Y[i,j(t)]\,g_i(\theta)$ be the
-transport-weighted batch subgradient of Algorithm~\ref{alg:gavot}, $g_i$ the
-stochastic subgradient of $f_i$ from $B^t\cap$ group $i$. Everything rests on
-\cite[Lem.~1]{rahimi2025fedavot} moved from models to gradients: transport
-removes bias; it is not a variance reduction device.
+transport-weighted batch subgradient of Algorithm~\ref{alg:gavot}. Everything
+rests on \cite[Lem.~1]{rahimi2025fedavot} moved from models to gradients:
+transport removes bias, it is not a variance reduction device.
 
 \begin{lemma}[Unbiasedness]
 \label{lem:unbiased}
@@ -155,19 +148,17 @@ Algorithm~\ref{alg:gavot} with $\gamma=1$ and $\eta=D/(G\sqrt{T})$ satisfies
 \E\big[F_p(\bar\theta_T)\big]-F_p(\theta^\star)\;\le\;\frac{DG}{\sqrt{T}} .
 \label{eq:rate}
 \end{equation}
-The constant is that of full-participation SGD, independent of how many
-groups a batch covers, though the realized variance is larger.
+The constant is that of full-participation SGD, independent of batch coverage.
 \end{theorem}
 
 \noindent\textbf{Outside the feasible region.}
-When \eqref{eq:hall} fails, Sinkhorn does not diverge: its iterates
-accumulate at the coupling whose row marginal $\hat p\triangleq T\mathbf{1}$
-is the KL-closest to $p$ over the reachable polytope
-$\{T\mathbf{1}: T\ge 0,\ \mathbf{1}^\top T=q,\ \mathrm{supp}(T)\subseteq E\}$
-\cite{csiszar1975,gietl2013ipfp,peyre2019}. The column marginal is met
-exactly, so both lemmas hold with $\hat p$ for $p$: the algorithm is unbiased
-SGD on the surrogate $F_{\hat p}$, and on singletons $\hat p_i\le r_i$, so
-groups with $p_i>r_i$ are truncated at their observation rate.
+When \eqref{eq:hall} fails, Sinkhorn accumulates at the coupling whose row
+marginal $\hat p\triangleq T\mathbf{1}$ is KL-closest to $p$ over the
+reachable polytope $\{T\mathbf{1}: T\ge 0,\ \mathbf{1}^\top T=q,\
+\mathrm{supp}(T)\subseteq E\}$ \cite{csiszar1975,gietl2013ipfp,peyre2019}.
+The column marginal is met exactly, so both lemmas hold with $\hat p$ for
+$p$: unbiased SGD on the surrogate $F_{\hat p}$, with $\hat p_i\le r_i$ on
+singletons, so groups with $p_i>r_i$ are truncated at their observation rate.
 
 \begin{theorem}[Infeasible regime]
 \label{thm:infeasible}
@@ -190,7 +181,7 @@ for the \emph{alignment gain}, transport improves on group-blind averaging
 exactly when $\Delta_{\mathrm{floor}}>\varepsilon_T(\hat p)-\varepsilon_T(\tilde p)$,
 and every floor is bounded by $\Phi(w)-\Phi(p)\le 2M\|p-w\|_1$.
 \end{theorem}
-\noindent Both terms are available before training, $\hat p$ and $\tilde p$
-from $(p,q,E)$ and $\Phi$ exactly on instances with a closed-form or convex
+\noindent Both terms are available before training, $\hat p,\tilde p$ from
+$(p,q,E)$ and $\Phi$ exactly on instances with a closed-form or convex
 frontier; the gain decides the sign, the residual is a stepsize artifact
-(Sec.~\ref{sec:exp}), and the $\ell_1$ bound is too loose to discriminate.
+(Sec.~\ref{sec:exp}).

@@ -40,8 +40,14 @@ uniform average over the observed groups (Proposition~\ref{prop:surrogate}
 with $\tilde p_i=r_i/K$); the \emph{fixed multiplier} $m/K$, the rescaling
 $(m/K)\,p_i$ that presumes uniform observation; and \emph{full}, every group
 every step weighted by $p$, the reference $\Phi(p)$. Stepsize
-$\eta_t=\eta/(1+t/1000)$ unless stated, $4000$ steps, $5$ seeds; we report
-$F_p$ averaged over the last $500$ steps, mean $\pm$ std over seeds. On both
+$\eta_t=\eta/(1+t/1000)$ unless stated, fixed before the comparison and
+shared by every rule; across nine schedules (constant, hyperbolic with
+$T_0\in\{250,\dots,16000\}$, inverse square root, step, cosine) the winner
+never changes on any instance, only the margin does: a faster decay puts
+full coverage on its floor and widens the IMDb-Wiki gap (cosine: $84.12$
+against $90.69$), a constant stepsize narrows it to a tie. $4000$ steps, $5$
+seeds; we report $F_p$ averaged over the last $500$ steps, mean $\pm$ std
+over seeds. On both
 instances $\argmin F_w$ is available to machine precision (closed form for
 least squares, Newton for the logistic loss), so the floors
 $\Phi(p),\Phi(\hat p),\Phi(\tilde p)$ of Theorem~\ref{thm:infeasible} are
@@ -53,18 +59,20 @@ certifying the remaining inequalities of \eqref{eq:hall}.
 \begin{table}[t]
 \centering
 \caption{Headline cells, tail-500 over $5$ seeds, decaying stepsize. \emph{full}
-sees every group every step. The fixed multiplier $m/K$ diverges whenever
-observation rates are non-uniform.}
+sees every group every step; \emph{upsamp.}, self-normalized upsampling
+(weights $\propto p_i/r_i$ within the batch); LDS, label-distribution
+smoothing \cite{yang2021dir}, regression only. The fixed multiplier $m/K$
+diverges whenever observation rates are non-uniform.}
 \label{tab:overall}
-\setlength{\tabcolsep}{2.4pt}
-\begin{tabular}{lcccc}
+\footnotesize\setlength{\tabcolsep}{2.2pt}
+\begin{tabular}{lcccccc}
 \toprule
-Instance & \avot{} & unif.\ avg & $m/K$ & full \\
+Instance & \avot{} & unif.\ avg & upsamp. & LDS & $m/K$ & full \\
 \midrule
-Adult, prevalence ($\nu{=}.60$) & $\best{0.2269}$ & $0.2479$ & $0.670$ & $0.2073$ \\
-Adult, aligned ($\nu{=}0$)      & $0.2075$ & $0.2077$ & div. & $0.2073$ \\
-IMDb, skewed ($\nu{=}.31$)      & $\best{86.06}$ & $91.63$ & $8504$ & $82.95$ \\
-IMDb, aligned ($\nu{=}0$)       & $\best{84.28}$ & $86.37$ & div. & $82.95$ \\
+Adult, $\nu{=}.60$ & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.670$ & $0.2073$ \\
+Adult, $\nu{=}0$   & $0.2075$ & $0.2077$ & $0.2075$ & -- & div. & $0.2073$ \\
+IMDb, $\nu{=}.31$  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $8504$ & $82.95$ \\
+IMDb, $\nu{=}0$    & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & div. & $82.95$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -146,6 +154,23 @@ value, which is what Proposition~\ref{prop:surrogate} predicts when
 $\tilde p=p$: there is nothing to correct and transport does not manufacture a
 difference. The fixed multiplier diverges on both aligned instances and is far
 off on the other two, so naive rescaling is no alternative to solving \eqref{eq:mot}.
+Two imbalance baselines sit between the two. Self-normalized upsampling
+(weights $\propto p_i/r_i$, renormalized within the batch), the reweighting
+form of oversampling rare groups, recovers most of the gain and transport
+the rest: $0.2288$ against $0.2269$ on Adult prevalence ($t{=}5.8$) and
+$86.74$ against $86.06$ on IMDb skewed ($t{=}2.6$, at the margin of
+significance with $5$ seeds); on the aligned instances the two coincide, as
+every convex rule must. Downsampling ($\min(p_i/r_i,1)$, normalized) is never
+better than upsampling ($0.2308$, $86.90$). Label-distribution smoothing
+\cite{yang2021dir}, the standard imbalanced-regression correction, reweights
+by the rarity of the label value rather than by how rarely a group is
+observed, and trails even group-blind averaging on both IMDb-Wiki instances
+($94.28$, $89.43$). On the least represented group the margin of transport
+over upsampling widens: $77.0$ against $80.0$ at $\nu{=}.31$ and $73.6$
+against $75.6$ when aligned on IMDb-Wiki, $.073$ against $.075$ on Adult
+prevalence. Upsampling is the one-shot heuristic for the marginal problem
+\eqref{eq:mot} solves exactly, without the feasibility certificate or the
+floor decomposition.
 
 % ----------------------------------------------------------- Table 2
 \begin{table}[t]

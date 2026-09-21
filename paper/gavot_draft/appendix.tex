@@ -99,17 +99,17 @@ target gives each race $1/5$, split equally among its groups, so on the
 prevalence instance the five groups of the three smallest races hold $60\%$
 of the target against $r_i\approx K/m=.03$. IMDb-Wiki: the first $100$
 identities with $30$ images, $128$-d ResNet embeddings, linear regression of
-age; at $\beta{=}0$ nine groups are infeasible (mass $.31$), at $\beta{=}3$
-forty-one ($.88$). Each step draws $K{=}3$ groups without replacement with
+age. Each step draws $K{=}3$ groups without replacement with
 probabilities $\propto r$, inducing $q$ over the $\binom{100}{3}$
 compositions; $q$ is estimated from $10^6$ draws and the plan fitted once
 per instance by \eqref{eq:ipfp}, which on every instance with $\nu=0$
 reaches a row error below $3\cdot10^{-8}$, certifying the remaining
 inequalities of \eqref{eq:hall}. All rules consume the same $H{=}5$ local
-updates from the same draw $A^t$; the fixed multiplier is $(m/K)\,p_i$,
-the rescaling that presumes uniform observation, and full is the reference
-$\Phi(p)$. $\argmin F_w$ is closed-form for least squares and Newton to
-machine precision for the logistic loss.
+updates from the same draw $A^t$. $\argmin F_w$ is closed-form for least squares and Newton to
+machine precision for the logistic loss. Baselines: upsampling weights
+$\propto p_i/r_i$, downsampling $\propto\min(p_i/r_i,1)$, LDS \cite{yang2021dir}
+the inverse Gaussian-smoothed age histogram (kernel $5$, $\sigma{=}2$) averaged
+per group; each renormalized within the batch.
 
 \medskip
 \noindent\textbf{C. Adult severity sweep.} The five Adult skews omitted from
@@ -142,6 +142,6 @@ full               & $.379$ & $.177$ & $.328$ & $.123$ & $.031$ \\
 \bottomrule
 \end{tabular}
 \end{center}
-Transport improves four of five categories and regresses only the majority group,
-the expected effect of reweighting toward a category-uniform target; the residual
-loss on the two smallest categories is the unreachable mass of Cor.~\ref{cor:batchsize}.
+Four of five categories improve and only the majority regresses, the expected
+effect of a category-uniform target; the residual on the two smallest is the
+unreachable mass of Cor.~\ref{cor:batchsize}.
