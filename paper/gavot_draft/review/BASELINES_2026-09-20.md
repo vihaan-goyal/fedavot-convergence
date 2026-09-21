@@ -1,10 +1,10 @@
 # Imbalance baselines and the Adult 16k check, 2026-09-20
 
 Herlock (9/20): "comparing with baselines like up and down sampling and imbalanced regression".
-Runs: `results/2026-09-20_baselines/<cell>/` (models `ipw`, `downsample`, 5 seeds, decay 1000,
+Runs: `results/2026-09-20_baselines/<cell>/` (models `ipw`, `downsample`, `lds` (IMDb only), 5 seeds, decay 1000,
 4000 steps, same flags as the severity sweep); Adult 16k: `results/2026-09-20_adult_16k/`;
 IMDb feasible at constant stepsize: `results/2026-09-14_severity_sweep/imdb_feasible_const/`
-(now in `severity_sweep_table.csv`). Runner: `scripts/pipeline/run_experiments.py`, commit fd4ef5c.
+(now in `severity_sweep_table.csv`). Runner: `scripts/pipeline/run_experiments.py`, commits fd4ef5c (ipw/downsample) and 4fa5541 (lds).
 
 ## What the two baselines are (both convex, self-normalized over the K observed groups)
 
@@ -13,6 +13,11 @@ IMDb feasible at constant stepsize: `results/2026-09-14_severity_sweep/imdb_feas
   the fixed multiplier (N/K) p_i, which is the un-normalized version.
 - **downsample**: weight by min(p_i / pi_i, 1), renormalized: over-observed (majority) groups are
   down-weighted, starved groups left at their share.
+- **LDS** (`lds`, imbalanced regression; Yang et al., "Delving into Deep Imbalanced Regression", ICML
+  2021, https://dir.csail.mit.edu/): label distribution smoothing. Histogram of the target (age) in
+  unit bins, Gaussian kernel (size 5, sigma 2), weight = inverse smoothed density normalized to
+  mean 1; applied at the group level (mean weight of the group's samples), renormalized within
+  the batch. Regression only, so IMDb only; Adult is classification (their FDS/LDS do not apply).
 - Upsampling as a *sampler* change is already the beta axis of the sweep: beta = 1 on Adult is
   "observe in proportion to importance", and group-blind averaging there (0.2077) is the
   perfectly-upsampled baseline. The coverage law p_i <= r_i is where sampler upsampling stops.
@@ -21,21 +26,21 @@ IMDb feasible at constant stepsize: `results/2026-09-14_severity_sweep/imdb_feas
 
 Overall objective (CE on Adult, MSE on IMDb):
 
-| Instance | GAVOT | group-blind | upsample | downsample | full |
-|---|---|---|---|---|---|
-| Adult prevalence (nu=.60) | **0.2269** | 0.2479 | 0.2288 | 0.2308 | 0.2073 |
-| Adult aligned (nu=0) | 0.2075 | 0.2077 | 0.2075 | 0.2075 | 0.2073 |
-| IMDb skewed (nu=.31) | **86.06** | 91.63 | 86.74 | 86.90 | 82.95 |
-| IMDb aligned (nu=0) | **84.28** | 86.37 | 84.40 | 84.40 | 82.95 |
+| Instance | GAVOT | group-blind | upsample | downsample | LDS | full |
+|---|---|---|---|---|---|---|
+| Adult prevalence (nu=.60) | **0.2269** | 0.2479 | 0.2288 | 0.2308 | n/a | 0.2073 |
+| Adult aligned (nu=0) | 0.2075 | 0.2077 | 0.2075 | 0.2075 | n/a | 0.2073 |
+| IMDb skewed (nu=.31) | **86.06** | 91.63 | 86.74 | 86.90 | 94.28 | 82.95 |
+| IMDb aligned (nu=0) | **84.28** | 86.37 | 84.40 | 84.40 | 89.43 | 82.95 |
 
 Least represented group (race Other on Adult; top-importance identities on IMDb):
 
-| Instance | GAVOT | group-blind | upsample | downsample | full |
-|---|---|---|---|---|---|
-| Adult prevalence | **.0732** | .1194 | .0746 | .0805 | .0309 |
-| Adult aligned | **.0318** | .0352 | .0325 | .0325 | .0309 |
-| IMDb skewed | **76.99** | 86.42 | 79.95 | 80.23 | 72.23 |
-| IMDb aligned | **73.63** | 79.89 | 75.59 | 75.59 | 72.23 |
+| Instance | GAVOT | group-blind | upsample | downsample | LDS | full |
+|---|---|---|---|---|---|---|
+| Adult prevalence | **.0732** | .1194 | .0746 | .0805 | n/a | .0309 |
+| Adult aligned | **.0318** | .0352 | .0325 | .0325 | n/a | .0309 |
+| IMDb skewed | **76.99** | 86.42 | 79.95 | 80.23 | 91.04 | 72.23 |
+| IMDb aligned | **73.63** | 79.89 | 75.59 | 75.59 | 84.81 | 72.23 |
 
 Reading: self-normalized upsampling is a strong baseline, far ahead of group-blind averaging and
 within 0.002 CE / 0.7 MSE of transport on the overall objective. Transport is ahead on every
@@ -44,6 +49,22 @@ the same idea at different precision: upsampling is the one-shot heuristic (rati
 normalized per batch), transport is the exact solution of the same marginal problem, with the
 feasibility certificate and the floor decomposition attached. Downsampling is never better than
 upsampling. On the aligned instances all convex rules tie, as Prop. 2 predicts.
+
+LDS is the wrong axis for this problem and the numbers say so: it is worse than group-blind
+averaging on both IMDb instances (94.3 vs 91.6 skewed, 89.4 vs 86.4 aligned) and on the rare
+group (91.0 vs 86.4, 84.8 vs 79.9). LDS reweights by how rare a *label value* (an age) is in the
+pooled data; the mismatch here is in how rarely a *group* is observed relative to its target
+share, which LDS never looks at. Its group weights correlate with the tail tiers, so it behaves
+like a mild version of group-blind averaging (tier 5: 95.0, vs 96.6 group-blind, 115.3 GAVOT,
+116.7 full). Report it as the imbalanced-regression baseline Herlock asked for, with that one
+sentence of explanation; do not tune it (kernel/sigma) into something it is not.
+
+Per-group detail (all groups, most-biased single group): see the 9/20 message to Vihaan; the
+rows where group-blind beats every other rule (White on Adult, tier 5 on IMDb) are the groups the
+target down-weights, and full coverage is worst there too, so that is the objective at work, not a
+failure. Upsampling beating full coverage on tier 2 / tier 5 is the same effect: full minimizes
+the p-weighted objective and is best on every group with large p_i; no rule beats full on the
+overall objective or on the least represented group.
 
 Where this goes: two more columns in Table 1 (or a small table in the extended version) and one
 sentence in E1: "self-normalized upsampling recovers most of the gain and transport the rest;
