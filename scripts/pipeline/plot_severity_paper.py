@@ -27,15 +27,15 @@ for ax, tag in zip(axes, ["const", "decay1000"]):
             ax.plot(x, [float(r[f"floor_{m}"]) for r in pts], color=COL[m], ls="--", lw=1.0, label=LBL[m] + r", floor $\Phi$")
     for r, xi in zip(pts, x):
         ax.annotate(rf"$\beta$={float(r['beta']):g}", (xi, float(r["meas_fedavot"])), textcoords="offset points",
-                    xytext=((0, -11) if float(r["beta"]) == 2 else (0, 5)), ha=("right" if float(r["beta"]) == 3 else "center"), fontsize=8, color="0.3")
-    ax.set_title(PANEL[tag], fontsize=9, pad=6); ax.tick_params(labelsize=8)
-    ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=8.5)
-    ax.tick_params(labelsize=7)
+                    xytext=((0, -11) if float(r["beta"]) == 2 else (0, 5)), ha=("right" if float(r["beta"]) == 3 else "center"), fontsize=9.3, color="0.3")
+    ax.set_title(PANEL[tag], fontsize=9.3, pad=6); ax.tick_params(labelsize=9.3)
+    ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=9.3)
+    ax.tick_params(labelsize=9.3)
     ax.grid(alpha=0.3)
-axes[0].set_ylabel(r"overall loss $F_p$ (MSE)", fontsize=9)
+axes[0].set_ylabel(r"overall loss $F_p$ (MSE)", fontsize=9.3)
 
 _h, _l = axes[1].get_legend_handles_labels(); _sel = [i for i, t in enumerate(_l) if "measured" in t]
-axes[1].legend([_h[i] for i in _sel], [_l[i].replace(", measured", "") for i in _sel], fontsize=8, frameon=False, loc="upper left", handlelength=2.2)
+axes[1].legend([_h[i] for i in _sel], [_l[i].replace(", measured", "") for i in _sel], fontsize=9.3, frameon=False, loc="upper left", handlelength=2.2)
 fig.tight_layout(pad=0.4)
 os.makedirs(OUT, exist_ok=True)
 fig.savefig(os.path.join(OUT, "severity_imdb.pdf"), bbox_inches="tight")

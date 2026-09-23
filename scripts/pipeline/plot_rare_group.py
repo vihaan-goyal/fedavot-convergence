@@ -125,7 +125,7 @@ for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Othe
     plt.close(fig)
 
 # --- fit version for the 4-page paper: one row, decaying-stepsize panels only (same data)
-fig, axes = plt.subplots(1, 2, figsize=(7.0, 1.6))
+fig, axes = plt.subplots(1, 2, figsize=(7.0, 1.9))   # 1.9 in: 9.3 pt text needs the height (kit: >= 9 pt placed)
 for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]:
     for mdl in ["fedavot", "fedavg", "full"]:
         pts = pick(ds, grp, "decay1000", mdl)
@@ -138,17 +138,18 @@ for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]
         if ds != "adult" and mdl == "fedavot":
             for r, xi, yi in zip(pts, x, y):
                 ax.annotate(rf"$\beta$={r['beta']:g}", (xi, yi), textcoords="offset points",
-                            xytext=((0, -11) if r["beta"] == 2 else (-5, -3) if r["beta"] == 3 else (0, 6)), ha=("right" if r["beta"] == 3 else "center"), fontsize=8, color="0.3")
+                            xytext=((0, -12) if r["beta"] == 2 else (5, -4) if r["beta"] == 3 else (0, 6)), ha=("left" if r["beta"] == 3 else "center"), fontsize=9.3, color="0.3")
     if ds == "adult":
         ax.invert_xaxis(); ax.set_xticks([r["beta"] for r in pts])
-        ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=8)
-        ax.set_title("Adult: race Other (cross-entropy)", fontsize=9, pad=6); ax.set_ylabel("cross-entropy", fontsize=8.5); ax.tick_params(labelsize=8)
-        ax.set_xlabel(r"sampling weights $\propto p^{\beta}$", fontsize=8)
+        ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=9.3)
+        ax.set_title("Adult: race Other (cross-entropy)", fontsize=9.3, pad=6); ax.set_ylabel("cross-entropy", fontsize=9.3); ax.tick_params(labelsize=9.3)
+        ax.set_xlabel(r"sampling weights $\propto p^{\beta}$", fontsize=9.3)
+        ax.set_ylim(top=0.17)   # headroom so the legend sits above the curves
     else:
-        ax.set_title("IMDb-Wiki: top-importance identities (MSE)", fontsize=9, pad=6); ax.set_ylabel("MSE", fontsize=8.5); ax.tick_params(labelsize=8); ax.margins(y=0.22)
-        ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=8)
-    ax.tick_params(labelsize=8); ax.grid(alpha=0.3)
-axes[0].legend(fontsize=8, frameon=False, loc="upper left", handlelength=2.2)
+        ax.set_title("IMDb-Wiki: top-importance identities (MSE)", fontsize=9.3, pad=6); ax.set_ylabel("MSE", fontsize=9.3); ax.tick_params(labelsize=9.3); ax.margins(y=0.22)
+        ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=9.3)
+    ax.tick_params(labelsize=9.3); ax.grid(alpha=0.3)
+axes[0].legend(fontsize=9.3, frameon=False, loc="upper left", handlelength=2.2)
 fig.tight_layout(pad=0.4)
 fig.savefig(os.path.join(OUT, "rare_group_fit.pdf"), bbox_inches="tight")
 fig.savefig(os.path.join(OUT, "rare_group_fit.png"), dpi=200, bbox_inches="tight")
