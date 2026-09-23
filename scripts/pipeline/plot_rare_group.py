@@ -115,7 +115,7 @@ for ds, grp, fname in [("imdbwiki", "tier1", "rare_group_imdb"), ("adult", "Othe
     axes[1].legend(fontsize=6.5, frameon=False, loc="upper left")
     fig.suptitle(TITLE[ds], fontsize=8.5, y=1.0)
     if ds == "adult":
-        fig.supxlabel(r"observation rate $r\propto p^{\beta}$ ($\beta{=}1$ aligned, $\beta{=}0$ uniform); $\nu$ = infeasible mass", fontsize=7.5)
+        fig.supxlabel(r"sampling weights $\propto p^{\beta}$ ($\beta{=}1$ aligned, $\beta{=}0$ uniform); $\nu$ = infeasible mass", fontsize=7.5)
     else:
         fig.supxlabel(r"infeasible mass $\nu$ (%)", fontsize=7.5)
     fig.tight_layout(pad=0.4)
@@ -143,7 +143,7 @@ for ax, ds, grp in [(axes[0], "adult", "Other"), (axes[1], "imdbwiki", "tier1")]
         ax.invert_xaxis(); ax.set_xticks([r["beta"] for r in pts])
         ax.set_xticklabels([f"$\\beta$={r['beta']:g}\n$\\nu$={r['nu']:.2f}" for r in pts], fontsize=8)
         ax.set_title("Adult: race Other (cross-entropy)", fontsize=9, pad=6); ax.set_ylabel("cross-entropy", fontsize=8.5); ax.tick_params(labelsize=8)
-        ax.set_xlabel(r"observation rate $r\propto p^{\beta}$", fontsize=8)
+        ax.set_xlabel(r"sampling weights $\propto p^{\beta}$", fontsize=8)
     else:
         ax.set_title("IMDb-Wiki: top-importance identities (MSE)", fontsize=9, pad=6); ax.set_ylabel("MSE", fontsize=8.5); ax.tick_params(labelsize=8); ax.margins(y=0.22)
         ax.set_xlabel(r"infeasible mass $\nu$ (%)", fontsize=8)
