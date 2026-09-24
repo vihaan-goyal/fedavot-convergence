@@ -1,4 +1,3 @@
-
 \documentclass{article}
 \usepackage{spconf,amsmath,amssymb,amsthm,graphicx,booktabs,multirow}
 \usepackage{algorithm}
@@ -59,22 +58,840 @@ $^{3}$Westhill High School, Stamford, CT, USA\\
 \begin{abstract}
 Minibatch stochastic gradient descent (SGD) weights each group of a
 population by how often it appears in the data, not by how much it
-matters. On imbalanced data, as in applications where fairness matters, it minimizes a surrogate risk that favors
-frequent groups, regardless of how many iterations one uses. We show that
-reweighting the gradients related to each group inside each batch reaches only a polytope of
-feasible objectives fixed by the sampler, which contains the target exactly when a
-masked optimal transport problem between the law of batch compositions
-and the target exists. The resulting method, Group-Fair Stochastic Gradient Descent via Masked Optimal Transport, or for short \avot{}, reweights
-every batch with a Sinkhorn plan computed once, is fair and converges at the $O(1/\sqrt{T})$ rate of SGD. When the target is out of reach, i.e., in the infeasible case, we show that Sinkhorn returns its
-max--min fair Kullback--Leibler projection, and a
-mean--conditional-value-at-risk (CVaR) layer certifies the target risk due to its Distributionally Robust Optimization form. On Adult and IMDb-Wiki, \avot{} closes $52$--$64\%$ of the gap between
-group-blind averaging and full-access SGD, and it wins where correcting the weighting saves more risk than its larger weights add in
-gradient noise.
+matters, so on imbalanced data it minimizes a surrogate risk that favors
+frequent groups, however long it runs. We show that reweighting the groups
+inside each batch reaches only a polytope of objectives fixed by the
+sampler, which contains the target exactly when a masked optimal transport
+problem between the law of batch compositions and the target is feasible.
+The resulting method, \avot{}, reweights every batch with a Sinkhorn plan
+computed once and, when the target is reachable, optimizes it at the
+$O(1/\sqrt{T})$ rate of SGD. Otherwise, Sinkhorn returns the max--min fair
+Kullback--Leibler projection of the target, and a
+mean--conditional-value-at-risk (CVaR) layer certifies the target risk
+through its distributionally robust form. On Adult and IMDb-Wiki, \avot{}
+closes $52$--$64\%$ of the gap between group-blind averaging and
+full-access SGD, and it wins wherever correcting the weighting saves more
+risk than its larger weights add in gradient noise.
 \end{abstract}
 
 \begin{keywords}
 Group fairness, imbalanced learning, stochastic gradient descent, masked
 optimal transport, conditional value at risk.
+\end{keywords}
+
+% =====================================================================
+\vspace{-4pt}\section{Introduction}
+\label{sec:intro}
+% =====================================================================
+
+Machine learning fits a model by minimizing its average loss over the
+population it will serve, at scale by stochastic gradient descent (SGD),
+one small random batch at a time \cite{nemirovski2009,bottou2018optimization}.
+SGD thus follows the population loss in the proportions in which the data
+arrive, and those proportions are rarely the ones that matter.
+Populations consist of groups, such as demographic categories, speakers
+or identities, whose share of the data differs from their importance:
+face-analysis systems err most on the intersections least present in
+their training data \cite{buolamwini2018gender}, speech recognizers make
+markedly more errors for Black than for white speakers
+\cite{koenecke2020speech}, and imbalanced regression errs most where labels
+are scarce \cite{yang2021dir}. Imbalance is the norm
+\cite{he2009imbalanced}, and SGD inherits it: each group steers the updates
+in proportion to its frequency.
+
+In Fig.~\ref{fig:motivation}, two groups, one nine times as frequent as
+the other, follow different trends, and the learner weighs them equally.
+Uniform SGD fits the frequent group and leaves the rare one with nearly
+twenty times its error, upsampling the rare group inside each batch
+narrows the gap, and \avot{} recovers the target line, with equal error
+on both groups.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/motivation.pdf}
+\vspace{-16pt}
+\caption{Two groups ($900/100$ samples, trends $\pm2\sigma$ shaded),
+i.i.d.\ batches of $b{=}7$, $p=(\frac12,\frac12)$; legend: MSE on
+majority/minority.}
+\label{fig:motivation}
+\vspace{-10pt}
+\end{figure}
+
+Existing remedies act on the sampler, the loss or the objective.
+Resampling \cite{he2009imbalanced,chawla2002smote} and balanced sampling
+\cite{idrissi2022simple} need control of the sampler, and down-sampling
+wastes data. Reweighting by class \cite{cui2019classbalanced} or label
+\cite{yang2021dir} frequency and margin or logit adjustment
+\cite{cao2019ldam,menon2021logit} favor rare classes, though importance
+weights fade on separable data \cite{byrd2019importance}, and importance
+sampling \cite{needell2014sgd,katharopoulos2018not} only reduces variance.
+Group distributionally robust optimization (DRO) \cite{sagawa2020dro} and
+its label-free variants \cite{hashimoto2018repeated,liu2021jtt}, CVaR and
+DRO objectives \cite{namkoong2017variance,levy2020large,curi2020adaptive}, and
+constrained methods
+\cite{hardt2016equality,agarwal2018reductions,cotter2019twoplayer,chamon2020pacc,chamon2023nonconvex}
+change the objective itself. In streaming, sharded or access-restricted
+pipelines, however, batches arrive as they come, and the only lever left
+is how the groups present in each batch are weighted.
+
+Upsampling, the natural choice, sets each group's weight from its own
+frequency and renormalizes the batch, so the weight the frequent group
+collects when alone is never returned to the rare group. We instead
+choose the weights of all batch compositions jointly, as a transport plan
+from how often each combination of groups appears to how much each group
+matters. This carries over \textsf{FedAVOT} \cite{rahimi2025fedavot} and
+\textsf{FedeRage} \cite{rahimi2026federage}, which correct and hedge the
+analogous mismatch between client participation and client importance in
+federated learning. Our contributions are:
+\begin{enumerate}\itemsep0pt\parskip0pt\topsep2pt
+\item \emph{What reweighting can reach.} SGD, and every normalized rule
+that reweights the groups of a batch, optimizes a surrogate whose
+weighting lies in a polytope fixed by the sampler; the target lies in it
+exactly when a Hall-type coverage condition holds, checked by one
+max-flow before training.
+\item \emph{Exact alignment.} In feasible cases, \avot{} is unbiased for the
+target and converges at the $O(1/\sqrt T)$ rate of SGD whatever the batch composition.
+\item \emph{Certified robustness beyond coverage.} Otherwise, Sinkhorn
+returns the max--min fair Kullback--Leibler projection of the target onto
+the reachable set, and a mean--CVaR layer certifies the target risk at the
+smallest price any normalized rule admits. One theorem covers both regimes
+at the $O(1/\sqrt T)$ rate, inflated by $\kappa$ under CVaR.
+\item \emph{Evidence.} On Adult and IMDb-Wiki, \avot{} closes
+$52$--$64\%$ of the gap between group-blind averaging and full-access SGD
+and cuts the cross-entropy of race Other (under $1\%$ of the records) from
+$0.119$ to $0.073$. It wins while the alignment gain exceeds the noise of
+its larger weights, though its weighting is always closer to $p$, and
+CVaR buys a certificate rather than a lower risk.
+\end{enumerate}
+
+% =====================================================================
+\vspace{-6pt}
+\vspace{-6pt}\section{Problem Formulation}
+\vspace{-8pt}
+\label{sec:setup}
+% =====================================================================
+
+\begin{algorithm}[t]
+\caption{Group-fair SGD by masked transport (\avot{})}
+\label{alg:gavot}
+\small
+\begin{algorithmic}[1]
+\Require $p$, $(q,\{A_j\},E)$, stepsizes $\eta_t$, horizon $T$,
+$\alpha\in(0,1]$, $\gamma\in[0,1]$
+\State $\Gamma\leftarrow$ Sinkhorn$(\mathbf 1_E;p,q)$,
+$\ W\leftarrow\Gamma\,\mathrm{diag}(q)^{-1}$ \Comment{offline}
+\State $\theta^0\in\mathcal{C}$, $\ \tau^0\in[0,M]$
+\For{$t=1,\dots,T$}
+  \State draw $B^t$; find $j$ with $A_j=A^t$; get $g^t_i,\hat f^t_i$, $i\in A^t$
+  \State $c^t_i\leftarrow\mathbf{1}\{\hat f^t_i\ge\tau^{t-1}\}$, $\ \omega^t_i\leftarrow W[i,j]\big(1-\gamma+\tfrac{\gamma}{\alpha}c^t_i\big)$
+  \State $\theta^{t}\leftarrow\Proj\big(\theta^{t-1}-\eta_t\sum_{i\in A^t}\omega^t_i\,g^t_i\big)$
+  \State $\tau^{t}\leftarrow\Pi_{[0,M]}\big(\tau^{t-1}-\eta_t\gamma\big(1-\tfrac{1}{\alpha}\sum_{i\in A^t}W[i,j]c^t_i\big)\big)$
+\EndFor
+\Ensure $(\bar\theta_T,\bar\tau_T)=\frac{1}{T}\sum_{t=0}^{T-1}(\theta^t,\tau^t)$
+\end{algorithmic}
+\end{algorithm}
+Let $\mathcal{X}\subseteq\R^{d_x}$ and $\mathcal{Y}$ be the input and
+output spaces, and let $\Nn{N}$ index the groups over which fairness is
+required. The training set $\mathcal{S}$ holds $n$ triples $(x,y,z)$ with
+group label $z\in\Nn{N}$. Group $i$ has $n_i$ examples, empirical law
+$\mathcal{D}_i$ and \emph{prevalence} $\pi_i\triangleq n_i/n$. A model
+$m(\cdot\,;\theta)$ with parameter $\theta$ in a convex compact set
+$\mathcal{C}\subseteq\R^{d}$ incurs a loss $\ell(m(x;\theta),y)\in[0,M]$,
+and group $i$ incurs the risk
+$f_i(\theta)\triangleq\E_{\mathcal{D}_i}[\ell(m(X;\theta),Y)]$. Each
+weighting $w\in\simplex{N}$ of the groups defines the risk
+$F_w\triangleq\sum_iw_if_i$ with a minimizer
+$\theta^\star_w\in\argmin_{\mathcal{C}}F_w$. Three weightings matter in
+what follows. The learner declares the first, the sampler imposes the
+second, and a reweighting rule achieves the third.
+
+\noindent\textbf{Target.} The learner declares a \emph{target}
+(importance) distribution $p\in\simplex{N}$, which may be uniform,
+inverse-prevalence, or set by a fairness specification
+\cite{mohri2019agnostic,li2020fair}, and seeks
+\vspace{-4pt}
+\begin{equation}
+\min_{\theta\in\mathcal{C}}\ F_p(\theta)=\textstyle\sum_{i=1}^{N}p_if_i(\theta).
+\label{eq:target}
+\end{equation}
+\vspace{-10pt}
+
+\noindent\textbf{Availability.} SGD never sees $p$. It sees random
+batches, and the groups present in them determine which objectives it can
+optimize. At step $t$ the batch $B^t$ holds $b$ examples drawn i.i.d.\
+uniformly from $\mathcal{S}$, independently across steps. The groups it
+contains form the \emph{active set} $A^t\triangleq\{z_k:k\in B^t\}$, which
+takes values in a family $\{A_j\}_{j\in\Nn{J}}$ with law
+$q_j\triangleq\PP[A^t=A_j]$, the \emph{availability distribution}. The
+\emph{mask} $E\triangleq\{(i,j):i\in A_j\}$ records which groups each
+composition contains. The \emph{coverage}
+$\bar q(I)\triangleq\PP[A^t\cap I\neq\emptyset]$ of a set
+$I\subseteq\Nn{N}$ is the probability that a batch contains at least one
+of its groups, and group $i$ is observed at rate
+$r_i\triangleq\bar q(\{i\})$. With $\pi(I)\triangleq\sum_{i\in I}\pi_i$,
+inclusion--exclusion gives
+\begin{multline}
+\PP[A^t\!=\!A]=\textstyle\sum_{A'\subseteq A}(-1)^{|A\setminus A'|}\pi(A')^b,
+\\ \bar q(I)=1-(1-\pi(I))^b,
+\label{eq:iidlaw}
+\end{multline}
+so $r_i=1-(1-\pi_i)^b$. The analysis uses the sampler only through $q$,
+so it covers every sampler with i.i.d.\ active sets, including the one of
+Sec.~\ref{sec:exp}, which draws $K$ groups per step.
+
+\noindent\textbf{Group-weighting rules.} Within a batch, the only freedom
+left is how to weight the groups present. Let $g^t_i$ and $\hat f^t_i$ be
+the subgradient and the loss at $\theta^{t-1}$, averaged over the
+$n_i(B^t)$ examples of group $i$ in $B^t$. SGD and each of its
+corrections step as $\theta^t=\Proj(\theta^{t-1}-\eta_t\hat g^t)$ along
+$\hat g^t=\sum_{i\in A^t}\omega^t_ig^t_i$, and they differ only in the
+batch weights $\omega^t$. A \emph{group-weighting rule} chooses
+$\omega^t\in\simplex{N}$ supported on $A^t$ and depending on $B^t$ only
+through its labels $\mathcal{Z}^t\triangleq(z_k)_{k\in B^t}$. We call such
+rules \emph{normalized}, since the weights of every batch sum to one.
+When the weights depend only on $A^t$, the rule is a matrix $W$ whose
+$j$-th column weights the batches of composition $A_j$, which is the
+client-weighting setting of \cite{rahimi2025fedavot,rahimi2026federage}
+with groups in place of clients. Uniform SGD uses
+$\omega^t_i=n_i(B^t)/b$, group-blind averaging $\omega^t_i=1/|A^t|$, and
+upsampling $\omega^t_i\propto p_i/r_i$ on $A^t$. The \emph{effective
+weighting} of a rule is $\tilde p\triangleq\E[\omega^t]$, and the next
+result shows that it is the weighting the rule optimizes.
+\vspace{-6pt}
+\begin{proposition}[Reachable objectives]
+\label{prop:surrogate}
+If the losses are convex in $\theta$, the batches are independent across
+steps, and, given $\mathcal{Z}^t$, the examples of each group $i\in A^t$
+are i.i.d.\ draws from $\mathcal{D}_i$ (as for i.i.d.\ batches), then a
+group-weighting rule is a stochastic subgradient method on $F_{\tilde p}$,
+and $\tilde p$ lies in the \emph{reachable set}
+\begin{equation}
+\Reach\triangleq\big\{\Gamma\mathbf 1_J:\ \Gamma\in\R_+^{N\times J},\
+\mathbf 1_N^\top\Gamma=q^\top,\ \mathrm{supp}(\Gamma)\subseteq E\big\};
+\label{eq:reach}
+\end{equation}
+conversely, every point of $\Reach$ is the effective weighting of some
+rule. Uniform SGD has $\tilde p=\pi$, and group-blind averaging the
+survival weights $\tilde p_i=\sum_{j:\,i\in A_j}q_j/|A_j|$ of
+\cite{rahimi2025agnostic,rahimi2026federage}.
+\end{proposition}
+\vspace{-8pt}
+\noindent\emph{Proof sketch.} Given $\mathcal{Z}^t$, $\omega^t$ is fixed and
+$\E[g^t_i\mid\theta^{t-1},\mathcal{Z}^t]=s_i\in\partial f_i(\theta^{t-1})$,
+so $\E[\hat g^t\mid\theta^{t-1}]=\sum_i\tilde p_is_i\in\partial F_{\tilde
+p}(\theta^{t-1})$. $\Gamma[i,j]\triangleq q_j\E[\omega^t_i\mid A^t=A_j]$
+meets \eqref{eq:reach} with $\Gamma\mathbf 1_J=\tilde p$, and any such
+$\Gamma$ is realized by $\omega^t=\Gamma[\cdot,j]/q_j$ on
+$\{A^t=A_j\}$.\hfill$\square$
+
+Proposition~\ref{prop:surrogate} has two consequences. The first concerns
+SGD itself. Its group counts are multinomial with parameters $(b,\pi)$,
+so $\tilde p=\pi$ and
+\begin{equation}
+\E\big[\hat g^t\mid\theta^{t-1}\big]\in\partial F_\pi(\theta^{t-1}).
+\label{eq:introbias}
+\end{equation}
+The sampler thus imposes the prevalence $\pi$. SGD is a stochastic
+subgradient method on $F_\pi$ and converges to $\theta^\star_\pi$, not to
+$\theta^\star_p$, for every horizon and stepsize, just as agnostic
+federated averaging converges to the participation-weighted optimum
+\cite{rahimi2025agnostic,rahimi2026federage}. The second concerns every
+normalized rule. Some rule optimizes \eqref{eq:target} if and only if
+$p\in\Reach$, that is, if and only if the availability $q$ can be
+transported onto the target $p$ along the mask $E$. \textsf{FedAVOT}
+\cite{rahimi2025fedavot} removes the analogous mismatch in federated
+averaging by masked optimal transport, and \textsf{FedeRage}
+\cite{rahimi2026federage} hedges it by CVaR. Section~\ref{sec:gavot}
+carries both tools over to SGD.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=.85\textwidth]{figs/rare_group_fit.pdf}
+\vspace{-12pt}
+\caption{Loss on the least represented groups: Adult, race Other
+($p_i=0.2$); IMDb-Wiki, the top-$20$ identities.}
+\vspace{-10pt}
+\label{fig:rare}
+\end{figure*}
+% =====================================================================
+\section{Group-Fair SGD by MOT and CVaR}
+\vspace{-8pt}
+\label{sec:gavot}\label{sec:cvar}% sec:cvar kept as an alias
+% =====================================================================
+
+By Proposition~\ref{prop:surrogate}, designing a normalized rule amounts
+to choosing a plan $\Gamma$, and the rule then optimizes the row marginal
+$\Gamma\mathbf 1_J$. \avot{} chooses the plan in two stages. Masked
+transport selects the reachable weighting closest to $p$, which is $p$
+itself when $p$ is reachable, and a mean--CVaR layer bounds the part of
+the target that no plan reaches. One theorem covers both stages.
+
+\noindent\textbf{Transport as reweighting.} A rule optimizes $F_p$ exactly
+when its plan, whose entry $\Gamma[i,j]$ is the mass that composition
+$A_j$ sends to group $i$, solves the \emph{masked optimal transport} (MOT)
+problem of \textsf{FedAVOT} \cite{rahimi2025fedavot}, a transport problem
+\cite{villani2009,peyre2019} without cost,
+\begin{equation}
+\Gamma\mathbf 1_J=p,\qquad \mathbf 1_N^\top\Gamma=q^\top,\qquad \Gamma\ge 0,
+\qquad \mathrm{supp}(\Gamma)\subseteq E .
+\label{eq:mot}
+\end{equation}
+The rule is then $\omega^t=W[\cdot,j(t)]$, where $A^t=A_{j(t)}$ and
+$W\triangleq\Gamma\,\mathrm{diag}(q)^{-1}$. The column constraint makes the
+weights of every batch sum to one, the mask assigns weight only to groups
+present in the batch, and the row constraint makes the weight of group
+$i$, averaged over batches, equal to $p_i$. In Fig.~\ref{fig:motivation},
+a batch holds only the majority with probability $0.9^7\approx0.48$. The
+plan gives the minority $0.96$ of every mixed batch and reaches
+$(0.48+0.52\cdot0.04,\,0.52\cdot0.96)\approx p$. Upsampling gives it only
+$0.66$ and reaches $(0.66,0.34)$, because it weights each group by its own
+rate, so the weight the majority collects in batches without the minority
+is never returned. A plan with the marginals of \eqref{eq:mot} exists only
+if the batches cover the target well enough, and
+Proposition~\ref{thm:feas} states this condition exactly.
+
+
+\vspace{-6pt}
+\begin{proposition}[Coverage, cf.\ {\cite[Thm.~1]{rahimi2025fedavot}}]
+\label{thm:feas}
+Problem \eqref{eq:mot} is feasible, i.e.\ $p\in\Reach$, if and only if
+\vspace{-9pt}
+
+\begin{equation}
+\textstyle p(I)\triangleq\sum_{i\in I}p_i\;\le\;\bar q(I)
+\qquad\forall\,I\subseteq\Nn{N}.
+\label{eq:hall}
+\end{equation}
+%For i.i.d.\ batches, $I=\{i\}$ and $I=\Nn{N}\setminus\{i\}$ give
+%$\pi_i^b\le p_i\le1-(1-\pi_i)^b$.
+\end{proposition}
+\vspace{-6pt}
+\noindent\emph{Proof sketch.} Max-flow/min-cut
+\cite{hall1935,fordfulkerson1956} on $s\to i\to j\to t$ with capacities
+$p_i$, $\infty$ on $E$, and $q_j$; the lower inequalities of
+\cite[Thm.~1]{rahimi2025fedavot} are \eqref{eq:hall} for
+$\Nn{N}\setminus I$.\hfill$\square$
+
+Condition \eqref{eq:hall} requires that no set of groups carry more
+importance than the probability that a batch contains one of them. Since
+$\bar q(I)\to1$ as $b$ grows, infeasibility arises with small batches and
+rare groups. Two quantities measure how far an instance is from
+feasibility, the \emph{Hall ratio}
+$\rho\triangleq\max_{I\neq\emptyset}p(I)/\bar q(I)\ge1$, which equals one
+exactly on feasible instances, and the \emph{infeasible mass}
+$\nu\triangleq\sum_{i:\,p_i>r_i}p_i$ of the groups whose importance
+exceeds their observation rate.
+
+\noindent\textbf{Sinkhorn and the KL projection.} \avot{} computes the
+plan by Sinkhorn scaling of $\mathbf 1_E$ to the marginals $(p,q)$
+\cite{sinkhorn1967,cuturi2013,peyre2019}, once and offline, at a cost of
+$O(|E|)$ per sweep. Under \eqref{eq:hall}, the scaling converges to a
+solution of \eqref{eq:mot}. When \eqref{eq:hall} fails, no solution
+exists, yet the iterates taken after each column scaling still normalize
+every batch, and their row marginals converge \cite{gietl2013ipfp}. The
+next result identifies their limit.
+
+% ----------------------------------------------------------- Table 1
+\begin{table*}[tp]
+\centering
+\small\setlength{\tabcolsep}{3pt}
+\begin{tabular}[t]{lccccc}
+\toprule
+(a) & \avot{} & blind avg. & upsamp. & LDS & full \\
+\midrule
+Adult, uniform & $\best{0.2269}$ & $0.2479$ & $0.2288$ & -- & $0.2073$ \\
+Adult, aligned & $\best{0.2075}$ & $0.2077$ & $0.2075$ & -- & $0.2073$ \\
+IMDb, uniform  & $\best{86.06}$ & $91.63$ & $86.74$ & $94.28$ & $82.95$ \\
+IMDb, aligned  & $\best{84.28}$ & $86.37$ & $84.40$ & $89.43$ & $82.95$ \\
+\bottomrule
+\end{tabular}%
+\hfill
+\setlength{\tabcolsep}{4.2pt}%
+\begin{tabular}[t]{lcccccc}
+\toprule
+(b) $\beta$ & $0$ & $0.5$ & $1.0$ & $1.5$ & $2.0$ & $3.0$ \\
+$\nu$ & $0.31$ & $0.59$ & $0.70$ & $0.77$ & $0.82$ & $0.88$ \\
+\midrule
+$\Delta_{\mathrm{floor}}$ & $6.99$ & $5.71$ & $3.67$ & $2.56$ & $1.62$ & $0.02$ \\
+gain & $\best{+5.57}$ & $\best{+3.46}$ & $\best{+2.05}$ & $+0.58$ & $-0.03$ & $\best{-2.28}$ \\
+$t$ & $18.5$ & $10.1$ & $4.9$ & $1.0$ & $-0.1$ & $-7.1$ \\
+\bottomrule
+\end{tabular}
+\vspace{-8pt}
+\caption{(a) Target risk $F_p$ (Adult: cross-entropy, IMDb-Wiki: MSE).
+(b) IMDb-Wiki skews. Bold: $|t|>3$ against group-blind averaging.}
+\label{tab:results}
+\end{table*}
+
+\vspace{-8pt}
+\begin{proposition}[Closest reachable weighting]
+\label{prop:proj}
+The row marginal $\hat p$ of the limit of the column-scaled Sinkhorn
+iterates satisfies
+(i) $\hat p=\argmin_{x\in\Reach}\KL(x\,\|\,p)$, the I-projection of $p$
+onto the reachable set \cite{csiszar1975}, and each composition sends its
+mass only to the groups it contains with the smallest ratio $\hat p_i/p_i$;
+(ii) $\max_ip_i/\hat p_i=\min_{x\in\Reach}\max_ip_i/x_i=\rho$.
+\end{proposition}
+\vspace{-8pt}
+\noindent\emph{Proof sketch.} (i) The limit is identified in
+\cite{gietl2013ipfp}, 
+and the second claim is the optimality condition of the projection; it
+involves $x$ only through $x_i/p_i$, so $\hat p$ also minimizes
+$\KL(p\,\|\,x)$ and is the lexicographically optimal base of the
+polymatroid $\bar q$ \cite{fujishige1980}. (ii) For $x\in\Reach$ and any
+$I$, $\min_ix_i/p_i\le x(I)/p(I)\le\bar q(I)/p(I)$ by
+Proposition~\ref{thm:feas}, so $\max_ip_i/x_i\ge\rho$. By (i), the groups
+$I_0$ of smallest ratio receive all the mass of every composition
+touching them, so $\hat p(I_0)=\bar q(I_0)$ and
+$\max_ip_i/\hat p_i=p(I_0)/\bar q(I_0)\le\rho$.\hfill$\square$
+
+Transport thus returns the reachable weighting closest to $p$ in
+Kullback--Leibler divergence, in either direction. It is also max--min
+fair, since no normalized rule gives the worst-served group a larger
+fraction of its importance. Under \eqref{eq:hall} this weighting is $p$
+itself, and transport alone optimizes the target.
+
+\noindent\textbf{Controlling the unreachable part by CVaR.} When $\rho>1$,
+the weighting $\hat p$ differs from $p$, and optimizing $F_{\hat p}$
+controls the target only through
+$F_p\le F_{\hat p}+\frac M2\|p-\hat p\|_1$. \textsf{FedeRage}
+\cite{rahimi2026federage} hedges the same gap in federated averaging with
+a mean--CVaR objective that is robust to weightings near the imposed one.
+We center this objective at $\hat p$. For $w\in\simplex{N}$,
+$\alpha\in(0,1]$, $\gamma\in[0,1]$ and
+$\kappa\triangleq(1-\gamma)+\gamma/\alpha$ \cite{rahimi2026federage}, let
+\vspace{-8pt}
+\begin{equation}
+\begin{aligned}
+\label{eq:meancvar}
+F^{\alpha,\gamma}_w&\triangleq(1-\gamma)F_w+\gamma\,\CVaR^w_\alpha(f)
+=\max\nolimits_{v\in\,\Uset(w)}F_v,\\
+\Uset(w)&\triangleq\big\{v\in\simplex{N}:\ (1-\gamma)w\le v\le\kappa\,w\big\}
+\end{aligned}
+\end{equation}
+where $\CVaR^w_\alpha$ is taken over the group drawn from $w$. The
+equality is the dual representation of CVaR \cite{shapiro2009lectures},
+written in $v=(1-\gamma)w+\gamma u$ with $u\le w/\alpha$. Hence
+$F^{\alpha,\gamma}_w$ bounds the risk of every weighting whose ratio to
+$w$ lies in $[1-\gamma,\kappa]$, and in particular bounds $F_p$ whenever
+$p\in\Uset(w)$.
+
+To optimize $F^{\alpha,\gamma}_{\hat p}$ from batches, we place the risk
+on the observed loss, as \textsf{FedeRage} does. Given $B^t$, let
+$I^t\mid B^t\sim W[\cdot,j(t)]$ be a group of the batch and
+$L\triangleq\hat f^t_{I^t}(\theta)$, so that $\E L=F_{\hat p}(\theta)$ and
+$\E[L\mid I^t=i]=f_i(\theta)$. Algorithm~\ref{alg:gavot} never samples
+$I^t$. Lines 5--7 average over it in closed form and take exact projected
+stochastic subgradient steps on the jointly convex Rockafellar--Uryasev
+form \cite{rockafellar2000cvar}
+\begin{equation}
+\Psi_{\alpha,\gamma}(\theta,\tau)\triangleq
+\E\big[(1-\gamma)L+\gamma\tau+\tfrac{\gamma}{\alpha}(L-\tau)_+\big].
+\label{eq:psi}
+\end{equation}
+Jensen's inequality conditional on $I^t$ then gives, for all
+$(\theta,\tau)$,
+\begin{equation}
+F_{\hat p}(\theta)\;\le\;F^{\alpha,\gamma}_{\hat p}(\theta)\;\le\;\Psi_{\alpha,\gamma}(\theta,\tau),
+\label{eq:sandwich}
+\end{equation}
+so the algorithm drives down an upper bound on the robust risk around
+$\hat p$.
+
+\noindent\textbf{Why transport first.} This bound has a price. A bound
+$F_p\le F^{\alpha,\gamma}_w$ valid for every loss profile needs
+$p\le\kappa w$, so $\kappa\ge\max_ip_i/w_i$, and $\kappa$ inflates the
+rate in Theorem~\ref{thm:rate}. Hedging around the prevalence $\pi$ that
+SGD imposes costs $\kappa\ge\max_ip_i/\pi_i$. Hedging around $\hat p$
+costs only $\rho$, the least any normalized rule admits by
+Proposition~\ref{prop:proj}(ii). Transport therefore makes the CVaR layer
+as cheap as possible, and the next theorem quantifies both stages.
+
+\vspace{-4pt}
+\begin{theorem}[Convergence of \avot{}]
+\label{thm:rate}
+Let $\mathcal{C}$ have diameter $D$, let each $\ell(m(x;\cdot),y)$ be
+convex on $\mathcal{C}$, let the batches be i.i.d.\ across steps with
+$\E[\|g^t_i\|^2\mid\theta^{t-1},\mathcal{Z}^t]\le G^2$, let $\Gamma$ be the
+Sinkhorn plan of Proposition~\ref{prop:proj}, with row marginal $\hat p$,
+and let $(\bar\theta_T,\bar\tau_T)$ be the output of
+Algorithm~\ref{alg:gavot}.\\
+(i) \emph{Transport.} If $\gamma=0$ and $\eta_t\equiv D/(G\sqrt{T})$, then
+$\E[\hat g^t\mid\theta^{t-1}]\in\partial F_{\hat p}(\theta^{t-1})$ and
+$\E[\|\hat g^t\|^2\mid\theta^{t-1}]\le G^2$, independently of $|A^t|$,
+$N$, $b$ and $r$, and
+\begin{equation}
+\E F_{\hat p}(\bar\theta_T)-F_{\hat p}(\theta^\star_{\hat p})\;\le\;DG/\sqrt{T},
+\label{eq:rate}
+\end{equation}
+where $\hat p=p$, i.e.\ the target itself is optimized, whenever
+\eqref{eq:hall} holds.\\
+(ii) \emph{Transport and CVaR.} Let $\gamma\in(0,1]$, $\alpha\in(0,1]$,
+$C_0\triangleq\sqrt{(D^2+M^2)(G^2+1)}$, and
+$\eta_t\equiv\sqrt{D^2+M^2}/(\kappa\sqrt{(G^2+1)T})$. Then
+\vspace{-12pt}
+\begin{equation*}
+\E\,\Psi_{\alpha,\gamma}(\bar\theta_T,\bar\tau_T)
+-\min\nolimits_{\mathcal{C}\times[0,M]}\Psi_{\alpha,\gamma}\;\le\;\kappa\,C_0/\sqrt T,
+\end{equation*}\vspace{-8pt}
+\vspace{-8pt}
+
+and if moreover $p\in\Uset(\hat p)$, i.e.\ $\kappa\ge\rho$ and
+$1-\gamma\le\min_ip_i/\hat p_i$, then\vspace{-8pt}
+
+\begin{equation}
+\E F_p(\bar\theta_T)\;\le\;\min\nolimits_{\mathcal{C}\times[0,M]}\Psi_{\alpha,\gamma}
++\kappa\,C_0/\sqrt{T}.
+\label{eq:certificate}
+\end{equation}\vspace{-8pt}
+
+\end{theorem}\vspace{-12pt}
+
+\noindent\emph{Proof sketch.} (i) Conditionally on $\theta^{t-1}$, the
+columns of $W$ sum to one and the rows of $\Gamma$ to $\hat p$, so
+$\E\hat g^t=\sum_jq_j\sum_{i\in A_j}W[i,j]\,s_i=\sum_i\hat p_is_i$ with
+$s_i\in\partial f_i(\theta^{t-1})$, and Jensen's inequality over
+$W[\cdot,j]$ bounds the second moment by $G^2$. This is the
+sample-to-model argument of \textsf{FedAVOT}
+\cite[Lemma~1, Thm.~3]{rahimi2025fedavot} with one local step, closed by
+the projected stochastic subgradient bound \cite{nemirovski2009}.
+(ii) Given $B^t$, the integrand of \eqref{eq:psi}, averaged over $I^t$, is
+jointly convex in $(\theta,\tau)$ and lines 5--7 compute one of its
+subgradients, so the iteration is projected stochastic subgradient descent
+on $\Psi_{\alpha,\gamma}$ over $\mathcal{C}\times[0,M]$, of diameter
+$\sqrt{D^2+M^2}$. As in \textsf{FedeRage}
+\cite[Thm.~2]{rahimi2026federage}, $\omega^t\le\kappa W[\cdot,j]$ and the
+$\tau$-step is at most $\kappa$, so the second moment grows to
+$\kappa^2(G^2+1)$ and the rate by $\kappa$. Finally, $p\in\Uset(\hat p)$
+gives $F_p\le F^{\alpha,\gamma}_{\hat p}$ by \eqref{eq:meancvar}, and
+\eqref{eq:sandwich} at $(\bar\theta_T,\bar\tau_T)$ gives
+\eqref{eq:certificate}.\hfill$\square$
+
+Under \eqref{eq:hall}, part (i) matches the rate of SGD that sees every
+group at every step, and the sampler affects the guarantee only through
+feasibility. When \eqref{eq:hall} fails, part (ii) bounds the whole target
+risk by the quantity the algorithm drives down. This bound costs a factor
+$\kappa\ge\rho$ in the rate, which no normalized rule can lower, and a
+premium $\min\Psi_{\alpha,\gamma}-\min F_p\ge0$ that grows with $\kappa$.
+Transport fixes the weighting under which the risk is averaged, and CVaR
+hedges the part of the target that this weighting misses.
+
+
+\noindent\textbf{When transport pays.} Theorem~\ref{thm:rate} measures
+\avot{} against the optimum of its own weighting $\hat p$. To compare
+rules at a finite horizon, let $\Phi(w)\triangleq F_p(\theta^\star_w)$,
+with minimizers taken unique. Any rule with effective weighting $w$ then
+satisfies\vspace{-8pt}
+
+\begin{equation}
+\E F_p(\bar\theta_T)-F_p(\theta^\star_p)
+=\underbrace{\Phi(w)-\Phi(p)}_{\textnormal{\small alignment floor}}
++\underbrace{\E F_p(\bar\theta_T)-\Phi(w)}_{\textnormal{\small residual }\varepsilon_T(w)}.
+\label{eq:infeasible}
+\end{equation}
+The alignment floor is nonnegative, independent of $T$ and at most
+$M\|p-w\|_1$. The residual vanishes as $T\to\infty$, but it has no rate in
+general and can be negative. Transport ($w=\hat p$) therefore beats
+another rule ($w=\tilde p$) at horizon $T$ exactly when\vspace{-8pt}
+
+\begin{equation}
+\Delta_{\mathrm{floor}}\triangleq\Phi(\tilde p)-\Phi(\hat p)\;>\;
+\varepsilon_T(\hat p)-\varepsilon_T(\tilde p).
+\label{eq:gain}
+\end{equation}\vspace{-12pt}
+
+The \emph{alignment gain} on the left depends only on the instance. The
+right side depends on the stepsize and on the variance of each rule, and
+transport can raise its own variance by putting large weights on rarely
+observed groups. A weighting closer to $p$ can therefore still lose.
+Condition \eqref{eq:gain}, and no distance between weightings, decides
+the comparison.
+% =====================================================================
+\vspace{-16pt}\section{Experiments}
+\label{sec:exp}
+% =====================================================================
+\vspace{-8pt}
+\noindent\textbf{Setup.} On Adult \cite{uci_adult}, logistic regression
+predicts whether income exceeds \$50{,}000 (cross-entropy, $\eta=0.1$). We form $100$ single-race groups of $30$ records in the data's
+race proportions, $85$ White, $10$ Black, $3$ Asian-Pac-Islander, $1$
+Amer-Indian-Eskimo and $1$ Other, and the target weights the races
+equally, so Other carries $p_i=0.2$. On IMDb-Wiki
+\cite{rothe2018imdbwiki}, linear regression predicts age (MSE,
+$\eta=10^{-2}$) from $128$ PCA features of a pretrained ResNet-18; $100$
+identities with $30$ images each form the groups, and
+$p_i\propto(101-i)^3$ puts $60\%$ of the target on the top $20$. Each step
+draws $K=3$ groups without replacement with weights $\sigma_i$ of skew
+$\beta$. On Adult, $\sigma_i\propto p_i^{\beta}$ runs from uniform
+($\beta=0$, $\nu=0.60$; Other enters $3\%$ of the batches but carries
+$20\%$ of the target) to aligned sampling ($\beta=1$, $\nu=0$). On
+IMDb-Wiki, $\sigma_i\propto i^{\beta}$ increasingly favors the least
+important identities, and $\sigma_i\propto101-i$ is aligned.
+Each drawn group takes $H=5$ local full-batch steps ($H=1$ in
+Theorem~\ref{thm:rate}), and all runs use $\eta_t=\eta/(1+t/1000)$ for
+$4000$ steps and report $F_p$ over the last $500$ iterates and $5$ seeds,
+with Welch's $t$ (clear if $|t|>3$). All rules see the
+same batches: group-blind averaging ($1/K$ each, $\tilde p_i=r_i/K$),
+upsampling ($\propto p_i/r_i$, renormalized), the unnormalized multiplier $(N/K)p_i$ \cite{rahimi2025fedavot}, LDS \cite{yang2021dir} on
+IMDb-Wiki, which reweights by label rarity, and full access, an unrealizable
+reference seeing every group at every step, weighted by
+$p$. \avot{} uses $\gamma=0$ unless stated.
+
+\noindent\textbf{Correcting the weighting lowers the target risk}
+(Table~\ref{tab:results}a). Under uniform sampling, \avot{} closes $52\%$
+of the gap between group-blind averaging and full access on Adult and
+$64\%$ on IMDb-Wiki, and $61\%$ under aligned IMDb-Wiki sampling, all with $t\ge11$. Upsampling recovers most, not all, of this gain ($t=5.1$ on Adult, $2.3$ on IMDb-Wiki), and LDS, which ignores
+availability, trails group-blind averaging. On aligned Adult there is nothing to correct: every normalized rule lies within $4\cdot10^{-4}$
+of full access, whereas the fixed multiplier, whose batch weights sum to up to
+$15.6$, reaches $0.670$ and $8504$ on uniform cells and diverges on aligned
+ones.
+
+\noindent\textbf{Transport wins while the alignment gain exceeds its noise
+cost} (Table~\ref{tab:results}b). As $\beta$ grows,
+$\Delta_{\mathrm{floor}}$ of \eqref{eq:gain} falls from $6.99$ to $0.02$,
+and the measured gain trails it by $1.4$ to $2.3$, the price of noisier
+weights. Transport wins for $\beta\le1$, ties at $\beta=1.5$
+and $2$, and loses at $\beta=3$ ($t=-7.1$), although its weighting is
+closer to $p$ at every skew. With a constant stepsize this price grows,
+and transport loses at all six IMDb-Wiki skews, by up to $7.9$, while it wins at every
+Adult skew.
+
+\noindent\textbf{The groups that matter most benefit} (Fig.~\ref{fig:rare}).
+On Adult, transport lowers the cross-entropy of race Other at every skew,
+to $0.073$ against $0.119$ for group-blind averaging under uniform
+sampling (full access: $0.031$). On IMDb-Wiki, the top $20$ identities, least observed once $\beta>0$, improve while $\nu\le0.59$, tie at $\nu=0.70$, and lose for $\nu\ge0.77$, where their weights
+and noise peak.
+
+\noindent\textbf{CVaR buys a guarantee, not a lower loss.} Over a
+$10\times10$ grid of $(\alpha,\gamma)$, $F_p$ is lowest at, or within
+noise of, $\gamma=0$ in every instance, the premium of
+Theorem~\ref{thm:rate}(ii). The layer lowers the loss of the worst-off
+race on uniform Adult to $0.3624$ at $(\alpha,\gamma)=(0.2,0.3)$, outside
+the certified region, against $0.3679$ for \avot{} and $0.3994$ for
+group-blind averaging, but never helps the least represented group, which
+it can reweight only when a batch contains it. Code, curves and the full
+grid are at
+\href{https://github.com/vihaan-goyal/group-fair-sgd-ot}{\nolinkurl{github.com/vihaan-goyal/group-fair-sgd-ot}}.
+
+%===========================================%==========================
+\vspace{-10pt}\section{Conclusion}
+\vspace{-5pt}% =====================================================================
+
+Minibatch SGD, and every normalized rule that reweights the groups of a
+batch, optimizes a weighting fixed by the sampler rather than the
+declared importance, a bias that upsampling does not remove. Choosing the weights of all batch compositions
+jointly by masked optimal transport yields \avot{}, unbiased under
+coverage at the rate of full-access SGD and, beyond coverage, certified
+by a mean--CVaR layer at the least possible price. Extending these
+guarantees to nonconvex models remains open.
+
+% =====================================================================
+
+\clearpage
+
+\renewcommand{\refname}{REFERENCES}
+
+\balance
+\begin{thebibliography}{99}\setlength{\itemsep}{-2.5pt}\small
+
+\bibitem{nemirovski2009}
+A.~Nemirovski, A.~Juditsky, G.~Lan, and A.~Shapiro, ``Robust stochastic
+approximation approach to stochastic programming,'' \emph{SIAM J. Optim.},
+vol.~19, no.~4, pp. 1574--1609, 2009.
+
+\bibitem{bottou2018optimization}
+L.~Bottou, F.~E. Curtis, and J.~Nocedal, ``Optimization methods for
+large-scale machine learning,'' \emph{SIAM Rev.}, vol.~60, no.~2,
+pp. 223--311, 2018.
+
+\bibitem{buolamwini2018gender}
+J.~Buolamwini and T.~Gebru, ``Gender shades: Intersectional accuracy
+disparities in commercial gender classification,'' in \emph{Proc. FAT*},
+2018, pp. 77--91.
+
+\bibitem{koenecke2020speech}
+A.~Koenecke \emph{et~al.}, ``Racial disparities in automated speech
+recognition,'' \emph{Proc. Natl. Acad. Sci. USA}, vol.~117, no.~14,
+pp. 7684--7689, 2020.
+
+\bibitem{yang2021dir}
+Y.~Yang, K.~Zha, Y.-C. Chen, H.~Wang, and D.~Katabi, ``Delving into deep
+imbalanced regression,'' in \emph{Proc. ICML}, 2021, pp. 11842--11851.
+
+\bibitem{he2009imbalanced}
+H.~He and E.~A. Garcia, ``Learning from imbalanced data,'' \emph{IEEE
+Trans. Knowl. Data Eng.}, vol.~21, no.~9, pp. 1263--1284, 2009.
+
+\bibitem{chawla2002smote}
+N.~V. Chawla, K.~W. Bowyer, L.~O. Hall, and W.~P. Kegelmeyer, ``SMOTE:
+Synthetic minority over-sampling technique,'' \emph{J. Artif. Intell.
+Res.}, vol.~16, pp. 321--357, 2002.
+
+\bibitem{idrissi2022simple}
+B.~Y. Idrissi, M.~Arjovsky, M.~Pezeshki, and D.~Lopez-Paz, ``Simple data
+balancing achieves competitive worst-group-accuracy,'' in \emph{Proc.
+CLeaR}, 2022, pp. 336--351.
+
+\bibitem{cui2019classbalanced}
+Y.~Cui, M.~Jia, T.-Y. Lin, Y.~Song, and S.~Belongie, ``Class-balanced loss
+based on effective number of samples,'' in \emph{Proc. IEEE/CVF CVPR},
+2019, pp. 9268--9277.
+
+\bibitem{cao2019ldam}
+K.~Cao, C.~Wei, A.~Gaidon, N.~Arechiga, and T.~Ma, ``Learning imbalanced
+datasets with label-distribution-aware margin loss,'' in \emph{Proc.
+NeurIPS}, vol.~32, 2019.
+
+\bibitem{menon2021logit}
+A.~K. Menon, S.~Jayasumana, A.~S. Rawat, H.~Jain, A.~Veit, and S.~Kumar,
+``Long-tail learning via logit adjustment,'' in \emph{Proc. ICLR}, 2021.
+
+\bibitem{byrd2019importance}
+J.~Byrd and Z.~C. Lipton, ``What is the effect of importance weighting in
+deep learning?'' in \emph{Proc. ICML}, 2019, pp. 872--881.
+
+\bibitem{needell2014sgd}
+D.~Needell, R.~Ward, and N.~Srebro, ``Stochastic gradient descent,
+weighted sampling, and the randomized Kaczmarz algorithm,'' in \emph{Proc.
+NeurIPS}, vol.~27, 2014, pp. 1017--1025.
+
+\bibitem{katharopoulos2018not}
+A.~Katharopoulos and F.~Fleuret, ``Not all samples are created equal: Deep
+learning with importance sampling,'' in \emph{Proc. ICML}, 2018,
+pp. 2525--2534.
+
+\bibitem{sagawa2020dro}
+S.~Sagawa, P.~W. Koh, T.~Hashimoto, and P.~Liang, ``Distributionally robust
+neural networks for group shifts,'' in \emph{Proc. ICLR}, 2020.
+
+\bibitem{hashimoto2018repeated}
+T.~Hashimoto, M.~Srivastava, H.~Namkoong, and P.~Liang, ``Fairness without
+demographics in repeated loss minimization,'' in \emph{Proc. ICML}, 2018,
+pp. 1929--1938.
+
+\bibitem{liu2021jtt}
+E.~Z. Liu \emph{et~al.}, ``Just train twice: Improving group robustness
+without training group information,'' in \emph{Proc. ICML}, 2021,
+pp. 6781--6792.
+
+\bibitem{namkoong2017variance}
+H.~Namkoong and J.~C. Duchi, ``Variance-based regularization with convex
+objectives,'' in \emph{Proc. NeurIPS}, vol.~30, 2017, pp. 2971--2980.
+
+\bibitem{levy2020large}
+D.~Levy, Y.~Carmon, J.~C. Duchi, and A.~Sidford, ``Large-scale methods for
+distributionally robust optimization,'' in \emph{Proc. NeurIPS}, vol.~33,
+2020, pp. 8847--8860.
+
+\bibitem{curi2020adaptive}
+S.~Curi, K.~Y. Levy, S.~Jegelka, and A.~Krause, ``Adaptive sampling for
+stochastic risk-averse learning,'' in \emph{Proc. NeurIPS}, vol.~33, 2020,
+pp. 1036--1047.
+
+\bibitem{hardt2016equality}
+M.~Hardt, E.~Price, and N.~Srebro, ``Equality of opportunity in supervised
+learning,'' in \emph{Proc. NeurIPS}, vol.~29, 2016, pp. 3315--3323.
+
+\bibitem{agarwal2018reductions}
+A.~Agarwal, A.~Beygelzimer, M.~Dud\'{\i}k, J.~Langford, and H.~Wallach,
+``A reductions approach to fair classification,'' in \emph{Proc. ICML},
+2018, pp. 60--69.
+
+\bibitem{cotter2019twoplayer}
+A.~Cotter, H.~Jiang, and K.~Sridharan, ``Two-player games for efficient
+non-convex constrained optimization,'' in \emph{Proc. ALT}, 2019,
+pp. 300--332.
+
+\bibitem{chamon2020pacc}
+L.~F.~O. Chamon and A.~Ribeiro, ``Probably approximately correct
+constrained learning,'' in \emph{Proc. NeurIPS}, vol.~33, 2020,
+pp. 16722--16735.
+
+\bibitem{chamon2023nonconvex}
+L.~F.~O. Chamon, S.~Paternain, M.~Calvo-Fullana, and A.~Ribeiro,
+``Constrained learning with non-convex losses,'' \emph{IEEE Trans. Inf.
+Theory}, vol.~69, no.~3, pp. 1739--1760, 2023.
+
+\bibitem{rahimi2025fedavot}
+H.~Rahimi and D.~Kalogerias, ``FedAVOT: Exact distribution alignment in
+federated learning via masked optimal transport,'' in \emph{Proc. IEEE
+ICASSP}, 2026.
+
+\bibitem{rahimi2026federage}
+H.~Rahimi and D.~Kalogerias, ``FedeRage: Provably convergent agnostic
+federated learning under general client drift,'' arXiv:2609.21057, 2026.
+
+\bibitem{mohri2019agnostic}
+M.~Mohri, G.~Sivek, and A.~T. Suresh, ``Agnostic federated learning,'' in
+\emph{Proc. ICML}, 2019, pp. 4615--4625.
+
+\bibitem{li2020fair}
+T.~Li, M.~Sanjabi, A.~Beirami, and V.~Smith, ``Fair resource allocation in
+federated learning,'' in \emph{Proc. ICLR}, 2020.
+
+\bibitem{rahimi2025agnostic}
+H.~Rahimi and D.~Kalogerias, ``Convergence of agnostic federated
+averaging,'' in \emph{Proc. IEEE CAMSAP}, 2025.
+
+\bibitem{villani2009}
+C.~Villani, \emph{Optimal Transport: Old and New}. Springer, 2009.
+
+\bibitem{peyre2019}
+G.~Peyr\'e and M.~Cuturi, \emph{Computational Optimal Transport}. Now
+Publishers, 2019.
+
+\bibitem{hall1935}
+P.~Hall, ``On representatives of subsets,'' \emph{J. London Math. Soc.},
+vol.~10, no.~1, pp. 26--30, 1935.
+
+\bibitem{fordfulkerson1956}
+L.~R. Ford and D.~R. Fulkerson, ``Maximal flow through a network,''
+\emph{Canad. J. Math.}, vol.~8, pp. 399--404, 1956.
+
+\bibitem{sinkhorn1967}
+R.~Sinkhorn, ``Diagonal equivalence to matrices with prescribed row and
+column sums,'' \emph{Amer. Math. Monthly}, vol.~74, no.~4, pp. 402--405,
+1967.
+
+\bibitem{cuturi2013}
+M.~Cuturi, ``Sinkhorn distances: Lightspeed computation of optimal
+transport,'' in \emph{Proc. NeurIPS}, vol.~26, 2013, pp. 2292--2300.
+
+\bibitem{gietl2013ipfp}
+C.~Gietl and F.~P. Reffel, ``Accumulation points of the iterative
+proportional fitting procedure,'' \emph{Metrika}, vol.~76, no.~6,
+pp. 783--798, 2013.
+
+\bibitem{csiszar1975}
+I.~Csisz\'ar, ``I-divergence geometry of probability distributions and
+minimization problems,'' \emph{Ann. Probab.}, vol.~3, no.~1, pp. 146--158,
+1975.
+
+\bibitem{fujishige1980}
+S.~Fujishige, ``Lexicographically optimal base of a polymatroid with
+respect to a weight vector,'' \emph{Math. Oper. Res.}, vol.~5, no.~2,
+pp. 186--196, 1980.
+
+\bibitem{rockafellar2000cvar}
+R.~T. Rockafellar and S.~Uryasev, ``Optimization of conditional
+value-at-risk,'' \emph{J. Risk}, vol.~2, no.~3, pp. 21--41, 2000.
+
+\bibitem{shapiro2009lectures}
+A.~Shapiro, D.~Dentcheva, and A.~Ruszczy\'nski, \emph{Lectures on
+Stochastic Programming: Modeling and Theory}. SIAM, 2009.
+
+\bibitem{uci_adult}
+B.~Becker and R.~Kohavi, ``Adult,'' UCI Machine Learning Repository, 1996,
+doi:10.24432/C5XW20.
+
+\bibitem{rothe2018imdbwiki}
+R.~Rothe, R.~Timofte, and L.~Van~Gool, ``Deep expectation of real and
+apparent age from a single image without facial landmarks,'' \emph{Int. J.
+Comput. Vis.}, vol.~126, no.~2--4, pp. 144--157, 2018.
+
+\end{thebibliography}
+
+\end{document}optimal transport, conditional value at risk.
 \end{keywords}
 
 % =====================================================================
